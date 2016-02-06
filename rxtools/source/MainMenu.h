@@ -35,6 +35,7 @@
 #include "configuration.h"
 #include "lang.h"
 #include "AdvancedFileManager.h"
+#include "lang.h"
 
 static void ShutDown(int arg){
 	i2cWriteRegister(I2C_DEV_MCU, 0x20, (arg) ? (uint8_t)(1<<0):(uint8_t)(1<<2));
@@ -206,16 +207,16 @@ void SettingsMenuInit(){
 
 	while (true) {
 		//UPDATE SETTINGS GUI
-		swprintf(MyMenu->Name, CONSOLE_MAX_TITLE_LENGTH+1, strings[STR_SETTINGS]);
-		swprintf(MyMenu->Option[0].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_FORCE_UI_BOOT], cfgs[CFG_GUI].val.i ? strings[STR_ENABLED] : strings[STR_DISABLED]);
-		swprintf(MyMenu->Option[1].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_SELECTED_THEME], cfgs[CFG_THEME].val.i + '0');
-		swprintf(MyMenu->Option[2].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_RANDOM], cfgs[CFG_RANDOM].val.i ? strings[STR_ENABLED] : strings[STR_DISABLED]);
-		swprintf(MyMenu->Option[3].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_SHOW_AGB], cfgs[CFG_AGB].val.i ? strings[STR_ENABLED] : strings[STR_DISABLED]);
-		swprintf(MyMenu->Option[4].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_ENABLE_3D_UI], cfgs[CFG_3D].val.i ? strings[STR_ENABLED] : strings[STR_DISABLED]);
-		swprintf(MyMenu->Option[5].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_ABSYSN], cfgs[CFG_ABSYSN].val.i ? strings[STR_ENABLED] : strings[STR_DISABLED]);
-		swprintf(MyMenu->Option[6].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_MENU_LANGUAGE], strings[STR_LANG_NAME]);
-		swprintf(MyMenu->Option[7].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_SHUTDOWN]);
-		swprintf(MyMenu->Option[8].Str, CONSOLE_MAX_LINE_LENGTH+1, strings[STR_REBOOT]);
+		swprintf(MyMenu->Name, CONSOLE_MAX_TITLE_LENGTH+1, lang("SETTINGS"));
+		swprintf(MyMenu->Option[0].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("FORCE_UI_BOOT"), lang(cfgs[CFG_GUI].val.i ? " +" : " -"));
+		swprintf(MyMenu->Option[1].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("SELECTED_THEME"), cfgs[CFG_THEME].val.i + '0');
+		swprintf(MyMenu->Option[2].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("RANDOM_THEME"), lang(cfgs[CFG_RANDOM].val.i ? " +" : " -"));
+		swprintf(MyMenu->Option[3].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("SHOW_AGB"), lang(cfgs[CFG_AGB].val.i ? " +" : " -"));
+		swprintf(MyMenu->Option[4].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("ENABLE_3D_UI"), lang(cfgs[CFG_3D].val.i ? " +" : " -"));
+		swprintf(MyMenu->Option[5].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("ABSYSN"), lang(cfgs[CFG_ABSYSN].val.i ? " +" : " -"));
+		swprintf(MyMenu->Option[6].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("MENU_LANGUAGE"), lang("LANG_NAME"));
+		swprintf(MyMenu->Option[7].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("Shutdown"));
+		swprintf(MyMenu->Option[8].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("Reboot"));
 		MenuRefresh();
 
 		uint32_t pad_state = InputWait();
@@ -323,6 +324,8 @@ void SettingsMenuInit(){
 				wcstombs(cfgs[CFG_LANG].val.s, langs[curLang],
 					CFG_STR_MAX_LEN);
 				switchStrings();
+				if (fontIsLoaded)
+					setLang(cfgs[CFG_LANG].val.s);
 			}
 			else if (MyMenu->Current == 7)
 			{

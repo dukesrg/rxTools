@@ -319,3 +319,58 @@ int loadStrings()
 
 	return 0;
 }
+
+//jsmn_parser plang;
+//TOKEN_NUM = 1 + STR_NUM * 2
+#define TOKEN_NUM 0x200
+#define STR_TRANS_CNT 8
+wchar_t wstr[STR_TRANS_CNT][STR_MAX_LEN];
+char str[STR_MAX_LEN];
+char js[0x2000];
+jsmntok_t tok[TOKEN_NUM];
+int r, itrans = 0;
+
+int setLang(char *langFile)
+{
+	wchar_t path[_MAX_LFN];
+	jsmn_parser p;
+	int len;
+	File fd;
+
+	swprintf(path, _MAX_LFN, L"%ls/%s", langPath, langFile);
+	if (!FileOpen(&fd, path, 0))
+		return 1;
+
+	len = FileGetSize(&fd);
+	if (len > sizeof(js))
+		return 1;
+
+	FileRead(&fd, js, len, 0);
+	FileClose(&fd);
+
+	jsmn_init(&p);
+	r = jsmn_parse(&p, js, len, tok, TOKEN_NUM);
+	return r;
+}
+
+wchar_t *lang(char *key)
+{
+	int i, len;
+	for (i = 1; i < r; i++) {
+		len = tok[i].end - tok[i].start;
+		if (tok[i].type == JSMN_STRING && strlen(key) == len && memcmp(key, js + tok[i].start, len) == 0) {
+			i++;
+			len = tok[i].end - tok[i].start;
+			if (len > STR_MAX_LEN - 1)
+				len = STR_MAX_LEN - 1;
+			strncpy(str, js + tok[i].start, len);
+			str[len] = 0;
+			key = str;
+			break;
+		}
+	}
+	if (itrans >= STR_TRANS_CNT)
+		itrans = 0;
+	mbstowcs(wstr[itrans], key, STR_MAX_LEN - 1);
+	return wstr[itrans++];
+}

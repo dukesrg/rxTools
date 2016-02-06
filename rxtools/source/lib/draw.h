@@ -30,6 +30,8 @@
 #define FONT_WIDTH	16
 #define FONT_HEIGHT	16
 #define FONT_HWIDTH	(FONT_WIDTH>>1)
+#define FONT_WIDTH_BIG	24
+#define FONT_HEIGHT_BIG	24
 #define FONT_CJK_START	0x2400
 #define TOP_SCREEN	(uint8_t*)(*(uint32_t*)0x080FFFC0)
 #define TOP_SCREEN2	(uint8_t*)(*(uint32_t*)0x080FFFC8)
@@ -58,12 +60,14 @@
 #define CHAR_SELECTED	"\u2714"
 #define CHAR_UNSELECTED	"\u2718"
 
-extern const uint16_t (* fontaddr)[FONT_WIDTH];
+extern uint32_t *fontaddr;
 
 void ClearScreen(uint8_t *screen, uint32_t color);
 void DrawClearScreenAll(void);
-void DrawCharacter(uint8_t *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+void DrawCharacter(uint8_t *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height);
 void DrawString(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+unsigned int GetStringWidth(const wchar_t *str, uint32_t font_width);
+void DrawHeading(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
 void DrawPixel(uint8_t *screen, uint32_t x, uint32_t y, uint32_t color);
 uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y);
 void Debug(const char *format, ...);

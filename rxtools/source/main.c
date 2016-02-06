@@ -188,7 +188,9 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	readCfg();
 
 	r = loadStrings();
-	if (r)
+	if (fontIsLoaded)
+		r = setLang(cfgs[CFG_LANG].val.s);
+	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);
 
 	drawTop();

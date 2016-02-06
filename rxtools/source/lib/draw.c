@@ -28,8 +28,8 @@
 uint32_t current_y = 1;
 
 uint8_t *tmpscreen = (uint8_t*)0x26000000;
-extern const uint16_t _binary_font_ascii_bin_start[][FONT_WIDTH];
-const uint16_t (* fontaddr)[FONT_WIDTH] = _binary_font_ascii_bin_start;
+extern uint32_t _binary_font_ascii_bin_start[];
+uint32_t *fontaddr = _binary_font_ascii_bin_start;
 
 void ClearScreen(uint8_t *screen, uint32_t color)
 {
@@ -54,7 +54,7 @@ void DrawClearScreenAll(void) {
 	current_y = 0;
 }
 
-static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
+static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height)
 {
 	struct {
 		uint8_t a;
@@ -64,9 +64,12 @@ static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, u
 	} fore, back;
 	uint8_t (* pScreen)[SCREEN_HEIGHT][BYTES_PER_PIXEL];
 	uint32_t fontX, fontY;
-	uint16_t charVal;
+	uint32_t charVal;
 
-	if (BOT_SCREEN_WIDTH < x + FONT_WIDTH || y < FONT_HEIGHT)
+	uint32_t char_width = font_width;
+	if (character < FONT_CJK_START)
+		char_width >>= 1;
+	if (BOT_SCREEN_WIDTH < x + char_width || y < font_height)
 		return;
 
 	fore.a = color >> 24;
@@ -77,13 +80,15 @@ static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, u
 	back.a = bgcolor >> 24;
 	back.r = bgcolor >> 16;
 	back.g = bgcolor >> 8;
-	back.b = color;
+	back.b = bgcolor;
 
 	pScreen = screen;
-
-	for (fontX = 0; fontX < FONT_WIDTH; fontX++) {
-		charVal = fontaddr[character][fontX];
-		for (fontY = 0; fontY < FONT_HEIGHT; fontY++) {
+	uint32_t charOffs = character * font_width * font_height;
+	font += charOffs >> 5;
+	charOffs &= 0x0000001F;
+	charVal = *font >> charOffs;
+	for (fontX = 0; fontX < char_width; fontX++) {
+		for (fontY = 0; fontY < font_height; fontY++) {
 			if (charVal & 1) {
 				if (fore.a) {
 					pScreen[x][SCREEN_HEIGHT - (y - fontY)][0] = fore.b;
@@ -97,27 +102,52 @@ static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, u
 					pScreen[x][SCREEN_HEIGHT - (y - fontY)][2] = back.r;
 				}
 			}
-
-			charVal >>= 1;
+			if ((charOffs++ & 0x0000001F) == 0)
+				charVal = *font++;
+			else
+				charVal >>= 1;
 		}
 
 		x++;
 	}
 }
 
-void DrawCharacter(uint8_t *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
+void DrawCharacter(uint8_t *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height)
 {
-	DrawCharacterOn1frame(screen, character, x, y, color, bgcolor);
+	DrawCharacterOn1frame(screen, character, x, y, color, bgcolor, font, font_width, font_height);
+}
+
+void DrawStringWithFont(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height)
+{
+	unsigned int dx = 0;
+	for (uint32_t i = 0; i < wcslen(str); i++){
+		DrawCharacter(screen, str[i], x + dx, y, color, bgcolor, font, font_width, font_height);
+		dx+=str[i]<FONT_CJK_START?(font_width>>1):font_width;
+	}
+}
+
+unsigned int GetStringWidth(const wchar_t *str, uint32_t font_width)
+{
+	unsigned int dx = 0;
+	for (uint32_t i = 0; i < wcslen(str); i++){
+		dx+=str[i]<FONT_CJK_START?(font_width>>1):font_width;
+	}
+	return dx;
 }
 
 void DrawString(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
 {
-	unsigned int dx = 0;
-	for (uint32_t i = 0; i < wcslen(str); i++){
-		DrawCharacter(screen, str[i], x + dx, y, color, bgcolor);
-		dx+=str[i]<FONT_CJK_START?FONT_HWIDTH:FONT_WIDTH;
-	}
+	DrawStringWithFont(screen, str, x, y, color, bgcolor, fontaddr, FONT_WIDTH, FONT_HEIGHT);
 }
+
+void DrawHeading(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
+{
+	if (fontIsLoaded)
+		DrawStringWithFont(screen, str, x, y, color, bgcolor, fontaddr+0x80000, FONT_WIDTH_BIG, FONT_HEIGHT_BIG);
+	else
+		DrawStringWithFont(screen, str, x, y, color, bgcolor, fontaddr, FONT_WIDTH, FONT_HEIGHT);
+}
+
 //[Unused]
 void DrawHex(uint8_t *screen, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
 {

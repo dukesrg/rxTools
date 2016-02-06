@@ -80,5 +80,7 @@
 	"REGION": "region",
 	"YES": "Yes",
 	"NO": "No",
-	"RANDOM_THEME": "Random theme"
+	"RANDOM_THEME": "Random theme",
+	" +":"✔",
+	" -":"✘"
 }

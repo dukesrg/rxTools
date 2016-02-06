@@ -110,7 +110,7 @@ void ConsoleShow(){
 	//	}
 	//}
 	int titlespace = 2*FONT_HEIGHT-2*BorderWidth;
-	DrawString(tmpscreen, consoletitle, ConsoleX + BorderWidth + 2 * FONT_HWIDTH, ConsoleY + (titlespace - FONT_HEIGHT) / 2 + BorderWidth, TextColor, ConsoleGetBackgroundColor());
+	DrawHeading(tmpscreen, consoletitle, ConsoleX + BorderWidth + 2 * FONT_HWIDTH, ConsoleY + (titlespace - FONT_HEIGHT) + BorderWidth, TextColor, ConsoleGetBackgroundColor());
 
 	for (int i = 0; i < CONSOLE_MAX_LINES; i++)
 		DrawString(tmpscreen, console[i],

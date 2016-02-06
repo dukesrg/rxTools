@@ -87,8 +87,14 @@ $(BUILD)/%.o: $(BUILD)/%.bin
 %_ascii.bin: %.bin
 	$(call Q,DD,$@)dd if=$< of=$@ count=8
 
-$(BUILD)/font.bin: unifont-8.0.01.bmp
-	$(call Q,CONVERT,$@)convert -crop 4096x4096+32+64 -transpose $< - | convert -crop 16x4096 -append - - | convert -roll +8 -negate -depth 1 - gray:$@;
+$(BUILD)/font.bin: $(BUILD)/font_16.bin $(BUILD)/font_24.bin
+	@cat $^ >$@
+
+$(BUILD)/font_16.bin: unifont-8.0.01.bmp
+	$(call Q,CONVERT,$@)convert -crop +32+64 -transpose +repage -crop 16 -append $< - | convert -flop - mono:$@;
+
+$(BUILD)/font_24.bin: intlfonts-1.2.1.bmp
+	$(call Q,CONVERT,$@)convert -crop +32 -transpose +repage -crop 24 -append $< - | convert -flop - mono:$@;
 
 $(foreach f,$(NEED_DIRS),$(eval $f : | $(dir $f)D))
 

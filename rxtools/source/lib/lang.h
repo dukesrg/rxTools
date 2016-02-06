@@ -168,5 +168,7 @@ void preloadStringsA(void);
 void preloadStringsU(void);
 void switchStrings(void);
 int loadStrings(void);
+int setLang(char *langFile);
+wchar_t *lang(char *key);
 
 #endif
