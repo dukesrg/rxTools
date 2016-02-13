@@ -94,7 +94,7 @@ void ConsoleShow(){
 	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/app.bin", cfgs[CFG_THEME].val.i);
 	DrawSplash(tmpscreen, str);
 	if(!consoleInited) return;
-	int titley = 2*FONT_HEIGHT;
+	int titley = 2 * font16.h;
 
 	//for(int y = ConsoleY; y < ConsoleH + ConsoleY + BorderWidth; y++){
 	//	for(int x = ConsoleX; x < ConsoleW + ConsoleX + BorderWidth; x++){
@@ -109,13 +109,13 @@ void ConsoleShow(){
 	//		}
 	//	}
 	//}
-	int titlespace = 2*FONT_HEIGHT-2*BorderWidth;
-	DrawHeading(tmpscreen, consoletitle, ConsoleX + BorderWidth + 2 * FONT_HWIDTH, ConsoleY + (titlespace - FONT_HEIGHT) + BorderWidth, TextColor, ConsoleGetBackgroundColor());
+	int titlespace = 2 * font16.h - 2 * BorderWidth;
+	DrawStringWithFont(tmpscreen, consoletitle, ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, TextColor, ConsoleGetBackgroundColor(), &font24);
 
 	for (int i = 0; i < CONSOLE_MAX_LINES; i++)
 		DrawString(tmpscreen, console[i],
-			ConsoleX + FONT_HWIDTH * Spacing,
-			i * FONT_HEIGHT + ConsoleY + 15 + FONT_HEIGHT * (Spacing - 1) + titley,
+			ConsoleX + font16.sw * Spacing,
+			i * font16.h + ConsoleY + 15 + font16.h * (Spacing - 1) + titley,
 			TextColor, ConsoleGetBackgroundColor());
 
 	memcpy(BOT_SCREEN, tmpscreen, SCREEN_SIZE);

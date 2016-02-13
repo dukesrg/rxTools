@@ -352,7 +352,7 @@ static void initBar(Bar *b, size_t n)
 	wchar_t *dst;
 
 	b->cur = b->str;
-	b->x = (BOT_SCREEN_WIDTH - n * FONT_WIDTH) / 2;
+	b->x = (BOT_SCREEN_WIDTH - n * font16.dw) / 2;
 
 	dst = b->str;
 	while (n > 0) {

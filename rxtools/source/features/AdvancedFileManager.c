@@ -79,7 +79,7 @@ void AdvFileManagerShow(panel_t* Panel, int x){
 	//Title
 	wchar_t tmp[_MAX_LFN];
 	swprintf(tmp, _MAX_LFN, L"%ls", Panel->dir);
-	DrawString(screentmp, tmp, 15 + x, FONT_HEIGHT * 2, ConsoleGetTextColor(), TRANSPARENT);
+	DrawString(screentmp, tmp, 15 + x, font16.h * 2, ConsoleGetTextColor(), TRANSPARENT);
 
 	//FileList
 	if (Panel->count != 0)
@@ -96,7 +96,7 @@ void AdvFileManagerShow(panel_t* Panel, int x){
 		int i = 0;
 		for (i = Panel->beginning; i < Panel->beginning + list[(Panel->pointer / 10)]; i++) {
 			swprintf(tmp, _MAX_LFN, L"%ls %ls", (i == Panel->pointer && Panel->enabled == 1) ? strings[STR_CURSOR] : strings[STR_NO_CURSOR], Panel->files[i]);
-			DrawString(screentmp, tmp, 15 + x, FONT_HEIGHT * 3 + FONT_HEIGHT * (i - Panel->beginning + 1), ConsoleGetTextColor(), TRANSPARENT);
+			DrawString(screentmp, tmp, 15 + x, font16.h * 3 + font16.h * (i - Panel->beginning + 1), ConsoleGetTextColor(), TRANSPARENT);
 		}
 	}
 }

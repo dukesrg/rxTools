@@ -155,7 +155,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	if (!FSInit()) {
 		DrawString(BOT_SCREEN, strings[STR_FAILED],
-			BOT_SCREEN_WIDTH / 2, SCREEN_HEIGHT - FONT_HEIGHT, RED, BLACK);
+			BOT_SCREEN_WIDTH / 2, SCREEN_HEIGHT - font16.h, RED, BLACK);
 		while (1);
 	}
 
@@ -176,7 +176,11 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 			fontIsLoaded = 1;
 
 		f_close(&f);
-		fontaddr = fontBuf;
+		font16.addr = fontBuf;
+		font24.sw = 12;
+		font24.h = 24;
+		font24.dw = 24;
+		font24.addr = font16.addr + font16.dw * font16.h * 0x10000 / (8 * sizeof(font24.addr[0]));
 	}
 
 	if (fontIsLoaded)

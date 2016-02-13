@@ -29,7 +29,8 @@ uint32_t current_y = 1;
 
 uint8_t *tmpscreen = (uint8_t*)0x26000000;
 extern uint32_t _binary_font_ascii_bin_start[];
-uint32_t *fontaddr = _binary_font_ascii_bin_start;
+FontMetrics font16 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //default font metrics
+FontMetrics font24 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //use default in case unicode glyps won't be loaded
 
 void ClearScreen(uint8_t *screen, uint32_t color)
 {
@@ -54,7 +55,7 @@ void DrawClearScreenAll(void) {
 	current_y = 0;
 }
 
-static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height)
+static uint32_t DrawCharacter(void *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
 {
 	struct {
 		uint8_t a;
@@ -66,11 +67,9 @@ static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, u
 	uint32_t fontX, fontY;
 	uint32_t charVal;
 
-	uint32_t char_width = font_width;
-	if (character < FONT_CJK_START)
-		char_width >>= 1;
-	if (BOT_SCREEN_WIDTH < x + char_width || y < font_height)
-		return;
+	uint32_t char_width = character < font->dwstart ? font->sw : font->dw;
+	if (BOT_SCREEN_WIDTH < x + char_width || y < font->h)
+		return 0;
 
 	fore.a = color >> 24;
 	fore.r = color >> 16;
@@ -83,12 +82,12 @@ static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, u
 	back.b = bgcolor;
 
 	pScreen = screen;
-	uint32_t charOffs = character * font_width * font_height;
-	font += charOffs >> 5;
-	charOffs &= 0x0000001F;
-	charVal = *font >> charOffs;
+	uint32_t charOffs = character * font->dw * font->h;
+	uint32_t *glyph = font->addr + (charOffs >> 5);
+	charOffs &= (sizeof(glyph[0]) * 8) - 1; //0x1F
+	charVal = *glyph >> charOffs;
 	for (fontX = 0; fontX < char_width; fontX++) {
-		for (fontY = 0; fontY < font_height; fontY++) {
+		for (fontY = 0; fontY < font->h; fontY++) {
 			if (charVal & 1) {
 				if (fore.a) {
 					pScreen[x][SCREEN_HEIGHT - (y - fontY)][0] = fore.b;
@@ -103,49 +102,49 @@ static void DrawCharacterOn1frame(void *screen, wchar_t character, uint32_t x, u
 				}
 			}
 			if ((charOffs++ & 0x0000001F) == 0)
-				charVal = *font++;
+				charVal = *glyph++;
 			else
 				charVal >>= 1;
 		}
 
 		x++;
 	}
+	return char_width;
 }
 
-void DrawCharacter(uint8_t *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height)
+void DrawSubString(uint8_t *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
 {
-	DrawCharacterOn1frame(screen, character, x, y, color, bgcolor, font, font_width, font_height);
+	for (uint32_t i = 0; i < count; x += DrawCharacter(screen, str[i++], x, y, color, bgcolor, font));
 }
 
-void DrawStringWithFont(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height)
+uint32_t GetStringWidth(const wchar_t *str, uint32_t count, FontMetrics *font)
 {
-	unsigned int dx = 0;
-	for (uint32_t i = 0; i < wcslen(str); i++){
-		DrawCharacter(screen, str[i], x + dx, y, color, bgcolor, font, font_width, font_height);
-		dx+=str[i]<FONT_CJK_START?(font_width>>1):font_width;
+	uint32_t width = 0;
+	for (uint32_t i = 0; i < count; width += str[i++] < font->dwstart ? font->sw : font->dw);
+	return width;
+}
+
+void DrawStringRect(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font, uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+{
+/*	uint32_t width = right - left;
+	uint32_t height = bottom - top;
+	uint32_t i = 0, j, k;
+	while (i < wcslen(str)) {
+		while (GetStringWidth(str, j, font) < (j = wcscspn(str, L" "))) {
+			k = j;
+		}
 	}
+*/
 }
 
-unsigned int GetStringWidth(const wchar_t *str, uint32_t font_width)
+void DrawStringWithFont(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
 {
-	unsigned int dx = 0;
-	for (uint32_t i = 0; i < wcslen(str); i++){
-		dx+=str[i]<FONT_CJK_START?(font_width>>1):font_width;
-	}
-	return dx;
+	DrawSubString(screen, str, wcslen(str), x, y, color, bgcolor, font);
 }
 
 void DrawString(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
 {
-	DrawStringWithFont(screen, str, x, y, color, bgcolor, fontaddr, FONT_WIDTH, FONT_HEIGHT);
-}
-
-void DrawHeading(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
-{
-	if (fontIsLoaded)
-		DrawStringWithFont(screen, str, x, y, color, bgcolor, fontaddr+0x80000, FONT_WIDTH_BIG, FONT_HEIGHT_BIG);
-	else
-		DrawStringWithFont(screen, str, x, y, color, bgcolor, fontaddr, FONT_WIDTH, FONT_HEIGHT);
+	DrawStringWithFont(screen, str, x, y, color, bgcolor, &font16);
 }
 
 //[Unused]
@@ -164,7 +163,7 @@ void DrawHex(uint8_t *screen, uint32_t hex, uint32_t x, uint32_t y, uint32_t col
 void DrawHexWithName(uint8_t *screen, const wchar_t *str, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
 {
 	DrawString(screen, str, x, y, color, bgcolor);
-	DrawHex(screen, hex, x + wcslen(str) * FONT_HWIDTH, y, color, bgcolor);
+	DrawHex(screen, hex, x + wcslen(str) * font16.sw, y, color, bgcolor);
 }
 
 void Debug(const char *format, ...)
@@ -244,7 +243,7 @@ void DrawTopSplash(TCHAR splash_file[], TCHAR splash_fileL[], TCHAR splash_fileR
 	{
 		wchar_t tmp[256];
 		swprintf(tmp, sizeof(tmp)/sizeof(tmp[0]), strings[STR_ERROR_OPENING], splash_file);
-		DrawString(BOT_SCREEN, tmp, FONT_WIDTH, SCREEN_HEIGHT - FONT_HEIGHT, RED, BLACK);
+		DrawString(BOT_SCREEN, tmp, font24.dw, SCREEN_HEIGHT - font24.h, RED, BLACK);
 	}
 }
 
@@ -268,7 +267,7 @@ void DrawSplash(uint8_t *screen, TCHAR splash_file[]) {
 	{
 		wchar_t tmp[256];
 		swprintf(tmp, sizeof(tmp)/sizeof(tmp[0]), strings[STR_ERROR_OPENING], splash_file);
-		DrawString(BOT_SCREEN, tmp, FONT_WIDTH, SCREEN_HEIGHT - FONT_HEIGHT, RED, BLACK);
+		DrawString(BOT_SCREEN, tmp, font24.dw, SCREEN_HEIGHT - font24.h, RED, BLACK);
 	}
 }
 

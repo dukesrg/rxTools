@@ -1,0 +1,160 @@
+{
+	"menu":{
+		"MENU1":{
+			"caption":"Boot",
+			"description":"",
+			"function":"&BootMenuInit",
+			"MENU1_1":{
+				"caption":"rxMode emuNAND",
+				"description":"Apply patches and reboot the console into rxMode on emuNand",
+				"function":""
+			},"MENU1_2":{
+				"caption":"rxMode sysNAND",
+				"description":"Apply patches and reboot the console into rxMode on sysNand",
+				"function":""
+			},"MENU1_3":{
+          			"caption":"PastaMode",
+				"description":"Patches signature checks and load in sysNAND with GBA and DSi support..",
+				"function":"(void(*)())&PastaMode"
+			},"MENU1_4":{
+				"caption":"Reboot",
+				"description":"Reboot the console",
+				"function":""
+			},"MENU1_5":{
+				"caption":"Shutdown",
+				"description":"Turn off the console",
+				"function":""
+			}
+		},"MENU2":{
+			"caption":"Decryption Options",
+			"description":"",
+			"function":"&DecryptMenuInit",
+			"MENU2_1":{
+				"caption":"Decrypt CTR Titles",
+				"description":"Decrypt 3DS titles directly on the console.",
+				"function":"&CTRDecryptor"
+			},"MENU2_2":{
+				"caption":"Decrypt Title Keys",
+				"description":"Decrypt title keys stored in tickets.db which is needed to decrypt CDN content.",
+				"function":"&DecryptTitleKeys"
+			},"MENU2_3":{
+				"caption":"Decrypt encTitleKeys.bin",
+				"description":"Decrypt the private key of a game.",
+				"function":"&DecryptTitleKeyFile"
+			},"MENU2_4":{
+				"caption":"Generate Xorpads",
+				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles.",
+				"function":"&PadGen"
+			},"MENU2_5":{
+				"caption":"Decrypt partitions",
+				"description":"Dump and decrypt all sysNAND or emuNAND partitions (except the TWL partition for now).",
+				"function":"&DumpNandPartitions"
+			},"MENU2_6":{
+				"caption":"Generate fat16 Xorpad",
+				"description":"Generate XORpad needed to decrypt main NAND partition",
+				"function":"GenerateNandXorpads"
+			}
+		},"MENU3":{
+			"caption":"Dump",
+			"description":"Dumping options",
+			"function":"&DumpMenuInit",
+			"MENU3_1":{
+				"caption":"Create NAND dump",
+				"description":"Backup your sysNAND or emuNAND partition. It is highly recommended to backup your sysNAND partition.",
+				"MENU3_1_1":{
+					"caption":"sysNAND",
+					"description":"Dump sysNAND",
+					"function":"&NandDumper"
+				},
+				"MENU3_1_2":{
+					"caption":"emuNAND",
+					"description":"Dump emuNAND",
+					"function":"&NandDumper"
+				}
+			},"MENU3_2":{
+				"caption":"Dump System Titles",
+				"description":"Dump all 3DS titles from sysNAND.",
+				"function":"&DumpNANDSystemTitles"
+			},"MENU3_3":{
+				"caption":"Dump NAND Files",
+				"description":"Dump various important files from sysNAND or emuNAND.",
+				"function":"&dumpCoolFiles"
+			},"MENU3_4":{
+				"caption":"Dump ARM9 RAM",
+				"description":"Dump ARM9 RAM (for development purposes).",
+				"function":"&dumpArm9Ram"
+			}
+		},"MENU4":{
+			"caption":"Inject",
+			"description":"Injection options.",
+			"function":"&InjectMenuInit",
+			"MENU4_1":{
+				"caption":"Inject emuNAND partitions",
+				"description":"Encrypt and write partitions from files on SD card into emuNAND (except the TWL partition for now).",
+				"function":"&RebuildNand"
+			},"MENU4_2":{
+				"caption":"Inject NAND Files",
+				"description":"Inject various important files from SD card into sysNAND or emuNAND.",
+				"function":"&restoreCoolFiles"
+			}
+		},"MENU5":{
+			"caption":"Advanced",
+			"description":"Advanced options",
+			"function":"&AdvancedMenuInit",
+			"MENU5_1":{
+				"caption":"Downgrade MSET on SysNAND",
+				"description":"Install old MSET in sysNAND to be able to use the DS profile exploit on firmwares 5.x-9.2.",
+				"function":"&downgradeMSET"
+			},"MENU5_2":{
+				"caption":"Install FBI over H&S App",
+				"description":"Install FBI (a legal .cia installed) over Health&Safety application in sysNAND.",
+				"function":"&installFBI"
+			},"MENU5_3":{
+				"caption":"Restore original H&S App",
+				"description":"Uninstall FBI .cia installer and restore the original Health&Safety application.",
+				"function":"&restoreHS"
+			},"MENU5_4":{
+				"caption":"Advanced File Manager",
+				"description":"Choose a firmare file on SD card and load it.",
+				"function":"&AdvFileManagerMain"
+			}
+		},"MENU6":{
+			"caption":"Settings",
+			"description":"",
+			"function":"&SettingsMenuInit",
+			"MENU6_1":{
+				"caption":"Force UI boot",
+				"description":"",
+				"function":""
+			},"MENU6_2":{
+				"caption":"Theme",
+				"description":"",
+				"function":""
+			},"MENU6_3":{
+				"caption":"Random theme",
+				"description":"",
+				"function":""
+			},"MENU6_3":{
+				"caption":"Show AGB_FIRM BIOS",
+				"description":"",
+				"function":""
+			},"MENU6_4":{
+				"caption":"Enable 3D UI",
+				"description":"",
+				"function":""
+			},"MENU6_5":{
+				"caption":"Autoboot into sysNAND",
+				"description":"",
+				"function":""
+			},"MENU6_6":{
+				"caption":"Menu language",
+				"description":"",
+				"function":""
+			}
+		},"MENU7":{
+			"caption":"Credits",
+			"description":"",
+			"function":""
+		}
+	}
+}

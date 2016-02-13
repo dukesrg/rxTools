@@ -81,12 +81,12 @@ void NandDumper(){
 		ConsoleShow();
 		int x, y;
 		ConsoleGetXY(&x, &y);
-		y += FONT_HEIGHT * 6;
-		x += FONT_HWIDTH * 2;
+		y += font16.h * 6;
+		x += font16.sw * 2;
 
 		DrawString(BOT_SCREEN, ProgressBar, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 		swprintf(tmpstr, STR_MAX_LEN, strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_B], strings[STR_CANCEL]);
-		DrawString(BOT_SCREEN, tmpstr, x, y + FONT_HEIGHT*2, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
+		DrawString(BOT_SCREEN, tmpstr, x, y + font16.h * 2, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 
 		for(int count = 0; count < getNandSize()/NAND_SECTOR_SIZE/nsectors; count++){
 
@@ -96,7 +96,7 @@ void NandDumper(){
 			FileWrite(&myFile, buf, nsectors*NAND_SECTOR_SIZE, count*NAND_SECTOR_SIZE*nsectors);
 			TryScreenShot();
 			if((count % (int)(getNandSize()/NAND_SECTOR_SIZE/nsectors/PROGRESS_WIDTH)) == 0 && count != 0){
-				DrawString(BOT_SCREEN, strings[STR_PROGRESS_OK], x+(FONT_WIDTH*(progress++)), y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
+				DrawString(BOT_SCREEN, strings[STR_PROGRESS_OK], x+(font16.dw*(progress++)), y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 			}
 			unsigned int pad = GetInput();
 			if (pad & BUTTON_B) {
@@ -151,8 +151,8 @@ void DumpNandPartitions(){
 			swprintf(tmp, _MAX_LFN, L"%08X / %08X", j*NAND_SECTOR_SIZE, p_size[i]);
 			int x, y;
 			ConsoleGetXY(&x, &y);
-			y += FONT_HEIGHT * 3;
-			x += FONT_HWIDTH*2;
+			y += font16.h * 3;
+			x += font16.sw * 2;
 			ConsoleShow();
 			DrawString(BOT_SCREEN, tmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 
@@ -268,8 +268,8 @@ void RebuildNand(){
 				swprintf(wtmp, wtmpLen, L"%08X / %08X", j*NAND_SECTOR_SIZE, p_size[i]);
 				int x, y;
 				ConsoleGetXY(&x, &y);
-				y += FONT_HEIGHT * 3;
-				x += FONT_HWIDTH*2;
+				y += font16.h * 3;
+				x += font16.sw * 2;
 				DrawString(BOT_SCREEN, wtmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 
 				FileRead(&out, BUF1, sect_row*NAND_SECTOR_SIZE, j*NAND_SECTOR_SIZE);

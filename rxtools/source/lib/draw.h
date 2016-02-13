@@ -27,19 +27,13 @@
 #define TOP_SCREEN_WIDTH	400
 #define SCREEN_HEIGHT    	240
 #define SCREEN_SIZE	(BYTES_PER_PIXEL*BOT_SCREEN_WIDTH*SCREEN_HEIGHT)
-#define FONT_WIDTH	16
-#define FONT_HEIGHT	16
-#define FONT_HWIDTH	(FONT_WIDTH>>1)
-#define FONT_WIDTH_BIG	24
-#define FONT_HEIGHT_BIG	24
-#define FONT_CJK_START	0x2400
 #define TOP_SCREEN	(uint8_t*)(*(uint32_t*)0x080FFFC0)
 #define TOP_SCREEN2	(uint8_t*)(*(uint32_t*)0x080FFFC8)
 #define BOT_SCREEN	(uint8_t*)(*(uint32_t*)0x080FFFD0)
 
 //Colors Macros
-#define ARGB(a,r,g,b)	(a<<24|r<<16|g<<8|b) //console asks for B,G,R in bytes
-#define RGB(r,g,b)	ARGB(255,r,g,b) //opaque color
+#define ARGB(a, r, g, b)	(a<<24|r<<16|g<<8|b) //console asks for B,G,R in bytes
+#define RGB(r, g, b)	ARGB(255, r, g, b) //opaque color
 #define COLOR_MASK	ARGB(0, 255, 255, 255)
 #define ALPHA_MASK	ARGB(255, 0, 0, 0)
 #define TRANSPARENT	ARGB(0, 0, 0, 0)
@@ -60,14 +54,26 @@
 #define CHAR_SELECTED	"\u2714"
 #define CHAR_UNSELECTED	"\u2718"
 
-extern uint32_t *fontaddr;
+typedef struct{
+	uint32_t sw;
+	uint32_t h;
+	uint32_t dw;
+	uint32_t dwstart; 
+	uint32_t *addr;
+} FontMetrics;
+
+typedef enum{
+	JUSTIFY_LEFT,
+	JUSTIFY_MIDDLE,
+	JUSTIFY_RIGHT,
+} justify;
+
+FontMetrics font16, font24;
 
 void ClearScreen(uint8_t *screen, uint32_t color);
 void DrawClearScreenAll(void);
-void DrawCharacter(uint8_t *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, uint32_t *font, uint32_t font_width, uint32_t font_height);
 void DrawString(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
-unsigned int GetStringWidth(const wchar_t *str, uint32_t font_width);
-void DrawHeading(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+void DrawStringWithFont(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font);
 void DrawPixel(uint8_t *screen, uint32_t x, uint32_t y, uint32_t color);
 uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y);
 void Debug(const char *format, ...);
