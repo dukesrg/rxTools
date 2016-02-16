@@ -84,9 +84,9 @@ void NandDumper(){
 		y += font16.h * 6;
 		x += font16.sw * 2;
 
-		DrawString(BOT_SCREEN, ProgressBar, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
+		DrawString(&bottomScreen, ProgressBar, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 		swprintf(tmpstr, STR_MAX_LEN, strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_B], strings[STR_CANCEL]);
-		DrawString(BOT_SCREEN, tmpstr, x, y + font16.h * 2, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
+		DrawString(&bottomScreen, tmpstr, x, y + font16.h * 2, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 
 		for(int count = 0; count < getNandSize()/NAND_SECTOR_SIZE/nsectors; count++){
 
@@ -96,7 +96,7 @@ void NandDumper(){
 			FileWrite(&myFile, buf, nsectors*NAND_SECTOR_SIZE, count*NAND_SECTOR_SIZE*nsectors);
 			TryScreenShot();
 			if((count % (int)(getNandSize()/NAND_SECTOR_SIZE/nsectors/PROGRESS_WIDTH)) == 0 && count != 0){
-				DrawString(BOT_SCREEN, strings[STR_PROGRESS_OK], x+(font16.dw*(progress++)), y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
+				DrawString(&bottomScreen, strings[STR_PROGRESS_OK], x+(font16.dw*(progress++)), y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 			}
 			unsigned int pad = GetInput();
 			if (pad & BUTTON_B) {
@@ -154,7 +154,7 @@ void DumpNandPartitions(){
 			y += font16.h * 3;
 			x += font16.sw * 2;
 			ConsoleShow();
-			DrawString(BOT_SCREEN, tmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
+			DrawString(&bottomScreen, tmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 
 			if(isEmuNand) emunand_readsectors(j, sect_row, BUF1, p_addr[i]);
 			else nand_readsectors(j, sect_row, BUF1, p_addr[i]);
@@ -270,7 +270,7 @@ void RebuildNand(){
 				ConsoleGetXY(&x, &y);
 				y += font16.h * 3;
 				x += font16.sw * 2;
-				DrawString(BOT_SCREEN, wtmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
+				DrawString(&bottomScreen, wtmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 
 				FileRead(&out, BUF1, sect_row*NAND_SECTOR_SIZE, j*NAND_SECTOR_SIZE);
 				if(isEmuNand) emunand_writesectors(j, sect_row, BUF1, p_addr[i]);

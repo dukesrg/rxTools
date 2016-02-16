@@ -32,8 +32,6 @@
 
 //---- GLOBAL VARIABLES ----
 int i;
-void *screentmp = (void*)0x27000000;
-
 
 size_t AdvFileManagerList(const TCHAR *path, TCHAR ***ls) {
 	size_t count = 0;
@@ -74,12 +72,12 @@ size_t AdvFileManagerList(const TCHAR *path, TCHAR ***ls) {
 	return count;
 }
 
-void AdvFileManagerShow(panel_t* Panel, int x){
+void AdvFileManagerShow(Screen *screen, panel_t* Panel, int x){
 
 	//Title
 	wchar_t tmp[_MAX_LFN];
 	swprintf(tmp, _MAX_LFN, L"%ls", Panel->dir);
-	DrawString(screentmp, tmp, 15 + x, font16.h * 2, ConsoleGetTextColor(), TRANSPARENT);
+	DrawString(screen, tmp, 15 + x, font16.h * 2, ConsoleGetTextColor(), TRANSPARENT);
 
 	//FileList
 	if (Panel->count != 0)
@@ -96,7 +94,7 @@ void AdvFileManagerShow(panel_t* Panel, int x){
 		int i = 0;
 		for (i = Panel->beginning; i < Panel->beginning + list[(Panel->pointer / 10)]; i++) {
 			swprintf(tmp, _MAX_LFN, L"%ls %ls", (i == Panel->pointer && Panel->enabled == 1) ? strings[STR_CURSOR] : strings[STR_NO_CURSOR], Panel->files[i]);
-			DrawString(screentmp, tmp, 15 + x, font16.h * 3 + font16.h * (i - Panel->beginning + 1), ConsoleGetTextColor(), TRANSPARENT);
+			DrawString(screen, tmp, 15 + x, font16.h * 3 + font16.h * (i - Panel->beginning + 1), ConsoleGetTextColor(), TRANSPARENT);
 		}
 	}
 }
@@ -241,18 +239,19 @@ void AdvFileManagerMain(){
 	}
 	Panels[0].enabled = 1;
 
-	
+	Screen screentmp = bottomScreen;	
+	screentmp.addr = (void*)0x27000000;
 
 	while (true)
 	{
 		//Background
 		wchar_t str[_MAX_LFN];
 		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/FM.bin", cfgs[CFG_THEME].val.i);
-		DrawSplash(screentmp, str);
+		DrawSplash(screentmp.addr, str);
 
-		AdvFileManagerShow(&Panels[0], 0);
-		AdvFileManagerShow(&Panels[1], 155);
-		memcpy(BOT_SCREEN, screentmp, SCREEN_SIZE); //Trick to avoid screen flickering
+		AdvFileManagerShow(&screentmp, &Panels[0], 0);
+		AdvFileManagerShow(&screentmp, &Panels[1], 155);
+		memcpy(bottomScreen.addr, screentmp.addr, bottomScreen.size); //Trick to avoid screen flickering
 
 		uint32_t pad_state = InputWait();
 		if (pad_state & BUTTON_DOWN) AdvFileManagerNextSelection(&Panels[currentPanel]);

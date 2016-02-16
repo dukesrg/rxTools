@@ -55,6 +55,16 @@
 #define CHAR_UNSELECTED	"\u2718"
 
 typedef struct{
+	uint32_t w;
+	uint32_t h;
+	uint32_t bpp;
+	uint32_t size;
+	void *addr;
+} Screen;
+
+Screen bottomScreen, top1Screen, top2Screen;
+
+typedef struct{
 	uint32_t sw;
 	uint32_t h;
 	uint32_t dw;
@@ -62,21 +72,28 @@ typedef struct{
 	uint32_t *addr;
 } FontMetrics;
 
+FontMetrics font16, font24;
+/*
+typedef struct{
+	uint32_t fg;
+	uint32_t bg;
+} TextColor;
+*/
+/*
 typedef enum{
 	JUSTIFY_LEFT,
 	JUSTIFY_MIDDLE,
 	JUSTIFY_RIGHT,
 } justify;
+*/
 
-FontMetrics font16, font24;
-
-void ClearScreen(uint8_t *screen, uint32_t color);
-void DrawClearScreenAll(void);
-void DrawString(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
-void DrawStringWithFont(uint8_t *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font);
-void DrawPixel(uint8_t *screen, uint32_t x, uint32_t y, uint32_t color);
-uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y);
-void Debug(const char *format, ...);
+//void ClearScreen(Screen *screen, uint32_t color);
+//void DrawClearScreenAll(void);
+void DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font);
+//void DrawPixel(uint8_t *screen, uint32_t x, uint32_t y, uint32_t color);
+//uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y);
+//void Debug(const char *format, ...);
 
 void DrawSplash(uint8_t *screen, TCHAR splash_file[]);
 void DrawBottomSplash(TCHAR splash_file[]);
@@ -86,5 +103,5 @@ void DrawFadeScreen(uint8_t *screen, uint16_t Width, uint16_t Height, uint32_t f
 void fadeOut();
 void OpenAnimation();
 //Unused functions.
-void DrawHex(uint8_t *screen, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
-void DrawHexWithName(uint8_t *screen, const wchar_t *str, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+//void DrawHex(uint8_t *screen, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+//void DrawHexWithName(uint8_t *screen, const wchar_t *str, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);

@@ -20,6 +20,7 @@
 
 #include <wchar.h>
 #include "console.h"
+#include "draw.h"
 
 #pragma once
 
@@ -32,7 +33,7 @@ typedef struct
 	int enabled; 
 } panel_t;
 
-void AdvFileManagerShow(panel_t* Panel, int x);
+void AdvFileManagerShow(Screen *screen, panel_t* Panel, int x);
 void AdvFileManagerNextSelection(panel_t* Panel);
 void AdvFileManagerPrevSelection(panel_t* Panel);
 void AdvFileManagerSelect(panel_t* Panel);

@@ -153,8 +153,13 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	preloadStringsA();
 
+	// init screen buffer addresses from const vectors
+	bottomScreen.addr = (uint8_t*)*(uint32_t*)bottomScreen.addr;
+	top1Screen.addr = (uint8_t*)*(uint32_t*)top1Screen.addr;
+	top2Screen.addr = (uint8_t*)*(uint32_t*)top2Screen.addr;
+
 	if (!FSInit()) {
-		DrawString(BOT_SCREEN, strings[STR_FAILED],
+		DrawString(&bottomScreen, strings[STR_FAILED],
 			BOT_SCREEN_WIDTH / 2, SCREEN_HEIGHT - font16.h, RED, BLACK);
 		while (1);
 	}
