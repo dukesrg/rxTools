@@ -84,7 +84,6 @@ static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uin
 	back.g = bgcolor >> 8;
 	back.b = bgcolor;
 
-//	pScreen = screen;
 	uint32_t charOffs = character * font->dw * font->h;
 	uint32_t *glyph = font->addr + (charOffs >> 5);
 	charOffs &= (sizeof(glyph[0]) * 8) - 1; //0x0000001F
@@ -117,37 +116,65 @@ static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uin
 
 void DrawSubString(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
 {
+	uint32_t len = wcslen(str);
+	if (count == 0 || count > len)
+		count = len;
 	for (uint32_t i = 0; i < count; x += DrawCharacter(screen, str[i++], x, y, color, bgcolor, font));
 }
 
 uint32_t GetStringWidth(const wchar_t *str, uint32_t count, FontMetrics *font)
 {
-	uint32_t width = 0;
-	for (uint32_t i = 0; i < count; width += str[i++] < font->dwstart ? font->sw : font->dw);
-	return width;
+	uint32_t len = wcslen(str);
+	if (count == 0 || count > len)
+		count = len;
+	len = 0;		
+	for (uint32_t i = 0; i < count; len += str[i++] < font->dwstart ? font->sw : font->dw);
+	return len;
 }
 
-void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font, uint32_t left, uint32_t top, uint32_t right, uint32_t bottom)
+void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color, uint32_t bgcolor, FontMetrics *font)
 {
-/*	uint32_t width = right - left;
-	uint32_t height = bottom - top;
-	uint32_t i = 0, j, k;
-	while (i < wcslen(str)) {
-		while (GetStringWidth(str, j, font) < (j = wcscspn(str, L" "))) {
-			k = j;
+	uint32_t len = wcslen(str);
+	if (count == 0 || count > len)
+		count = len;
+	if (count == 0 || x >= screen->w || y >= screen->h)
+		return;
+	if (w == 0 || x + w > screen->w)
+		w = screen->w - x;
+	if (h == 0 || y + h > screen->h)
+		h = screen->h - y;
+	h += y - font->h;
+	uint32_t i, j, k, sw;
+	for (i = 0; i < count && y <= h; ) {
+		sw = 0;
+		k = 0;
+		j = wcsspn(str + i, L" "); //include leading spaces
+		j += wcscspn(str + i + j, L" ");
+		for (; (sw += GetStringWidth(str + i + k, j, font)) < w && i + j + k < count; ) {
+			k += j;
+			j = wcsspn(str + i + k, L" "); //next gap
+			j += wcscspn(str + i + k + j, L" "); //next word
 		}
+		if (sw <= w || k == 0) //word do not cross the area border or only one word - take all
+			j += k;
+		else //word crosses the area border - take all but last word
+			j = k;                                                                                                	
+		 //add trailing spaces, if any, to draw non-transparent background color and remove trailing word part or added spaces that won't fit
+		for (j += wcsspn(str + i + j, L" "); GetStringWidth(str + i, j, font) > w; j--);
+		DrawSubString(screen, str + i, j, x, y, color, bgcolor, font);
+		i += j + wcsspn(str + i + j, L" "); //skip the rest spaces for the next line start
+		y += font->h;
 	}
-*/
 }
 
 void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
 {
-	DrawSubString(screen, str, wcslen(str), x, y, color, bgcolor, font);
+	DrawStringRect(screen, str, 0, x, y, 0, 0, color, bgcolor, font);
 }
 
 void DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
 {
-	DrawStringWithFont(screen, str, x, y, color, bgcolor, &font16);
+	DrawStringRect(screen, str, 0, x, y, 0, 0, color, bgcolor, &font16);
 }
 
 /*//[Unused]
@@ -216,53 +243,14 @@ uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y){
 
 //----------------New Splash Screen Stuff------------------
 
-void DrawTopSplash(TCHAR splash_file[], TCHAR splash_fileL[], TCHAR splash_fileR[]) {
-	unsigned int n = 0, bin_size;
-	File Splash, SplashL, SplashR;
-	if (FileOpen(&SplashL, splash_fileL, 0)&&FileOpen(&SplashR, splash_fileR, 0))
-	{
-		//Load the spash image
-		bin_size = 0;
-		while ((n = FileRead(&SplashL, (void*)((uint32_t)TOP_SCREEN + bin_size), 0x100000, bin_size)) > 0) {
-			bin_size += n;
-		}
-		FileClose(&SplashL);
-		bin_size = 0;
-		while ((n = FileRead(&SplashR, (void*)((uint32_t)TOP_SCREEN2 + bin_size), 0x100000, bin_size)) > 0) {
-			bin_size += n;
-		}
-		FileClose(&SplashR);
-	}
-	else if (FileOpen(&Splash, splash_file, 0))
-	{
-		//Load the spash image
-		bin_size = 0;
-		while ((n = FileRead(&Splash, (void*)((uint32_t)TOP_SCREEN + bin_size), 0x100000, bin_size)) > 0) {
-			bin_size += n;
-		}
-		FileClose(&Splash);
-		memcpy(TOP_SCREEN2, TOP_SCREEN, bin_size);
-	}
-	else
-	{
-		wchar_t tmp[256];
-		swprintf(tmp, sizeof(tmp)/sizeof(tmp[0]), strings[STR_ERROR_OPENING], splash_file);
-		DrawString(&bottomScreen, tmp, font24.dw, SCREEN_HEIGHT - font24.h, RED, BLACK);
-	}
-}
-
-void DrawBottomSplash(TCHAR splash_file[]) {
-	DrawSplash(BOT_SCREEN, splash_file);
-}
-
-void DrawSplash(uint8_t *screen, TCHAR splash_file[]) {
+void DrawSplash(Screen *screen, TCHAR *splash_file) {
 	unsigned int n = 0, bin_size;
 	File Splash;
 	if(FileOpen(&Splash, splash_file, 0))
 	{
 		//Load the spash image
 		bin_size = 0;
-		while ((n = FileRead(&Splash, (void*)((uint32_t)screen + bin_size), 0x100000, bin_size)) > 0) {
+		while ((n = FileRead(&Splash, (void*)(screen->addr + bin_size), 0x100000, bin_size)) > 0) {
 			bin_size += n;
 		}
 		FileClose(&Splash);
@@ -275,11 +263,10 @@ void DrawSplash(uint8_t *screen, TCHAR splash_file[]) {
 	}
 }
 
-void DrawFadeScreen(uint8_t *screen, uint16_t Width, uint16_t Height, uint32_t f)
+void DrawFadeScreen(Screen *screen, uint32_t f)
 {
-	uint32_t *screen32 = (uint32_t *)screen;
-	int i;
-	for (i = 0; i<Width*Height * 3 / 4; i++)
+	uint32_t *screen32 = (uint32_t *)screen->addr;
+	for (int i = 0; i < screen->w * screen->h * 3 / 4; i++)
 	{
 		*screen32 = (*screen32 >> 1) & 0x7F7F7F7F;
 		*screen32 += (*screen32 >> 3) & 0x1F1F1F1F; 
@@ -289,10 +276,11 @@ void DrawFadeScreen(uint8_t *screen, uint16_t Width, uint16_t Height, uint32_t f
 }
 
 void fadeOut(){
-	for (int x = 255; x >= 0; x-=8){ 
-		DrawFadeScreen(BOT_SCREEN, BOT_SCREEN_WIDTH, SCREEN_HEIGHT, x); 
-		DrawFadeScreen(TOP_SCREEN, TOP_SCREEN_WIDTH, SCREEN_HEIGHT, x); 
-		DrawFadeScreen(TOP_SCREEN2, TOP_SCREEN_WIDTH, SCREEN_HEIGHT, x); 
+	for (int x = 255; x >= 0; x-=8)
+	{ 
+		DrawFadeScreen(&bottomScreen, x); 
+		DrawFadeScreen(&top1Screen, x); 
+		DrawFadeScreen(&top2Screen, x); 
 	} 
 }
 

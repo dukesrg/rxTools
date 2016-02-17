@@ -58,19 +58,20 @@ static void install()
 static void drawTop()
 {
 	wchar_t str[_MAX_LFN];
-	wchar_t strl[_MAX_LFN];
-	wchar_t strr[_MAX_LFN];
 
-	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin",
-		cfgs[CFG_THEME].val.i);
 	if (cfgs[CFG_3D].val.i) {
-		swprintf(strl, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin",
-			cfgs[CFG_THEME].val.i);
-		swprintf(strr, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin",
-			cfgs[CFG_THEME].val.i);
-		DrawTopSplash(str, strl, strr);
-	} else
-		DrawTopSplash(str, str, str);
+		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", cfgs[CFG_THEME].val.i);
+		DrawSplash(&top1Screen, str);
+		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin", cfgs[CFG_THEME].val.i);
+		DrawSplash(&top2Screen, str);
+	} else {
+		Screen tmpScreen = top1Screen;
+		tmpScreen.addr = (uint8_t*)0x27000000;
+		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin", cfgs[CFG_THEME].val.i);
+		DrawSplash(&tmpScreen, str);
+		memcpy(top1Screen.addr, tmpScreen.addr, top1Screen.size);
+		memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
+	}
 }
 
 static FRESULT initKeyX()

@@ -94,7 +94,7 @@ void ConsoleShow(){
 	Screen tmpScreen = bottomScreen;
 	tmpScreen.addr = (uint8_t*)0x27000000;
 	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/app.bin", cfgs[CFG_THEME].val.i);
-	DrawSplash(tmpScreen.addr, str);
+	DrawSplash(&tmpScreen, str);
 	if(!consoleInited) return;
 	int titley = 2 * font16.h;
 
@@ -112,7 +112,7 @@ void ConsoleShow(){
 	//	}
 	//}
 	int titlespace = 2 * font16.h - 2 * BorderWidth;
-	DrawStringWithFont(&tmpScreen, consoletitle, ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, TextColor, ConsoleGetBackgroundColor(), &font24);
+	DrawStringRect(&tmpScreen, consoletitle, 0, ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0, TextColor, ConsoleGetBackgroundColor(), &font24);
 
 	for (int i = 0; i < CONSOLE_MAX_LINES; i++)
 		DrawString(&tmpScreen, console[i],

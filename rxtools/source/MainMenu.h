@@ -173,8 +173,6 @@ void SettingsMenuInit(){
 	DIR d;
 	FILINFO fno;
 	wchar_t str[_MAX_LFN];
-	wchar_t strl[_MAX_LFN];
-	wchar_t strr[_MAX_LFN];
 	const unsigned int maxLangNum = 16;
 	TCHAR langs[maxLangNum][CFG_STR_MAX_LEN];
 	unsigned char theme_num = 0;
@@ -275,19 +273,19 @@ void SettingsMenuInit(){
 				if (found)
 				{
 					theme_num = i;
-					swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin", theme_num);
-					if (cfgs[CFG_3D].val.i)
-					{
-						swprintf(strl, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", theme_num);
-						swprintf(strr, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin", theme_num);
-						DrawTopSplash(str, strl, strr);
-					}
-					else
-					{
+					if (cfgs[CFG_3D].val.i) {
+						swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", theme_num);
+						DrawSplash(&top1Screen, str);
+						swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin", theme_num);
+						DrawSplash(&top2Screen, str);
+					} else {
+						Screen tmpScreen = top1Screen;
+						tmpScreen.addr = (uint8_t*)0x27000000;
 						swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin", theme_num);
-						DrawTopSplash(str, str, str);
+						DrawSplash(&tmpScreen, str);
+						memcpy(top1Screen.addr, tmpScreen.addr, top1Screen.size);
+						memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
 					}
-
 					cfgs[CFG_THEME].val.i = theme_num;
 					trySetLangFromTheme(1);
 				}
@@ -297,17 +295,18 @@ void SettingsMenuInit(){
 			else if (MyMenu->Current == 4)
 			{
 				cfgs[CFG_3D].val.i ^= 1;
-				swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin", theme_num);
-				if(cfgs[CFG_3D].val.i)
-				{
-					swprintf(strl, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", theme_num);
-					swprintf(strr, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin", theme_num);
-					DrawTopSplash(str, strl, strr);
-				}
-				else
-				{
+				if (cfgs[CFG_3D].val.i) {
+					swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", theme_num);
+					DrawSplash(&top1Screen, str);
+					swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin", theme_num);
+					DrawSplash(&top2Screen, str);
+				} else {
+					Screen tmpScreen = top1Screen;
+					tmpScreen.addr = (uint8_t*)0x27000000;
 					swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin", theme_num);
-					DrawTopSplash(str, str, str);
+					DrawSplash(&tmpScreen, str);
+					memcpy(top1Screen.addr, tmpScreen.addr, top1Screen.size);
+					memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
 				}
 			}
 			else if (MyMenu->Current == 5)
@@ -368,15 +367,15 @@ void BootMenuInit(){
 	//SHOW ONLY SYSYNAND IF EMUNAND IS NOT FOUND
 	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/boot%c.bin",
 		cfgs[CFG_THEME].val.i, checkEmuNAND() ? L'0' : L'S');
-	DrawBottomSplash(str);
+	DrawSplash(&bottomScreen, str);
 	while (true) {
 		uint32_t pad_state = InputWait();
 		if ((pad_state & BUTTON_Y) && checkEmuNAND()) {
 			rxModeWithSplash(1);      //Boot emunand (only if found)
-			DrawBottomSplash(str);
+			DrawSplash(&bottomScreen, str);
 		} else if (pad_state & BUTTON_X) {
 			rxModeWithSplash(0); //Boot sysnand
-			DrawBottomSplash(str);
+			DrawSplash(&bottomScreen, str);
 		} else if (pad_state & BUTTON_B)
 			break;
 	}
@@ -388,7 +387,7 @@ void CreditsMenuInit(){
 	wchar_t str[_MAX_LFN];
 	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/credits.bin",
 		cfgs[CFG_THEME].val.i);
-	DrawBottomSplash(str);
+	DrawSplash(&bottomScreen, str);
 	WaitForButton(BUTTON_B);
 	OpenAnimation();
 }

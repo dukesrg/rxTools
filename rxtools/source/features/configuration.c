@@ -460,7 +460,7 @@ int CheckInstallationData(){
 }
 
 void InstallConfigData(){
-	wchar_t path[_MAX_LFN], pathL[_MAX_LFN], pathR[_MAX_LFN];
+	wchar_t path[_MAX_LFN];
 
 	if(CheckInstallationData() == 0)
 		return;
@@ -470,22 +470,25 @@ void InstallConfigData(){
 
 	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg0TOP.bin",
 		cfgs[CFG_THEME].val.i);
-	DrawTopSplash(path, path, path);
+	DrawSplash(&top1Screen, path);
+	DrawSplash(&top2Screen, path);
 	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg0.bin",
 		cfgs[CFG_THEME].val.i);
-	DrawBottomSplash(path);
+	DrawSplash(&bottomScreen, path);
 
 	int res = InstallData();
 	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg1%c.bin",
 		cfgs[CFG_THEME].val.i, res == 0 ? 'O' : 'E');
-	DrawBottomSplash(path);
+	DrawSplash(&bottomScreen, path);
 	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin",
 		cfgs[CFG_THEME].val.i);
-	swprintf(pathL, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin",
+	DrawSplash(&top1Screen, path);
+	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin",
 		cfgs[CFG_THEME].val.i);
-	swprintf(pathR, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin",
+	DrawSplash(&top1Screen, path);
+	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin",
 		cfgs[CFG_THEME].val.i);
-	DrawTopSplash(path, pathL, pathR);
+	DrawSplash(&top2Screen, path);
 
 	InputWait();
 }

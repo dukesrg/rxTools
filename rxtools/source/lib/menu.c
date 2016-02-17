@@ -58,9 +58,22 @@ void MenuShow(){
 	}*/
 
 	//NEW GUI:
+	/*
 	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/%ls",
 		cfgs[CFG_THEME].val.i, MyMenu->Option[MyMenu->Current].gfx_splash);
 	DrawBottomSplash(str);
+	*/
+	//NEW TEXT GUI :)
+	Screen tmpScreen = bottomScreen;
+	tmpScreen.addr = (uint8_t*)0x27000000;
+	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/%ls",
+		cfgs[CFG_THEME].val.i, MyMenu->Option[MyMenu->Current].gfx_splash);
+	DrawSplash(&tmpScreen, str);
+	DrawStringRect(&tmpScreen, MyMenu->Name, 0, 0, font24.h, 0, 0, BLACK, RGB(0, 0x8d, 0xc5), &font24);
+	for (int i = 0; i < MyMenu->nEntryes; i++)
+//		DrawStringRect(&tmpScreen, i == MyMenu->Current ? strings[STR_CURSOR] : strings[STR_NO_CURSOR], 0, x + font16.dw*(ConsoleGetSpacing() - 1), (i)* font16.dw + y + font16.dw*(ConsoleGetSpacing() + 1), 0, 0, ConsoleGetSpecialColor(), ConsoleGetBackgroundColor(), &font16);
+		DrawStringRect(&tmpScreen, MyMenu->Option[i].Str, 0, 0, font24.h + font16.h + font16.h * i, tmpScreen.w / 2, 0, i == MyMenu->Current ? BLACK : RGB(0, 0x8d, 0xc5), i == MyMenu->Current ? RGB(0, 0x8d, 0xc5) : TRANSPARENT, &font16);
+	memcpy(bottomScreen.addr, tmpScreen.addr, bottomScreen.size);
 }
 
 void MenuNextSelection(){

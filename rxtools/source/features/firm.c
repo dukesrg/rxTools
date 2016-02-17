@@ -192,7 +192,7 @@ int rxMode(int emu)
 
 			swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
 				cfgs[CFG_THEME].val.i);
-			DrawBottomSplash(path);
+			DrawSplash(&bottomScreen, path);
 		}
 	} else
 		sector = 0;
@@ -278,7 +278,7 @@ void rxModeWithSplash(int emu)
 
 	swprintf(s, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
 		cfgs[CFG_THEME].val.i);
-	DrawBottomSplash(s);
+	DrawSplash(&bottomScreen, s);
 	rxMode(emu);
 }
 

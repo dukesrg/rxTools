@@ -91,15 +91,14 @@ typedef enum{
 //void DrawClearScreenAll(void);
 void DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
 void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font);
+void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color, uint32_t bgcolor, FontMetrics *font);
 //void DrawPixel(uint8_t *screen, uint32_t x, uint32_t y, uint32_t color);
 //uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y);
 //void Debug(const char *format, ...);
 
-void DrawSplash(uint8_t *screen, TCHAR splash_file[]);
-void DrawBottomSplash(TCHAR splash_file[]);
-void DrawTopSplash(TCHAR splash_file[], TCHAR splash_fileL[], TCHAR splash_fileR[]);
+void DrawSplash(Screen *screen, TCHAR *splash_file);
 void SplashScreen();
-void DrawFadeScreen(uint8_t *screen, uint16_t Width, uint16_t Height, uint32_t f);
+void DrawFadeScreen(Screen *screen, uint32_t f);
 void fadeOut();
 void OpenAnimation();
 //Unused functions.
