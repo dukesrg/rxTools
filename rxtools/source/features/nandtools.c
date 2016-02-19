@@ -48,14 +48,14 @@ static struct {
 };
 
 static Menu CoolFilesMenu = {
-	L"Choose the file to work on",
+	"Choose the file to work on",
 	.Option = (MenuEntry[nCoolFiles]){
-		{ L" movable.sed", &SelectFile, L"fil0.bin" },
-		{ L" SecureInfo_A", &SelectFile, L"fil1.bin" },
-		{ L" LocalFriendCodeSeed_B", &SelectFile, L"fil2.bin" },
-		{ L" rand_seed", &SelectFile, L"fil3.bin" },
-		{ L" ticket.db", &SelectFile, L"fil4.bin" },
-		{ L" import.db", &SelectFile, L"fil5.bin" },
+		{ " movable.sed", &SelectFile, L"fil0.bin" },
+		{ " SecureInfo_A", &SelectFile, L"fil1.bin" },
+		{ " LocalFriendCodeSeed_B", &SelectFile, L"fil2.bin" },
+		{ " rand_seed", &SelectFile, L"fil3.bin" },
+		{ " ticket.db", &SelectFile, L"fil4.bin" },
+		{ " import.db", &SelectFile, L"fil5.bin" },
 	},
 	nCoolFiles,
 	0,

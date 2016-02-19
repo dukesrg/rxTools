@@ -35,7 +35,6 @@
 #include "configuration.h"
 #include "lang.h"
 #include "AdvancedFileManager.h"
-#include "lang.h"
 
 static void ShutDown(int arg){
 	i2cWriteRegister(I2C_DEV_MCU, 0x20, (arg) ? (uint8_t)(1<<0):(uint8_t)(1<<2));
@@ -43,14 +42,14 @@ static void ShutDown(int arg){
 }
 
 static Menu DecryptMenu = {
-	L"Decryption Options",
+	"Decryption Options",
 	.Option = (MenuEntry[6]){
-		{ L" Decrypt CTR Titles", &CTRDecryptor, L"dec0.bin" },
-		{ L" Decrypt Title Keys", &DecryptTitleKeys, L"dec1.bin" },
-		{ L" Decrypt encTitleKeys.bin", &DecryptTitleKeyFile, L"dec2.bin" },
-		{ L" Generate Xorpads", &PadGen, L"dec3.bin" },
-		{ L" Decrypt partitions", &DumpNandPartitions, L"dec4.bin" },
-		{ L" Generate fat16 Xorpad", &GenerateNandXorpads, L"dec5.bin" },
+		{ " Decrypt CTR Titles", &CTRDecryptor, L"dec0.bin" },
+		{ " Decrypt Title Keys", &DecryptTitleKeys, L"dec1.bin" },
+		{ " Decrypt encTitleKeys.bin", &DecryptTitleKeyFile, L"dec2.bin" },
+		{ " Generate Xorpads", &PadGen, L"dec3.bin" },
+		{ " Decrypt partitions", &DumpNandPartitions, L"dec4.bin" },
+		{ " Generate fat16 Xorpad", &GenerateNandXorpads, L"dec5.bin" },
 	},
 	6,
 	0,
@@ -58,11 +57,11 @@ static Menu DecryptMenu = {
 };
 
 static Menu DumpMenu = {
-	L"Dumping Options",
+	"Dumping Options",
 	.Option = (MenuEntry[3]){
-		{ L" Create NAND dump", &NandDumper, L"dmp0.bin" },
-		{ L" Dump System Titles", &DumpNANDSystemTitles, L"dmp1.bin" },
-		{ L" Dump NAND Files", &dumpCoolFiles, L"dmp2.bin" },
+		{ " Create NAND dump", &NandDumper, L"dmp0.bin" },
+		{ " Dump System Titles", &DumpNANDSystemTitles, L"dmp1.bin" },
+		{ " Dump NAND Files", &dumpCoolFiles, L"dmp2.bin" },
 	},
 	3,
 	0,
@@ -70,10 +69,10 @@ static Menu DumpMenu = {
 };
 
 static Menu InjectMenu = {
-	L"Injection Options",
+	"Injection Options",
 	.Option = (MenuEntry[2]){
-		{ L" Inject EmuNAND partitions", &RebuildNand, L"inj0.bin" },
-		{ L" Inject NAND Files", &restoreCoolFiles, L"inj1.bin" },
+		{ " Inject EmuNAND partitions", &RebuildNand, L"inj0.bin" },
+		{ " Inject NAND Files", &restoreCoolFiles, L"inj1.bin" },
 	},
 	2,
 	0,
@@ -81,13 +80,13 @@ static Menu InjectMenu = {
 };
 
 static Menu AdvancedMenu = {
-	L"Other Options",
+	"Other Options",
 	.Option = (MenuEntry[5]){
-		{ L" Downgrade MSET on SysNAND", &downgradeMSET, L"adv0.bin" },
-		{ L" Install FBI over H&S App", &installFBI, L"adv1.bin" },
-		{ L" Restore original H&S App", &restoreHS, L"adv2.bin" },
-		{ L" Launch PastaMode", (void(*)())&PastaMode, L"adv3.bin" },
-		{ L" Advanced File Manager", &AdvFileManagerMain, L"adv4.bin" },
+		{ " Downgrade MSET on SysNAND", &downgradeMSET, L"adv0.bin" },
+		{ " Install FBI over H&S App", &installFBI, L"adv1.bin" },
+		{ " Restore original H&S App", &restoreHS, L"adv2.bin" },
+		{ " Launch PastaMode", (void(*)())&PastaMode, L"adv3.bin" },
+		{ " Advanced File Manager", &AdvFileManagerMain, L"adv4.bin" },
 	},
 	5,
 	0,
@@ -95,17 +94,17 @@ static Menu AdvancedMenu = {
 };
 
 static Menu SettingsMenu = {
-	L"           SETTINGS",
+	"           SETTINGS",
 	.Option = (MenuEntry[9]){
-		{ L"Force UI boot               ", NULL, L"app.bin" },
-		{ L"Selected theme:             ", NULL, L"app.bin" },
-		{ L"Random theme:               ", NULL, L"app.bin" },
-		{ L"Show AGB_FIRM BIOS:         ", NULL, L"app.bin" },
-		{ L"Enable 3D UI:               ", NULL, L"app.bin" },
-		{ L"Autoboot into sysNAND:      ", NULL, L"app.bin" },
-		{ L"Console language:           ", NULL, L"app.bin" },
-		{ L"Reboot                      ", NULL, L"app.bin" },
-		{ L"Shutdown                    ", NULL, L"app.bin" },
+		{ "Force UI boot               ", NULL, L"app.bin" },
+		{ "Selected theme:             ", NULL, L"app.bin" },
+		{ "Random theme:               ", NULL, L"app.bin" },
+		{ "Show AGB_FIRM BIOS:         ", NULL, L"app.bin" },
+		{ "Enable 3D UI:               ", NULL, L"app.bin" },
+		{ "Autoboot into sysNAND:      ", NULL, L"app.bin" },
+		{ "Console language:           ", NULL, L"app.bin" },
+		{ "Reboot                      ", NULL, L"app.bin" },
+		{ "Shutdown                    ", NULL, L"app.bin" },
 	},
 	9,
 	0,
@@ -205,7 +204,7 @@ void SettingsMenuInit(){
 
 	while (true) {
 		//UPDATE SETTINGS GUI
-		swprintf(MyMenu->Name, CONSOLE_MAX_TITLE_LENGTH+1, lang("SETTINGS"));
+/*		swprintf(MyMenu->Name, CONSOLE_MAX_TITLE_LENGTH+1, lang("SETTINGS"));
 		swprintf(MyMenu->Option[0].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("FORCE_UI_BOOT"), lang(cfgs[CFG_GUI].val.i ? " +" : " -"));
 		swprintf(MyMenu->Option[1].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("SELECTED_THEME"), cfgs[CFG_THEME].val.i + '0');
 		swprintf(MyMenu->Option[2].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("RANDOM_THEME"), lang(cfgs[CFG_RANDOM].val.i ? " +" : " -"));
@@ -215,7 +214,7 @@ void SettingsMenuInit(){
 		swprintf(MyMenu->Option[6].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("MENU_LANGUAGE"), lang("LANG_NAME"));
 		swprintf(MyMenu->Option[7].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("Shutdown"));
 		swprintf(MyMenu->Option[8].Str, CONSOLE_MAX_LINE_LENGTH+1, lang("Reboot"));
-		MenuRefresh();
+*/		MenuRefresh();
 
 		uint32_t pad_state = InputWait();
 		if (pad_state & BUTTON_DOWN)
@@ -393,15 +392,15 @@ void CreditsMenuInit(){
 }
 
 static Menu MainMenu = {
-		L"rxTools - Roxas75 [v3.0]",
+		"rxTools - Roxas75 [v3.0]",
 		.Option = (MenuEntry[7]){
-			{ L" Launch rxMode", &BootMenuInit, L"menu0.bin" },
-			{ L" Decryption Options", &DecryptMenuInit, L"menu1.bin" },
-			{ L" Dumping Options", &DumpMenuInit, L"menu2.bin" },
-			{ L" Injection Options", &InjectMenuInit, L"menu3.bin" },
-			{ L" Advanced Options", &AdvancedMenuInit, L"menu4.bin" },
-			{ L" Settings", &SettingsMenuInit, L"menu5.bin" },
-			{ L" Credits", &CreditsMenuInit, L"menu6.bin" },
+			{ " Launch rxMode", &BootMenuInit, L"menu0.bin" },
+			{ " Decryption Options", &DecryptMenuInit, L"menu1.bin" },
+			{ " Dumping Options", &DumpMenuInit, L"menu2.bin" },
+			{ " Injection Options", &InjectMenuInit, L"menu3.bin" },
+			{ " Advanced Options", &AdvancedMenuInit, L"menu4.bin" },
+			{ " Settings", &SettingsMenuInit, L"menu5.bin" },
+			{ " Credits", &CreditsMenuInit, L"menu6.bin" },
 		},
 		7,
 		0,

@@ -28,14 +28,14 @@
 #define MENU_STATE_COUNT	4
 
 typedef struct{
-	wchar_t Str[CONSOLE_MAX_LINE_LENGTH+1];
+	char Str[CONSOLE_MAX_LINE_LENGTH+1];
 	void( *Func)();
 	wchar_t *gfx_splash;
 	TextColors color[MENU_STATE_COUNT];
 } MenuEntry;
 
 typedef struct{
-	wchar_t Name[CONSOLE_MAX_LINE_LENGTH+1];
+	char Name[CONSOLE_MAX_LINE_LENGTH+1];
 	MenuEntry *Option;
 	int nEntryes;
 	int Current;    //The current selected option
@@ -56,5 +56,13 @@ extern bool agb_bios;
 extern bool theme_3d;
 extern unsigned char language;
 extern Menu* MyMenu;
+
+int menuLoad();
+int menuTry(int targetposition, int currentposition);
+int menuLevel(int pos);
+int menuPrev(int pos);
+int menuNext(int pos);
+int menuUp(int pos);
+int menuDown(int pos);
 
 #endif

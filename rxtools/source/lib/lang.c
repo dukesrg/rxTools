@@ -339,11 +339,11 @@ int setLang(char *langFile)
 
 	swprintf(path, _MAX_LFN, L"%ls/%s", langPath, langFile);
 	if (!FileOpen(&fd, path, 0))
-		return 1;
+		return -1;
 
 	len = FileGetSize(&fd);
 	if (len > sizeof(js))
-		return 1;
+		return -1;
 
 	FileRead(&fd, js, len, 0);
 	FileClose(&fd);

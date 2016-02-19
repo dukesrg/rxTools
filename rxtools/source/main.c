@@ -203,8 +203,13 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);
 
+	r = menuLoad();
+//	if (r < 0)
+//		warn(L"Failed to load gui: %d\n", r);
+
 	drawTop();
 
+//	if (r < 0 || (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1))
 	if (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1)
 		rxMode(cfgs[CFG_ABSYSN].val.i ? 0 : 1);
 
