@@ -73,12 +73,12 @@ typedef struct{
 } FontMetrics;
 
 FontMetrics font16, font24;
-/*
+
 typedef struct{
 	uint32_t fg;
 	uint32_t bg;
-} TextColor;
-*/
+} TextColors;
+
 /*
 typedef enum{
 	JUSTIFY_LEFT,
@@ -90,8 +90,8 @@ typedef enum{
 //void ClearScreen(Screen *screen, uint32_t color);
 //void DrawClearScreenAll(void);
 void DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
-void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font);
-void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color, uint32_t bgcolor, FontMetrics *font);
+void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font);
+void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, TextColors *color, FontMetrics *font);
 //void DrawPixel(uint8_t *screen, uint32_t x, uint32_t y, uint32_t color);
 //uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y);
 //void Debug(const char *format, ...);

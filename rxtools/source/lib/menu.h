@@ -21,16 +21,22 @@
 #include <stdbool.h>
 #include <wchar.h>
 #include "console.h"
+#include "draw.h"
+
+#define MENU_MASK_SELECTED	0x01
+#define MENU_MASK_DISABLED	0x02
+#define MENU_STATE_COUNT	4
 
 typedef struct{
 	wchar_t Str[CONSOLE_MAX_LINE_LENGTH+1];
-	void(* Func)();
-	wchar_t* gfx_splash;
-}MenuEntry;
+	void( *Func)();
+	wchar_t *gfx_splash;
+	TextColors color[MENU_STATE_COUNT];
+} MenuEntry;
 
 typedef struct{
 	wchar_t Name[CONSOLE_MAX_LINE_LENGTH+1];
-	MenuEntry* Option;
+	MenuEntry *Option;
 	int nEntryes;
 	int Current;    //The current selected option
 	bool Showed;    //Useful, to not refresh everything everytime

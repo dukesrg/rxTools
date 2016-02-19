@@ -58,7 +58,7 @@ void DrawClearScreenAll(void) {
 	current_y = 0;
 }
 
-static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
+static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font)
 {
 	uint32_t char_width = character < font->dwstart ? font->sw : font->dw;
 	if (screen->w < x + char_width || y < font->h)
@@ -74,15 +74,15 @@ static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uin
 		uint8_t b;
 	} fore, back;
 
-	fore.a = color >> 24;
-	fore.r = color >> 16;
-	fore.g = color >> 8;
-	fore.b = color;
+	fore.a = color->fg >> 24;
+	fore.r = color->fg >> 16;
+	fore.g = color->fg >> 8;
+	fore.b = color->fg;
 
-	back.a = bgcolor >> 24;
-	back.r = bgcolor >> 16;
-	back.g = bgcolor >> 8;
-	back.b = bgcolor;
+	back.a = color->bg >> 24;
+	back.r = color->bg >> 16;
+	back.g = color->bg >> 8;
+	back.b = color->bg;
 
 	uint32_t charOffs = character * font->dw * font->h;
 	uint32_t *glyph = font->addr + (charOffs >> 5);
@@ -114,12 +114,12 @@ static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uin
 	return char_width;
 }
 
-void DrawSubString(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
+void DrawSubString(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font)
 {
 	uint32_t len = wcslen(str);
 	if (count == 0 || count > len)
 		count = len;
-	for (uint32_t i = 0; i < count; x += DrawCharacter(screen, str[i++], x, y, color, bgcolor, font));
+	for (uint32_t i = 0; i < count; x += DrawCharacter(screen, str[i++], x, y, color, font));
 }
 
 uint32_t GetStringWidth(const wchar_t *str, uint32_t count, FontMetrics *font)
@@ -132,7 +132,7 @@ uint32_t GetStringWidth(const wchar_t *str, uint32_t count, FontMetrics *font)
 	return len;
 }
 
-void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t color, uint32_t bgcolor, FontMetrics *font)
+void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, TextColors *color, FontMetrics *font)
 {
 	uint32_t len = wcslen(str);
 	if (count == 0 || count > len)
@@ -161,20 +161,21 @@ void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t
 			j = k;                                                                                                	
 		 //add trailing spaces, if any, to draw non-transparent background color and remove trailing word part or added spaces that won't fit
 		for (j += wcsspn(str + i + j, L" "); GetStringWidth(str + i, j, font) > w; j--);
-		DrawSubString(screen, str + i, j, x, y, color, bgcolor, font);
+		DrawSubString(screen, str + i, j, x, y, color, font);
 		i += j + wcsspn(str + i + j, L" "); //skip the rest spaces for the next line start
 		y += font->h;
 	}
 }
 
-void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor, FontMetrics *font)
+void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font)
 {
-	DrawStringRect(screen, str, 0, x, y, 0, 0, color, bgcolor, font);
+	DrawStringRect(screen, str, 0, x, y, 0, 0, color, font);
 }
 
 void DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
 {
-	DrawStringRect(screen, str, 0, x, y, 0, 0, color, bgcolor, &font16);
+	TextColors c = {color, bgcolor};
+	DrawStringRect(screen, str, 0, x, y, 0, 0, &c, &font16);
 }
 
 /*//[Unused]
