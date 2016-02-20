@@ -31,6 +31,7 @@
 #include "configuration.h"
 #include "log.h"
 #include "AdvancedFileManager.h"
+#include "json.h"
 
 #define FONT_NAME "font.bin"
 
@@ -198,14 +199,18 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	readCfg();
 
 	r = loadStrings();
-	if (fontIsLoaded)
-		r = setLang(cfgs[CFG_LANG].val.s);
+	if (fontIsLoaded) {
+//		r = setLang(cfgs[CFG_LANG].val.s);
+		wchar_t path[_MAX_LFN];
+		swprintf(path, _MAX_LFN, L"%ls/%s", langPath, cfgs[CFG_LANG].val.s);
+		r = jsonLoad(&langJson, path);
+	}
+
 	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);
 
-	r = menuLoad();
-//	if (r < 0)
-//		warn(L"Failed to load gui: %d\n", r);
+	if ((r = jsonLoad(&menuJson, menuPath)) <= 0)
+		warn(L"Failed to load gui: %d\n", r);
 
 	drawTop();
 
@@ -231,6 +236,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	}
 
 	OpenAnimation();
+	menuInit();
 	MenuInit(&MainMenu);
 	MenuShow();
 	mainLoop();

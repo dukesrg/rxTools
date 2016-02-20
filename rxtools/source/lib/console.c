@@ -91,10 +91,8 @@ void ConsoleShow(){
 	wchar_t str[_MAX_LFN];
 
 //	void *tmpscreen = (void*)0x27000000;
-	Screen tmpScreen = bottomScreen;
-	tmpScreen.addr = (uint8_t*)0x27000000;
 	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/app.bin", cfgs[CFG_THEME].val.i);
-	DrawSplash(&tmpScreen, str);
+	DrawSplash(&bottomTmpScreen, str);
 	if(!consoleInited) return;
 	int titley = 2 * font16.h;
 
@@ -113,15 +111,15 @@ void ConsoleShow(){
 	//}
 	int titlespace = 2 * font16.h - 2 * BorderWidth;
 	TextColors c = {TextColor, ConsoleGetBackgroundColor()};
-	DrawStringRect(&tmpScreen, consoletitle, 0, ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0, &c, &font24);
+	DrawStringRect(&bottomTmpScreen, consoletitle, 0, ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0, &c, &font24);
 
 	for (int i = 0; i < CONSOLE_MAX_LINES; i++)
-		DrawString(&tmpScreen, console[i],
+		DrawString(&bottomTmpScreen, console[i],
 			ConsoleX + font16.sw * Spacing,
 			i * font16.h + ConsoleY + 15 + font16.h * (Spacing - 1) + titley,
 			TextColor, ConsoleGetBackgroundColor());
 
-	memcpy(bottomScreen.addr, tmpScreen.addr, bottomScreen.size);
+	memcpy(bottomScreen.addr, bottomTmpScreen.addr, bottomScreen.size);
 }
 
 void ConsoleFlush()

@@ -15,8 +15,7 @@
 * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-#ifndef LOG_H
-#define LOG_H
+#pragma once
 
 typedef enum {
 	ll_fatal = 0,
@@ -31,5 +30,3 @@ void set_loglevel(loglevel_t ll);
 void log_(loglevel_t ll, const char* file, int line, const char* fmt, ...);
 
 #define log(ll, fmt, ...) log_(ll, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
-
-#endif //LOG_H

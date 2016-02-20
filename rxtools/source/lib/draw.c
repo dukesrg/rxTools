@@ -27,13 +27,15 @@
 
 uint32_t current_y = 1;
 
-uint8_t *tmpscreen = (uint8_t*)0x26000000;
+Screen top1Screen = {400, 240, 3, 400*240*3, (uint8_t*)0x080FFFC0};
+Screen top2Screen = {400, 240, 3, 400*240*3, (uint8_t*)0x080FFFC8};
+Screen topTmpScreen = {400, 240, 3, 400*240*3, (uint8_t*)0x26000000};
+Screen bottomScreen = {320, 240, 3, 320*240*3, (uint8_t*)0x080FFFD0};
+Screen bottomTmpScreen = {320, 240, 3, 320*240*3, (uint8_t*)0x27000000};
+
 extern uint32_t _binary_font_ascii_bin_start[];
 FontMetrics font16 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //default font metrics
 FontMetrics font24 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //use default in case unicode glyps won't be loaded
-Screen top1Screen = {320, 240, 3, 320*240*3, (uint8_t*)0x080FFFC0};
-Screen top2Screen = {400, 240, 3, 400*240*3, (uint8_t*)0x080FFFC8};
-Screen bottomScreen = {400, 240, 3, 400*240*3, (uint8_t*)0x080FFFD0};
 
 void ClearScreen(Screen *screen, uint32_t color)
 {

@@ -2,32 +2,32 @@
 	"menu":{
 		"MENU1":{
 			"caption":"Boot",
-			"description":"",
+			"description":"Boot options.",
 			"function":"&BootMenuInit",
 			"MENU1_1":{
 				"caption":"rxMode emuNAND",
-				"description":"Apply patches and reboot the console into rxMode on emuNand",
+				"description":"Apply patches and reboot the console into rxMode on emuNand.",
 				"function":""
 			},"MENU1_2":{
 				"caption":"rxMode sysNAND",
-				"description":"Apply patches and reboot the console into rxMode on sysNand",
+				"description":"Apply patches and reboot the console into rxMode on sysNand.",
 				"function":""
 			},"MENU1_3":{
           			"caption":"PastaMode",
-				"description":"Patches signature checks and load in sysNAND with GBA and DSi support..",
+				"description":"Patches signature checks and load in sysNAND with GBA and DSi support.",
 				"function":"(void(*)())&PastaMode"
 			},"MENU1_4":{
 				"caption":"Reboot",
-				"description":"Reboot the console",
+				"description":"Reboot the console.",
 				"function":""
 			},"MENU1_5":{
 				"caption":"Shutdown",
-				"description":"Turn off the console",
+				"description":"Turn off the console.",
 				"function":""
 			}
 		},"MENU2":{
-			"caption":"Decryption Options",
-			"description":"",
+			"caption":"Decrypt",
+			"description":"Decryption options.",
 			"function":"&DecryptMenuInit",
 			"MENU2_1":{
 				"caption":"Decrypt CTR Titles",
@@ -51,12 +51,12 @@
 				"function":"&DumpNandPartitions"
 			},"MENU2_6":{
 				"caption":"Generate fat16 Xorpad",
-				"description":"Generate XORpad needed to decrypt main NAND partition",
+				"description":"Generate XORpad needed to decrypt main NAND partition.",
 				"function":"GenerateNandXorpads"
 			}
 		},"MENU3":{
 			"caption":"Dump",
-			"description":"Dumping options",
+			"description":"Dumping options.",
 			"function":"&DumpMenuInit",
 			"MENU3_1":{
 				"caption":"Create NAND dump",
@@ -99,7 +99,7 @@
 			}
 		},"MENU5":{
 			"caption":"Advanced",
-			"description":"Advanced options",
+			"description":"Advanced options.",
 			"function":"&AdvancedMenuInit",
 			"MENU5_1":{
 				"caption":"Downgrade MSET on SysNAND",
@@ -120,7 +120,7 @@
 			}
 		},"MENU6":{
 			"caption":"Settings",
-			"description":"",
+			"description":"Change settings.",
 			"function":"&SettingsMenuInit",
 			"MENU6_1":{
 				"caption":"Force UI boot",
@@ -153,7 +153,7 @@
 			}
 		},"MENU7":{
 			"caption":"Credits",
-			"description":"",
+			"description":"Show credits.",
 			"function":""
 		}
 	}

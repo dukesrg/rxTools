@@ -15,8 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef MY_MENU
-#define MY_MENU
+#pragma once
 
 #include "hid.h"
 #include "draw.h"
@@ -35,6 +34,7 @@
 #include "configuration.h"
 #include "lang.h"
 #include "AdvancedFileManager.h"
+#include "json.h"
 
 static void ShutDown(int arg){
 	i2cWriteRegister(I2C_DEV_MCU, 0x20, (arg) ? (uint8_t)(1<<0):(uint8_t)(1<<2));
@@ -322,8 +322,14 @@ void SettingsMenuInit(){
 				wcstombs(cfgs[CFG_LANG].val.s, langs[curLang],
 					CFG_STR_MAX_LEN);
 				switchStrings();
-				if (fontIsLoaded)
-					setLang(cfgs[CFG_LANG].val.s);
+				if (fontIsLoaded) {
+//					setLang(cfgs[CFG_LANG].val.s);
+					wchar_t path[_MAX_LFN];
+					swprintf(path, _MAX_LFN, L"%ls/%s", langPath, cfgs[CFG_LANG].val.s);
+					langJson.len = LANG_JSON_SIZE;
+					langJson.count = LANG_JSON_TOKENS;
+					jsonLoad(&langJson, path);
+				}
 			}
 			else if (MyMenu->Current == 7)
 			{
@@ -406,5 +412,3 @@ static Menu MainMenu = {
 		0,
 		0
 	};
-
-#endif

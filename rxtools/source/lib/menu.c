@@ -25,16 +25,17 @@
 #include "hid.h"
 #include "jsmn/jsmn.h"
 #include "fs.h"
+#include "json.h"
 
 Menu* MyMenu;
 Menu *MenuChain[100];
 int openedMenus = 0;
 int saved_index = 0;
 
-#define TOKEN_NUM_M 0x200
-char js_m[0x2000];
-jsmntok_t tok_m[TOKEN_NUM_M];
-int r_m;
+char jsm[LANG_JSON_SIZE];
+jsmntok_t tokm[LANG_JSON_TOKENS];
+Json menuJson = {jsm, MENU_JSON_SIZE, tokm, MENU_JSON_TOKENS};
+const TCHAR *menuPath = _T("") SYS_PATH "/gui.json";
 
 #define MENU_MAX_LEVELS 4
 #define MENU_LEVEL_BIT_WIDTH 8*sizeof(unsigned int)/MENU_MAX_LEVELS
@@ -50,6 +51,8 @@ typedef enum{
 	APPLY_TARGET
 } menuapply;
 
+int menuPosition;
+int idescr, ihead;
 
 void MenuInit(Menu* menu){
 	MyMenu = menu;
@@ -57,11 +60,15 @@ void MenuInit(Menu* menu){
 	if (openedMenus == 0) MyMenu->Current = saved_index; //if we're entering the main menu, load the index
 	else  MyMenu->Current = 0;
     MyMenu->Showed = 0;
-	ConsoleSetTitle(lang(MyMenu->Name));
+	ConsoleSetTitle(lang(MyMenu->Name, -1));
 	for(int i = 0; i < MyMenu->nEntryes; i++){
-		ConsoleAddText(lang(MyMenu->Option[i].Str));
+		ConsoleAddText(lang(MyMenu->Option[i].Str, -1));
 	}
 }
+
+TextColors itemColor = {WHITE, TRANSPARENT},
+	selectedColor = {BLACK, WHITE},
+	descriptionColor = {YELLOW, TRANSPARENT};
 
 void MenuShow(){
 	wchar_t str[_MAX_LFN];
@@ -86,20 +93,19 @@ void MenuShow(){
 	DrawBottomSplash(str);
 	*/
 	//NEW TEXT GUI :)
-	TextColors itemColor = {WHITE, TRANSPARENT},
-		selectedColor = {BLACK, WHITE};
-	Screen tmpScreen = bottomScreen;
-	tmpScreen.addr = (uint8_t*)0x27000000;
 	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/%ls",
 		cfgs[CFG_THEME].val.i, MyMenu->Option[MyMenu->Current].gfx_splash);
-	DrawSplash(&tmpScreen, str);
-	DrawStringRect(&tmpScreen, lang(MyMenu->Name), 0, 0, font24.h, 0, 0, &selectedColor, &font24);
+	DrawSplash(&bottomTmpScreen, str);
+	DrawStringRect(&bottomTmpScreen, lang(MyMenu->Name, -1), 0, 0, font24.h, 0, 0, &selectedColor, &font24);
+//	DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[ihead].start, menuJson.tok[ihead].end - menuJson.tok[ihead].start), 0, 0, font24.h, 0, 0, &descriptionColor, &font24);
 	for (int i = 0; i < MyMenu->nEntryes; i++)
-		DrawStringRect(&tmpScreen, lang(MyMenu->Option[i].Str), 0, 0, font24.h + font16.h + font16.h * i, tmpScreen.w / 2, 0, i == MyMenu->Current ? &selectedColor : &itemColor, &font16);
-	memcpy(bottomScreen.addr, tmpScreen.addr, bottomScreen.size);
+		DrawStringRect(&bottomTmpScreen, lang(MyMenu->Option[i].Str, -1), 0, 0, font24.h + font16.h + font16.h * i, bottomTmpScreen.w / 2, 0, i == MyMenu->Current ? &selectedColor : &itemColor, &font16);
+	DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[idescr].start, menuJson.tok[idescr].end - menuJson.tok[idescr].start), 0, bottomTmpScreen.w / 2, font24.h + font16.h, 0, 0, &descriptionColor, &font16);
+	memcpy(bottomScreen.addr, bottomTmpScreen.addr, bottomScreen.size);
 }
 
 void MenuNextSelection(){
+	menuPosition = menuNext(menuPosition);
 	if(MyMenu->Current + 1 < MyMenu->nEntryes){
 		MyMenu->Current++;
 	}else{
@@ -109,6 +115,7 @@ void MenuNextSelection(){
 }
 
 void MenuPrevSelection(){
+	menuPosition = menuPrev(menuPosition);
 	if(MyMenu->Current > 0){
 		MyMenu->Current--;
 	}else{
@@ -117,6 +124,7 @@ void MenuPrevSelection(){
 }
 
 void MenuSelect(){
+	menuPosition = menuDown(menuPosition);
 	if(MyMenu->Option[MyMenu->Current].Func != NULL){
 		if (openedMenus == 0)saved_index = MyMenu->Current; //if leaving the main menu, save the index
 		MenuChain[openedMenus++] = MyMenu;
@@ -127,6 +135,7 @@ void MenuSelect(){
 }
 
 void MenuClose(){
+	menuPosition = menuUp(menuPosition);
 	if (openedMenus > 0){
 		OpenAnimation();
 	}
@@ -135,9 +144,9 @@ void MenuClose(){
 void MenuRefresh(){
 	ConsoleInit();
 	MyMenu->Showed = 0;
-	ConsoleSetTitle(lang(MyMenu->Name));
+	ConsoleSetTitle(lang(MyMenu->Name, -1));
 	for (int i = 0; i < MyMenu->nEntryes; i++){
-		print(L"%ls %ls\n", i == MyMenu->Current ? strings[STR_CURSOR] : strings[STR_NO_CURSOR], MyMenu->Option[i].Str);
+		print(L"%ls %ls\n", i == MyMenu->Current ? strings[STR_CURSOR] : strings[STR_NO_CURSOR], lang(MyMenu->Option[i].Str, -1));
 	}
 	int x = 0, y = 0;
 	ConsoleGetXY(&x, &y);
@@ -148,40 +157,24 @@ void MenuRefresh(){
 }
 
 //New menu system
-int menuLoad()
-{
-	jsmn_parser p;
-	int len;
-	File fd;
 
-	if (!FileOpen(&fd, L"/rxTools/sys/gui.json", 0))
-		return -1;
-
-	len = FileGetSize(&fd);
-	if (len > sizeof(js_m))
-		return -1;
-
-	FileRead(&fd, js_m, len, 0);
-	FileClose(&fd);
-
-	jsmn_init(&p);
-	r_m = jsmn_parse(&p, js_m, len, tok_m, TOKEN_NUM_M);
-	return r_m;
+void menuInit(){
+	menuPosition = menuDown(0);
 }
 
-int menuParse(jsmntok_t *t, size_t count, objtype type, int menulevel, int menuposition, int targetposition, int *foundposition) {
-	if (count == 0)
+int menuParse(int s, objtype type, int menulevel, int menuposition, int targetposition, int *foundposition) {
+	if (s == menuJson.count)
 		return 0;
-	if (t->type == JSMN_PRIMITIVE || t->type == JSMN_STRING)
+	if (menuJson.tok[s].type == JSMN_PRIMITIVE || menuJson.tok[s].type == JSMN_STRING)
 		return 1;
-	else if (t->type == JSMN_OBJECT) {
+	else if (menuJson.tok[s].type == JSMN_OBJECT) {
 		int mask, i, j = 0, k;
 		menuapply apply = APPLY_NONE;
 		if (type == OBJ_MENU)
 			menulevel++;
-		for (i = 0; i < t->size; i++) {
+		for (i = 0; i < menuJson.tok[s].size; i++) {
 			j++;
-			if (t[j+1].type == JSMN_OBJECT && menulevel > 0){
+			if (menuJson.tok[s+j+1].type == JSMN_OBJECT && menulevel > 0){
 				menuposition += 1 << ((MENU_MAX_LEVELS - menulevel) * MENU_LEVEL_BIT_WIDTH);
 				mask = (0xffffffff << (8 * sizeof(unsigned int) - menulevel * MENU_LEVEL_BIT_WIDTH));
 				if((menuposition & mask) == (targetposition & mask)){
@@ -198,30 +191,33 @@ int menuParse(jsmntok_t *t, size_t count, objtype type, int menulevel, int menup
 			if(apply == APPLY_INHERIT && menuposition == targetposition)
 				apply = APPLY_TARGET;
 
-			switch (*(js_m + t[j].start)){
+			switch (menuJson.js[menuJson.tok[s+j].start]){
 				case 'c': //"caption"
 					j++;
-					if (apply == APPLY_TARGET || apply == APPLY_INHERIT)
+//					if (apply == APPLY_INHERIT)
+//						ihead = menuJson.count - count + j;
 //						printf("caption=%.*s\n", t[j].end - t[j].start, js+t[j].start);
 					break;
 				case 'd': //"description"
 					j++;
-					if (apply == APPLY_TARGET || apply == APPLY_INHERIT)
+					if (apply == APPLY_TARGET)
+//						idescr = menuJson.count - count + j;
+						idescr = s + j;
 //						printf("description=%.*s\n", t[j].end - t[j].start, js+t[j].start);
 					break;
 				case 'f': //"function"
 					j++;
-					if (apply == APPLY_TARGET || apply == APPLY_INHERIT)
+//					if (apply == APPLY_TARGET || apply == APPLY_INHERIT)
 //						printf("function=%.*s\n", t[j].end - t[j].start, js+t[j].start);
 					break;
 				case 'm': //"menu"
-					k = menuParse(t+j+1, count-j, OBJ_MENU, menulevel, menuposition, targetposition, foundposition);
+					k = menuParse(s+j+1, OBJ_MENU, menulevel, menuposition, targetposition, foundposition);
 					if (k == 0)
 						return 0;
 					j += k;
 					break;
 				default:
-					k = menuParse(t+j+1, count-j, type, menulevel, menuposition, targetposition, foundposition);
+					k = menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
 					if (k == 0)
 						return 0;
 					j += k;
@@ -230,10 +226,10 @@ int menuParse(jsmntok_t *t, size_t count, objtype type, int menulevel, int menup
 		if (menuposition >= targetposition)
 			return 0;
 		return j+1;
-	} else if (t->type == JSMN_ARRAY) {
+	} else if (menuJson.tok[s].type == JSMN_ARRAY) {
 		int i, j = 0;
-		for (i = 0; i < t->size; i++)
-			j += menuParse(t+j+1, count-j, type, menulevel, menuposition, targetposition, foundposition);
+		for (i = 0; i < menuJson.tok[s].size; i++)
+			j += menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
 		return j+1;
 	}
 	return 0;
@@ -241,9 +237,9 @@ int menuParse(jsmntok_t *t, size_t count, objtype type, int menulevel, int menup
 
 int menuTry(int targetposition, int currentposition) {
 	int foundposition = 0;
-	menuParse(tok_m, r_m, OBJ_NONE, 0, 0, targetposition, &foundposition);
+	menuParse(0, OBJ_NONE, 0, 0, targetposition, &foundposition);
 	if (foundposition == 0)
-		menuParse(tok_m, r_m, OBJ_NONE, 0, 0, currentposition, &foundposition);
+		menuParse(0, OBJ_NONE, 0, 0, currentposition, &foundposition);
 	return foundposition;
 }
 

@@ -15,8 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef CONSOLE_H
-#define CONSOLE_H
+#pragma once
 
 #include <stdarg.h>
 #include <wchar.h>
@@ -54,4 +53,3 @@ int ConsoleGetSpacing();
 
 void print(const wchar_t *format, ...);
 void vprint(const wchar_t *format, va_list va);
-#endif

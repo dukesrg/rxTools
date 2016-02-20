@@ -15,11 +15,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef LANG_H
-#define LANG_H
+#pragma once
 
 #include <wchar.h>
 #include "configuration.h"
+#include "json.h"
 
 #define STR_MAX_LEN 128
 
@@ -161,14 +161,17 @@ enum {
 };
 
 extern int fontIsLoaded;
-extern const wchar_t langPath[];
+extern const TCHAR *langPath;
 extern wchar_t strings[STR_NUM][STR_MAX_LEN];
 
 void preloadStringsA(void);
 void preloadStringsU(void);
 void switchStrings(void);
 int loadStrings(void);
-int setLang(char *langFile);
-wchar_t *lang(char *key);
 
-#endif
+#define LANG_JSON_SIZE		0x2000
+#define LANG_JSON_TOKENS	0x200
+
+extern Json langJson;
+
+wchar_t *lang(char *key, int keylen);

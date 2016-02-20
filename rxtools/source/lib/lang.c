@@ -26,7 +26,7 @@
 
 int fontIsLoaded = 0;
 wchar_t strings[STR_NUM][STR_MAX_LEN] = {};
-const wchar_t langPath[] = L"/rxTools/lang";
+const TCHAR *langPath = _T("/rxTools/lang");
 
 static const char *keys[STR_NUM] = {
 	[STR_LANG_NAME] = "LANG_NAME",
@@ -320,57 +320,38 @@ int loadStrings()
 	return 0;
 }
 
-//jsmn_parser plang;
-//TOKEN_NUM = 1 + STR_NUM * 2
-#define TOKEN_NUM 0x200
 #define STR_TRANS_CNT 8
 wchar_t wstr[STR_TRANS_CNT][STR_MAX_LEN];
 char str[STR_MAX_LEN];
-char js[0x2000];
-jsmntok_t tok[TOKEN_NUM];
-int r, itrans = 0;
+int itrans = 0;
 
-int setLang(char *langFile)
+char jsl[LANG_JSON_SIZE];
+jsmntok_t tokl[LANG_JSON_TOKENS];
+Json langJson = {jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
+
+wchar_t *lang(char *key, int keylen)
 {
-	wchar_t path[_MAX_LFN];
-	jsmn_parser p;
-	int len;
-	File fd;
-
-	swprintf(path, _MAX_LFN, L"%ls/%s", langPath, langFile);
-	if (!FileOpen(&fd, path, 0))
-		return -1;
-
-	len = FileGetSize(&fd);
-	if (len > sizeof(js))
-		return -1;
-
-	FileRead(&fd, js, len, 0);
-	FileClose(&fd);
-
-	jsmn_init(&p);
-	r = jsmn_parse(&p, js, len, tok, TOKEN_NUM);
-	return r;
-}
-
-wchar_t *lang(char *key)
-{
+	if (keylen < 0)
+		keylen = strlen(key);
 	int i, len;
-	for (i = 1; i < r; i++) {
-		len = tok[i].end - tok[i].start;
-		if (tok[i].type == JSMN_STRING && strlen(key) == len && memcmp(key, js + tok[i].start, len) == 0) {
+	for (i = 1; i < langJson.count; i++) {
+		len = langJson.tok[i].end - langJson.tok[i].start;
+		if (langJson.tok[i].type == JSMN_STRING && keylen == len && memcmp(key, langJson.js + langJson.tok[i].start, len) == 0) {
 			i++;
-			len = tok[i].end - tok[i].start;
+			len = langJson.tok[i].end - langJson.tok[i].start;
 			if (len > STR_MAX_LEN - 1)
 				len = STR_MAX_LEN - 1;
-			strncpy(str, js + tok[i].start, len);
-			str[len] = 0;
+			strncpy(str, langJson.js + langJson.tok[i].start, len);
 			key = str;
+			keylen = len;
 			break;
 		}
 	}
 	if (itrans >= STR_TRANS_CNT)
 		itrans = 0;
-	mbstowcs(wstr[itrans], key, STR_MAX_LEN - 1);
+	if (keylen > STR_MAX_LEN - 1)
+		keylen = STR_MAX_LEN - 1;
+	mbstowcs(wstr[itrans], key, keylen + 1);
+	wstr[itrans][keylen] = 0;
 	return wstr[itrans++];
 }

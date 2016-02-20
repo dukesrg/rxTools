@@ -42,6 +42,7 @@
 #define RED		RGB(255, 0, 0)
 #define GREEN		RGB(0, 255, 0)
 #define BLUE		RGB(0, 0, 255)
+#define YELLOW		RGB(255, 255, 0)
 #define GREY		RGB(0x77, 0x77, 0x77) //GW Gray shade
 
 //Unicode special characters
@@ -62,8 +63,6 @@ typedef struct{
 	void *addr;
 } Screen;
 
-Screen bottomScreen, top1Screen, top2Screen;
-
 typedef struct{
 	uint32_t sw;
 	uint32_t h;
@@ -72,12 +71,13 @@ typedef struct{
 	uint32_t *addr;
 } FontMetrics;
 
-FontMetrics font16, font24;
-
 typedef struct{
 	uint32_t fg;
 	uint32_t bg;
 } TextColors;
+
+extern Screen top1Screen, top2Screen, topTmpScreen, bottomScreen, bottomTmpScreen;
+extern FontMetrics font16, font24;
 
 /*
 typedef enum{

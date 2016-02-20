@@ -15,17 +15,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef MENU_H
-#define MENU_H
+#pragma once
 
 #include <stdbool.h>
 #include <wchar.h>
 #include "console.h"
 #include "draw.h"
+#include "json.h"
 
 #define MENU_MASK_SELECTED	0x01
 #define MENU_MASK_DISABLED	0x02
 #define MENU_STATE_COUNT	4
+
+#define MENU_JSON_SIZE		0x2000
+#define MENU_JSON_TOKENS	0x200
+
+extern Json menuJson;
+extern const TCHAR *menuPath;
 
 typedef struct{
 	char Str[CONSOLE_MAX_LINE_LENGTH+1];
@@ -57,12 +63,10 @@ extern bool theme_3d;
 extern unsigned char language;
 extern Menu* MyMenu;
 
-int menuLoad();
+void menuInit();
 int menuTry(int targetposition, int currentposition);
 int menuLevel(int pos);
 int menuPrev(int pos);
 int menuNext(int pos);
 int menuUp(int pos);
 int menuDown(int pos);
-
-#endif
