@@ -112,6 +112,10 @@ static _Noreturn void mainLoop()
 			MenuSelect();
 		}
 
+		if (pad & BUTTON_B) {
+			MenuClose();
+		}
+
 		if (pad & BUTTON_SELECT) {
 			fadeOut();
 			ShutDown(1); //shutdown
@@ -236,7 +240,6 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	}
 
 	OpenAnimation();
-	menuInit();
 	MenuInit(&MainMenu);
 	MenuShow();
 	mainLoop();

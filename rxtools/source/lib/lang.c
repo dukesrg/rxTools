@@ -334,14 +334,13 @@ wchar_t *lang(char *key, int keylen)
 	if (keylen < 0)
 		keylen = strlen(key);
 	int i, len;
-	for (i = 1; i < langJson.count; i++) {
+	for (i = 1; i < langJson.count; i+=2) {
 		len = langJson.tok[i].end - langJson.tok[i].start;
 		if (langJson.tok[i].type == JSMN_STRING && keylen == len && memcmp(key, langJson.js + langJson.tok[i].start, len) == 0) {
-			i++;
-			len = langJson.tok[i].end - langJson.tok[i].start;
+			len = langJson.tok[i+1].end - langJson.tok[i+1].start;
 			if (len > STR_MAX_LEN - 1)
 				len = STR_MAX_LEN - 1;
-			strncpy(str, langJson.js + langJson.tok[i].start, len);
+			strncpy(str, langJson.js + langJson.tok[i+1].start, len);
 			key = str;
 			keylen = len;
 			break;

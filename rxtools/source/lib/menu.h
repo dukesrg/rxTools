@@ -27,8 +27,8 @@
 #define MENU_MASK_DISABLED	0x02
 #define MENU_STATE_COUNT	4
 
-#define MENU_JSON_SIZE		0x2000
-#define MENU_JSON_TOKENS	0x200
+#define MENU_JSON_SIZE		0x4000
+#define MENU_JSON_TOKENS	0x400
 
 extern Json menuJson;
 extern const TCHAR *menuPath;
@@ -63,10 +63,5 @@ extern bool theme_3d;
 extern unsigned char language;
 extern Menu* MyMenu;
 
-void menuInit();
 int menuTry(int targetposition, int currentposition);
 int menuLevel(int pos);
-int menuPrev(int pos);
-int menuNext(int pos);
-int menuUp(int pos);
-int menuDown(int pos);

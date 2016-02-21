@@ -1,160 +1,139 @@
 {
 	"menu":{
-		"MENU1":{
+		"ITEM1":{
 			"caption":"Boot",
 			"description":"Boot options.",
-			"function":"&BootMenuInit",
-			"MENU1_1":{
+			"ITEM1-1":{
 				"caption":"rxMode emuNAND",
-				"description":"Apply patches and reboot the console into rxMode on emuNand.",
-				"function":""
-			},"MENU1_2":{
+				"description":"Apply patches and reboot the console into rxMode on emuNand, if present.",
+				"function":"FUNC_RXE",
+				"enabled":"FUNC_CHK_E"
+			},"ITEM1-2":{
 				"caption":"rxMode sysNAND",
 				"description":"Apply patches and reboot the console into rxMode on sysNand.",
-				"function":""
-			},"MENU1_3":{
+				"function":"FUNC_RXS"
+			},"ITEM1-3":{
           			"caption":"PastaMode",
 				"description":"Patches signature checks and load in sysNAND with GBA and DSi support.",
-				"function":"(void(*)())&PastaMode"
-			},"MENU1_4":{
+				"function":"FUNC_PASTA"
+			},"ITEM1-4":{
 				"caption":"Reboot",
 				"description":"Reboot the console.",
-				"function":""
-			},"MENU1_5":{
+				"function":"FUNC_REBOOT"
+			},"ITEM1-5":{
 				"caption":"Shutdown",
 				"description":"Turn off the console.",
-				"function":""
+				"function":"FUNC_SHUTDOWN"
 			}
-		},"MENU2":{
+		},"ITEM2":{
 			"caption":"Decrypt",
 			"description":"Decryption options.",
-			"function":"&DecryptMenuInit",
-			"MENU2_1":{
+			"ITEM2-1":{
 				"caption":"Decrypt CTR Titles",
 				"description":"Decrypt 3DS titles directly on the console.",
-				"function":"&CTRDecryptor"
-			},"MENU2_2":{
+				"function":"FUNC_DEC_CTR"
+			},"ITEM2-2":{
 				"caption":"Decrypt Title Keys",
 				"description":"Decrypt title keys stored in tickets.db which is needed to decrypt CDN content.",
-				"function":"&DecryptTitleKeys"
-			},"MENU2_3":{
+				"function":"FUNC_DEC_TK"
+			},"ITEM2-3":{
 				"caption":"Decrypt encTitleKeys.bin",
 				"description":"Decrypt the private key of a game.",
-				"function":"&DecryptTitleKeyFile"
-			},"MENU2_4":{
+				"function":"FUNC_DEC_TKF"
+			},"ITEM2-4":{
 				"caption":"Generate Xorpads",
 				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles.",
-				"function":"&PadGen"
-			},"MENU2_5":{
+				"function":"FUNC_GEN_T_PAD"
+			},"ITEM2-5":{
 				"caption":"Decrypt partitions",
 				"description":"Dump and decrypt all sysNAND or emuNAND partitions (except the TWL partition for now).",
-				"function":"&DumpNandPartitions"
-			},"MENU2_6":{
+				"function":"FUNC_DEC_PAR"
+			},"ITEM2-6":{
 				"caption":"Generate fat16 Xorpad",
 				"description":"Generate XORpad needed to decrypt main NAND partition.",
-				"function":"GenerateNandXorpads"
+				"function":"FUN_GEN_PAR_PAD"
 			}
-		},"MENU3":{
+		},"ITEM3":{
 			"caption":"Dump",
 			"description":"Dumping options.",
-			"function":"&DumpMenuInit",
-			"MENU3_1":{
+			"ITEM3-1":{
 				"caption":"Create NAND dump",
 				"description":"Backup your sysNAND or emuNAND partition. It is highly recommended to backup your sysNAND partition.",
-				"MENU3_1_1":{
-					"caption":"sysNAND",
-					"description":"Dump sysNAND",
-					"function":"&NandDumper"
-				},
-				"MENU3_1_2":{
-					"caption":"emuNAND",
-					"description":"Dump emuNAND",
-					"function":"&NandDumper"
-				}
-			},"MENU3_2":{
+				"function":"FUNC_DMP_N"
+			},"ITEM3-2":{
 				"caption":"Dump System Titles",
 				"description":"Dump all 3DS titles from sysNAND.",
-				"function":"&DumpNANDSystemTitles"
-			},"MENU3_3":{
+				"function":"FUNC_DMP_NT"
+			},"ITEM3-3":{
 				"caption":"Dump NAND Files",
 				"description":"Dump various important files from sysNAND or emuNAND.",
-				"function":"&dumpCoolFiles"
-			},"MENU3_4":{
+				"function":"FUNC_DMP_NF"
+			},"ITEM3-4":{
 				"caption":"Dump ARM9 RAM",
 				"description":"Dump ARM9 RAM (for development purposes).",
-				"function":"&dumpArm9Ram"
+				"function":"FUNC_DMP_RAM"
 			}
-		},"MENU4":{
+		},"ITEM4":{
 			"caption":"Inject",
 			"description":"Injection options.",
-			"function":"&InjectMenuInit",
-			"MENU4_1":{
+			"ITEM4-1":{
 				"caption":"Inject emuNAND partitions",
 				"description":"Encrypt and write partitions from files on SD card into emuNAND (except the TWL partition for now).",
-				"function":"&RebuildNand"
-			},"MENU4_2":{
+				"function":"FUNC_INJ_N"
+			},"ITEM4-2":{
 				"caption":"Inject NAND Files",
 				"description":"Inject various important files from SD card into sysNAND or emuNAND.",
-				"function":"&restoreCoolFiles"
+				"function":"FUNC_INJ_NF"
 			}
-		},"MENU5":{
+		},"ITEM5":{
 			"caption":"Advanced",
 			"description":"Advanced options.",
-			"function":"&AdvancedMenuInit",
-			"MENU5_1":{
+			"ITEM5-1":{
 				"caption":"Downgrade MSET on SysNAND",
 				"description":"Install old MSET in sysNAND to be able to use the DS profile exploit on firmwares 5.x-9.2.",
-				"function":"&downgradeMSET"
-			},"MENU5_2":{
+				"function":"FUNC_DG_MSET"
+			},"ITEM5-2":{
 				"caption":"Install FBI over H&S App",
 				"description":"Install FBI (a legal .cia installed) over Health&Safety application in sysNAND.",
-				"function":"&installFBI"
-			},"MENU5_3":{
+				"function":"FUNC_INS_FBI"
+			},"ITEM5-3":{
 				"caption":"Restore original H&S App",
 				"description":"Uninstall FBI .cia installer and restore the original Health&Safety application.",
-				"function":"&restoreHS"
-			},"MENU5_4":{
+				"function":"FUNC_INS_HS"
+			},"ITEM5-4":{
 				"caption":"Advanced File Manager",
 				"description":"Choose a firmare file on SD card and load it.",
-				"function":"&AdvFileManagerMain"
+				"function":"FUNC_AFM"
 			}
-		},"MENU6":{
+		},"ITEM6":{
 			"caption":"Settings",
 			"description":"Change settings.",
-			"function":"&SettingsMenuInit",
-			"MENU6_1":{
+			"ITEM6-1":{
 				"caption":"Force UI boot",
-				"description":"",
-				"function":""
-			},"MENU6_2":{
+				"value":"CFG_GUI"
+			},"ITEM6_2":{
 				"caption":"Theme",
-				"description":"",
-				"function":""
-			},"MENU6_3":{
+				"value":"CFG_THEME"
+			},"ITEM6-3":{
 				"caption":"Random theme",
-				"description":"",
-				"function":""
-			},"MENU6_3":{
+				"value":"CFG_RANDOM"
+			},"ITEM6-4":{
 				"caption":"Show AGB_FIRM BIOS",
-				"description":"",
-				"function":""
-			},"MENU6_4":{
+				"value":"CFG_AGB"
+			},"ITEM6-5":{
 				"caption":"Enable 3D UI",
-				"description":"",
-				"function":""
-			},"MENU6_5":{
+				"value":"CFG_3D"
+			},"ITEM6-6":{
 				"caption":"Autoboot into sysNAND",
-				"description":"",
-				"function":""
-			},"MENU6_6":{
-				"caption":"Menu language",
-				"description":"",
-				"function":""
+				"value":"CFG_ABSYSN"
+			},"ITEM6-7":{
+				"caption":"Language",
+				"value":"CFG_LANG",
+				"options":"FUNC_OPT_LANG"
 			}
-		},"MENU7":{
+		},"ITEM7":{
 			"caption":"Credits",
-			"description":"Show credits.",
-			"function":""
+			"description":"Show credits."
 		}
 	}
 }

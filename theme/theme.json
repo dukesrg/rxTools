@@ -7,75 +7,75 @@
 	"bgtop":"top.bin",
 	"bgbottomp":"base.bin",
 	"menu":{
-		"MENU1":{
+		"ITEM1":{
 			"bgbottom":"menu0.bin",
-			"MENU1_1":{
-			},"MENU1_2":{
-			},"MENU1_3":{
-			},"MENU1_4":{
-			},"MENU1_5":{
+			"ITEM1-1":{
+			},"ITEM1-2":{
+			},"ITEM1-3":{
+			},"ITEM1-4":{
+			},"ITEM1-5":{
 			}
-		},"MENU2":{
+		},"ITEM2":{
 			"bgbottom":"menu1.bin",
-			"MENU2_1":{
+			"ITEM2-1":{
 				"bgbottom":"dec0.bin"
-			},"MENU2_2":{
+			},"ITEM2-2":{
 				"bgbottom":"dec1.bin"
-			},"MENU2_3":{
+			},"ITEM2-3":{
 				"bgbottom":"dec2.bin"
-			},"MENU2_4":{
+			},"ITEM2-4":{
 				"bgbottom":"dec3.bin"
-			},"MENU2_5":{
+			},"ITEM2-5":{
 				"bgbottom":"dec4.bin"
-			},"MENU2_6":{
+			},"ITEM2-6":{
 				"bgbottom":"dec5.bin"
 			}
-		},"MENU3":{
+		},"ITEM3":{
 			"bgbottom":"menu2.bin",
-			"MENU3_1":{
+			"ITEM3-1":{
 				"bgbottom":"dmp0.bin",
-				"MENU3_1_1":{
-				},"MENU3_1_2":{
+				"ITEM3_1_1":{
+				},"ITEM3_1_2":{
 				}
-			},"MENU3_2":{
+			},"ITEM3-2":{
 				"bgbottom":"dmp1.bin"
-			},"MENU3_3":{
+			},"ITEM3-3":{
 				"bgbottom":"dmp2.bin"
-			},"MENU3_4":{
+			},"ITEM3-4":{
 				"bgbottom":"dmp3.bin"
 			}
-		},"MENU4":{
+		},"ITEM4":{
 			"bgbottom":"menu3.bin",
-			"MENU4_1":{
+			"ITEM4-1":{
 				"bgbottom":"inj0.bin"
-			},"MENU4_2":{
+			},"ITEM4-2":{
 				"bgbottom":"inj1.bin"
 			}
-		},"MENU5":{
+		},"ITEM5":{
 			"bgbottom":"menu4.bin",
-			"MENU5_1":{
+			"ITEM5-1":{
 				"bgbottom":"adv0.bin"
-			},"MENU5_2":{
+			},"ITEM5-2":{
 				"bgbottom":"adv1.bin"
-			},"MENU5_3":{
+			},"ITEM5-3":{
 				"bgbottom":"adv2.bin"
-			},"MENU5_4":{
+			},"ITEM5-4":{
 				"bgbottom":"adv3.bin"
-			},"MENU5_5":{
+			},"ITEM5-5":{
 				"bgbottom":"adv4.bin"
 			}
-		},"MENU6":{
+		},"ITEM6":{
 			"bgbottom":"app.bin",
-			"MENU6_1":{
-			},"MENU6_2":{
-			},"MENU6_3":{
-			},"MENU6_4":{
-			},"MENU6_5":{
-			},"MENU6_6":{
-			},"MENU6_7":{
-			},"MENU6_8":{
+			"ITEM6-1":{
+			},"ITEM6-2":{
+			},"ITEM6-3":{
+			},"ITEM6-4":{
+			},"ITEM6-5":{
+			},"ITEM6-6":{
+			},"ITEM6-7":{
+			},"ITEM6-8":{
 			}
-		},"MENU7":{
+		},"ITEM7":{
 			"bgbottom":"menu6.bin"
 		}
 	}

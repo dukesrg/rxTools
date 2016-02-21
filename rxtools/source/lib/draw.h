@@ -87,11 +87,12 @@ typedef enum{
 } justify;
 */
 
-//void ClearScreen(Screen *screen, uint32_t color);
+void ClearScreen(Screen *screen, uint32_t color);
 //void DrawClearScreenAll(void);
-void DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
-void DrawStringWithFont(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font);
-void DrawStringRect(Screen *screen, const wchar_t *str, uint32_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, TextColors *color, FontMetrics *font);
+uint32_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, int count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, TextColors *color, FontMetrics *font);
+uint32_t DrawStringRect(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t w, uint32_t h, TextColors *color, FontMetrics *font);
+uint32_t DrawSubString(Screen *screen, const wchar_t *str, int count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font);
 //void DrawPixel(uint8_t *screen, uint32_t x, uint32_t y, uint32_t color);
 //uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y);
 //void Debug(const char *format, ...);
