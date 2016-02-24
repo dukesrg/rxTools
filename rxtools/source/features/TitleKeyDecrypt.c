@@ -93,12 +93,12 @@ void DecryptTitleKeys() {
 	ConsoleSetTitle(strings[STR_DECRYPT], strings[STR_TITLE_KEYS]);
 	File tick;
 	File dump;
-	const TCHAR *filename=_T("rxTools/decTitleKeys.bin");
+	const wchar_t *filename = L"rxTools/decTitleKeys.bin";
 	print(strings[STR_OPENING], "ticket.db");
 	FileOpen(&dump, filename, 1);
 	uint32_t tick_size = 0xD0000;     //Chunk size
 	nKey = 0; int nullbyte = 0;
-	if (FileOpen(&tick, _T("1:dbs/ticket.db"), 0)) {
+	if (FileOpen(&tick, L"1:dbs/ticket.db", 0)) {
 		print(strings[STR_DECRYPTING], strings[STR_TITLE_KEYS], filename);
 		ConsoleShow();
 		uint8_t *buf = BUF1;
@@ -146,9 +146,9 @@ void DecryptTitleKeyFile(void) {
 	FIL tick, dump;
 	FRESULT rr = 0;
 	UINT br = 0;
-	const TCHAR *filename = _T("rxTools/encTitleKeys.bin");
-	const TCHAR *filename2 = _T("rxTools/decTitleKeys.bin");
-	const TCHAR *filename3 = _T("rxTools/decTitleKeysA.bin");
+	const wchar_t *filename = L"rxTools/encTitleKeys.bin";
+	const wchar_t *filename2 = L"rxTools/decTitleKeys.bin";
+	const wchar_t *filename3 = L"rxTools/decTitleKeysA.bin";
 	print(strings[STR_OPENING], filename);
 	ConsoleShow();
 	//decTitleKeys.bin that generated from other stuff can be handled streamly.
@@ -344,7 +344,7 @@ static FRESULT seekRead(FIL *fp, DWORD ofs, void *buff, UINT btr)
 	(seekRead((fp), 0x140 + offsetof(TicketHdr, member), buff,	\
 		CETK_MEMBER_SIZE(member)))
 
-int getTitleKeyWithCetk(uint8_t dst[16], const TCHAR *path)
+int getTitleKeyWithCetk(uint8_t dst[16], const wchar_t *path)
 {
 	uint8_t id[CETK_MEMBER_SIZE(titleId)];
 	uint8_t index;

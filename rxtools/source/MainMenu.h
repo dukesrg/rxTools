@@ -173,7 +173,7 @@ void SettingsMenuInit(){
 	FILINFO fno;
 	wchar_t str[_MAX_LFN];
 	const unsigned int maxLangNum = 16;
-	TCHAR langs[maxLangNum][CFG_STR_MAX_LEN];
+	wchar_t langs[maxLangNum][CFG_STR_MAX_LEN];
 	unsigned char theme_num = 0;
 	unsigned int curLang, langNum;
 

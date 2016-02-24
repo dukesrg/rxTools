@@ -15,14 +15,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef CFW_H
-#define CFW_H
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <reboot.h>
-#include "fatfs/ff.h"
+#include "fs.h"
 #include "crypto.h"
 
 typedef struct {
@@ -41,8 +40,8 @@ typedef struct {
 	} ext;
 } Arm9Hdr;
 
-extern const wchar_t firmPathFmt[];
-extern const wchar_t firmPatchPathFmt[];
+extern const wchar_t *firmPathFmt;
+extern const wchar_t *firmPatchPathFmt;
 
 int PastaMode();
 void FirmLoader();
@@ -61,5 +60,3 @@ static inline int getFirmPatchPath(wchar_t *s, TitleIdLo id)
 {
 	return swprintf(s, _MAX_LFN, firmPatchPathFmt, TID_HI_FIRM, id);
 }
-
-#endif

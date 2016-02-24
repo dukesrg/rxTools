@@ -6,12 +6,14 @@
 			"ITEM1-1":{
 				"caption":"rxMode emuNAND",
 				"description":"Apply patches and reboot the console into rxMode on emuNand, if present.",
-				"function":"FUNC_RXE",
-				"enabled":"FUNC_CHK_E"
+				"enabled":"FUNC_CHK_E",
+				"function":"FUNC_RXMODE",
+				"parameter":1
 			},"ITEM1-2":{
 				"caption":"rxMode sysNAND",
 				"description":"Apply patches and reboot the console into rxMode on sysNand.",
-				"function":"FUNC_RXS"
+				"function":"FUNC_RXMODE",
+				"parameter":0
 			},"ITEM1-3":{
           			"caption":"PastaMode",
 				"description":"Patches signature checks and load in sysNAND with GBA and DSi support.",
@@ -19,11 +21,13 @@
 			},"ITEM1-4":{
 				"caption":"Reboot",
 				"description":"Reboot the console.",
-				"function":"FUNC_REBOOT"
+				"function":"FUNC_SHUTDOWN",
+				"parameter":0
 			},"ITEM1-5":{
 				"caption":"Shutdown",
 				"description":"Turn off the console.",
-				"function":"FUNC_SHUTDOWN"
+				"function":"FUNC_SHUTDOWN",
+				"parameter":1
 			}
 		},"ITEM2":{
 			"caption":"Decrypt",
@@ -57,18 +61,103 @@
 			"caption":"Dump",
 			"description":"Dumping options.",
 			"ITEM3-1":{
-				"caption":"Create NAND dump",
-				"description":"Backup your sysNAND or emuNAND partition. It is highly recommended to backup your sysNAND partition.",
-				"function":"FUNC_DMP_N"
+				"caption":"Dump sysNAND",
+				"description":"Backup your sysNAND partition. It is highly recommended to backup your sysNAND partition.",
+				"function":"FUNC_DMP_N",
+				"parameter":0
 			},"ITEM3-2":{
-				"caption":"Dump System Titles",
+				"caption":"Dump emuNAND",
+				"description":"Backup your emuNAND partition.",
+				"enabled":"FUNC_CHK_E",
+				"function":"FUNC_DMP_N",
+				"parameter":1
+			},"ITEM3-3":{
+				"caption":"Dump system titles",
 				"description":"Dump all 3DS titles from sysNAND.",
 				"function":"FUNC_DMP_NT"
-			},"ITEM3-3":{
-				"caption":"Dump NAND Files",
-				"description":"Dump various important files from sysNAND or emuNAND.",
-				"function":"FUNC_DMP_NF"
 			},"ITEM3-4":{
+				"caption":"Dump sysNAND files",
+				"description":"Dump various important files from sysNAND.",
+				"ITEM3-4-1":{
+					"caption":"movable.sed",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:private/movable.sed"
+				},"ITEM3-4-2":{
+					"caption":"SecureInfo_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/SecureInfo_A"
+				},"ITEM3-4-3":{
+					"caption":"SecureInfo_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/SecureInfo_B"
+				},"ITEM3-4-4":{
+					"caption":"LocalFriendCodeSeed_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM3-4-5":{
+					"caption":"LocalFriendCodeSeed_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM3-4-6":{
+					"caption":"rand_seed",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/rand_seed"
+				},"ITEM3-4-7":{
+					"caption":"ticket.db",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:dbs/ticket.db"
+				},"ITEM3-4-8":{
+					"caption":"import.db",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:dbs/import.db"
+				}
+			},"ITEM3-5":{
+				"caption":"Dump emuNAND files",
+				"description":"Dump various important files from emuNAND.",
+				"enabled":"FUNC_CHK_E",
+				"parameter":0,
+				"ITEM3-5-1":{
+					"caption":"movable.sed",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:private/movable.sed"
+				},"ITEM3-5-2":{
+					"caption":"SecureInfo_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:rw/sys/SecureInfo_A"
+				},"ITEM3-5-3":{
+					"caption":"SecureInfo_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:rw/sys/SecureInfo_B"
+				},"ITEM3-5-4":{
+					"caption":"LocalFriendCodeSeed_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM3-5-5":{
+					"caption":"LocalFriendCodeSeed_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM3-5-6":{
+					"caption":"rand_seed",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:rw/sys/rand_seed"
+				},"ITEM3-5-7":{
+					"caption":"ticket.db",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:dbs/ticket.db"
+				},"ITEM3-5-8":{
+					"caption":"import.db",
+					"function":"FUNC_DMP_NF",
+					"parameter":"2:/dbs/import.db"
+				}
+			},"ITEM3-6":{
 				"caption":"Dump ARM9 RAM",
 				"description":"Dump ARM9 RAM (for development purposes).",
 				"function":"FUNC_DMP_RAM"
@@ -79,17 +168,97 @@
 			"ITEM4-1":{
 				"caption":"Inject emuNAND partitions",
 				"description":"Encrypt and write partitions from files on SD card into emuNAND (except the TWL partition for now).",
-				"function":"FUNC_INJ_N"
+				"enabled":"FUNC_CHK_E",
+				"function":"FUNC_INJ_N",
+				"parameter":0,
 			},"ITEM4-2":{
-				"caption":"Inject NAND Files",
-				"description":"Inject various important files from SD card into sysNAND or emuNAND.",
-				"function":"FUNC_INJ_NF"
+				"caption":"Inject emuNAND files",
+				"description":"Inject various important files from SD card into emuNAND.",
+				"enabled":"FUNC_CHK_E",
+				"parameter":0,
+				"ITEM4-2-1":{
+					"caption":"movable.sed",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:private/movable.sed"
+				},"ITEM4-2-2":{
+					"caption":"SecureInfo_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:rw/sys/SecureInfo_A"
+				},"ITEM4-2-3":{
+					"caption":"SecureInfo_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:rw/sys/SecureInfo_B"
+				},"ITEM4-2-4":{
+					"caption":"LocalFriendCodeSeed_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM4-2-5":{
+					"caption":"LocalFriendCodeSeed_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM4-2-6":{
+					"caption":"rand_seed",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:rw/sys/rand_seed"
+				},"ITEM4-2-7":{
+					"caption":"ticket.db",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:dbs/ticket.db"
+				},"ITEM4-2-8":{
+					"caption":"import.db",
+					"function":"FUNC_INJ_NF",
+					"parameter":"2:/dbs/import.db"
+				}				
+			},"ITEM4-3":{
+				"caption":"Inject sysNAND files",
+				"description":"Inject various important files from SD card into sysNAND.",
+				"ITEM4-3-1":{
+					"caption":"movable.sed",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:private/movable.sed"
+				},"ITEM4-3-2":{
+					"caption":"SecureInfo_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:rw/sys/SecureInfo_A"
+				},"ITEM4-3-3":{
+					"caption":"SecureInfo_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:rw/sys/SecureInfo_B"
+				},"ITEM4-3-4":{
+					"caption":"LocalFriendCodeSeed_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM4-3-5":{
+					"caption":"LocalFriendCodeSeed_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM4-3-6":{
+					"caption":"rand_seed",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:rw/sys/rand_seed"
+				},"ITEM4-3-7":{
+					"caption":"ticket.db",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:dbs/ticket.db"
+				},"ITEM4-3-8":{
+					"caption":"import.db",
+					"function":"FUNC_INJ_NF",
+					"parameter":"1:/dbs/import.db"
+				}
 			}
 		},"ITEM5":{
 			"caption":"Advanced",
 			"description":"Advanced options.",
 			"ITEM5-1":{
-				"caption":"Downgrade MSET on SysNAND",
+				"caption":"Downgrade MSET on sysNAND",
 				"description":"Install old MSET in sysNAND to be able to use the DS profile exploit on firmwares 5.x-9.2.",
 				"function":"FUNC_DG_MSET"
 			},"ITEM5-2":{

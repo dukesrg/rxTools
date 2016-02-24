@@ -16,25 +16,24 @@
  */
 
 #include "fs.h"
-#include "fatfs/ff.h"
 
 ////////////////////////////////////////////////////////////////Basic FileSystem Operations
 static FATFS fs[3];
 /**Init FileSystems.*/
 bool FSInit(void) {
-	if (f_mount(&fs[0], _T("0:"), 0) != FR_OK) return 0;		//SDCard
-	if (f_mount(&fs[1], _T("1:"), 1) != FR_OK) return 0;		//NAND
-	if (f_mount(&fs[2], _T("2:"), 0) != FR_OK) ; //return 0;	//EmuNAND, Sometimes it doesn't exist
+	if (f_mount(&fs[0], L"0:", 0) != FR_OK) return 0;		//SDCard
+	if (f_mount(&fs[1], L"1:", 1) != FR_OK) return 0;		//NAND
+	if (f_mount(&fs[2], L"2:", 0) != FR_OK) ; //return 0;	//EmuNAND, Sometimes it doesn't exist
 	return 1;
 }
 /**[Unused?]DeInit FileSystems.*/
 void FSDeInit(void) {
-	f_mount(NULL, _T("0:"), 0);
-	f_mount(NULL, _T("1:"), 0);
-	f_mount(NULL, _T("2:"), 0);
+	f_mount(NULL, L"0:", 0);
+	f_mount(NULL, L"1:", 0);
+	f_mount(NULL, L"2:", 0);
 }
 
-bool FileOpen(File *Handle, const TCHAR *path, bool truncate) {
+bool FileOpen(File *Handle, const wchar_t *path, bool truncate) {
 	unsigned flags = FA_READ | FA_WRITE;
 	flags |= truncate ? FA_CREATE_ALWAYS : FA_OPEN_EXISTING; //: FA_OPEN_ALWAYS;
 	bool ret = (f_open(Handle, path, flags) == FR_OK);
@@ -58,6 +57,7 @@ size_t FileWrite(File *Handle, void *buf, size_t size, size_t foffset) {
 	return bytes_written;
 }
 
+
 size_t FileGetSize(File *Handle) {
 	return f_size(Handle);
 }
@@ -65,6 +65,12 @@ size_t FileGetSize(File *Handle) {
 void FileClose(File *Handle) {
 	f_close(Handle);
 }
+
+bool FileExists(const wchar_t *path) {
+	FIL file;
+	return f_open(&file, path, FA_READ | FA_OPEN_EXISTING) == FR_OK && f_close(&file) == FR_OK;
+}
+
 ////////////////////////////////////////////////////////////////Advanced FileSystem Operations
 /** Copy Source File (source) to Target (target).
   * @param  target Target file, will be created if not exists.
@@ -72,7 +78,7 @@ void FileClose(File *Handle) {
   * @retval Compounded value of (STEP<<8)|FR_xx, so it contains real reasons.
   * @note   directly FATFS calls. FATFS return value only ranges from 0 to 19.
   */
-uint32_t FSFileCopy(TCHAR *target, TCHAR *source) {
+uint32_t FSFileCopy(wchar_t *target, wchar_t *source) {
 	FIL src, dst;
 	uint32_t step = 0; //Tells you where it failed
 	FRESULT retfatfs = 0; //FATFS return value

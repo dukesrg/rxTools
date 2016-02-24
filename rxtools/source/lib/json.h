@@ -28,4 +28,4 @@ typedef struct {
 	int count;
 } Json;
 
-int jsonLoad(Json *json, const TCHAR *path);
+int jsonLoad(Json *json, const wchar_t *path);

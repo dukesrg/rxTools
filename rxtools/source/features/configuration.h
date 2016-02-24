@@ -15,8 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef CONFIGURATION_H
-#define CONFIGURATION_H
+#pragma once
 
 #define CFG_STR_MAX_LEN 16
 
@@ -56,5 +55,3 @@ void trySetLangFromTheme(int onswitch);
 
 int writeCfg();
 int readCfg();
-
-#endif

@@ -15,10 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef NANDTOOLS_H
-#define NANDTOOLS_H
+#pragma once
 
 void dumpCoolFiles();
 void restoreCoolFiles();
-
-#endif

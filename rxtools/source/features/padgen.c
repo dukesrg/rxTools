@@ -45,7 +45,7 @@ uint32_t NcchPadgen()
 	File pf;
 	NcchInfo *info = (NcchInfo*)0x20316000;
 
-	const TCHAR *filename = _T("/ncchinfo.bin");
+	const wchar_t *filename = L"/ncchinfo.bin";
 	if (!FileOpen(&pf, filename, 0)) {
 		print(strings[STR_ERROR_OPENING], filename+1);
 		return 1;
@@ -95,14 +95,14 @@ uint32_t SdPadgen()
 	SdInfo *info = (SdInfo*)0x20316000;
 
 	uint8_t movable_seed[0x120] = {0};
-	const TCHAR *filename;
-	const TCHAR *filenames[] = {
-		_T("movable.sed"),
-		_T("2:private/movable.sed"),
-		_T("1:private/movable.sed"),
+	const wchar_t *filename;
+	const wchar_t *filenames[] = {
+		L"movable.sed",
+		L"2:private/movable.sed",
+		L"1:private/movable.sed",
 		0
 	};
-	const TCHAR **pfilename;
+	const wchar_t **pfilename;
 	for(pfilename = filenames; *pfilename != 0; pfilename++)
 	{
 		filename = *pfilename;
@@ -123,7 +123,7 @@ uint32_t SdPadgen()
 			break;
 		}
 	}
-	filename = _T("/SDinfo.bin");
+	filename = L"/SDinfo.bin";
 	if (!FileOpen(&fp, filename, 0)) {
 		print(strings[STR_ERROR_OPENING], filename+1);
 		return 1;

@@ -27,7 +27,6 @@
 #include "lang.h"
 #include "console.h"
 #include "polarssl/aes.h"
-#include "fatfs/ff.h"
 #include "fs.h"
 #include "ncch.h"
 #include "draw.h"
@@ -38,8 +37,8 @@
 #include "configuration.h"
 #include "lang.h"
 
-const wchar_t firmPathFmt[] = _T("") FIRM_PATH_FMT;
-const wchar_t firmPatchPathFmt[] = _T("") FIRM_PATCH_PATH_FMT;
+const wchar_t *firmPathFmt= L"" FIRM_PATH_FMT;
+const wchar_t *firmPatchPathFmt = L"" FIRM_PATCH_PATH_FMT;
 
 unsigned int emuNandMounted = 0;
 _Noreturn void (* const _softreset)() = (void *)0x080F0000;
@@ -52,7 +51,7 @@ static FRESULT loadExecReboot()
 	FRESULT r;
 	UINT br;
 
-	r = f_open(&fd, _T("") SYS_PATH "/reboot.bin", FA_READ);
+	r = f_open(&fd, L"" SYS_PATH "/reboot.bin", FA_READ);
 	if (r != FR_OK)
 		return r;
 
@@ -64,7 +63,7 @@ static FRESULT loadExecReboot()
 	_softreset();
 }
 
-static int loadFirm(TCHAR *path, UINT *fsz)
+static int loadFirm(wchar_t *path, UINT *fsz)
 {
 	FIL fd;
 	FRESULT r;
@@ -152,7 +151,7 @@ uint8_t *decryptFirmTitle(uint8_t *title, size_t size, size_t *firmSize, uint8_t
 static void setAgbBios()
 {
 	File agb_firm;
-	TCHAR path[64];
+	wchar_t path[_MAX_LFN];
 	unsigned char svc = (cfgs[CFG_AGB].val.i ? 0x26 : 0x01);
 
 	getFirmPath(path, TID_CTR_AGB_FIRM);
@@ -214,7 +213,7 @@ int rxMode(int emu)
 
 	setAgbBios();
 
-	if (sysver < 7 && f_open(&fd, _T("slot0x25KeyX.bin"), FA_READ) == FR_OK) {
+	if (sysver < 7 && f_open(&fd, L"slot0x25KeyX.bin", FA_READ) == FR_OK) {
 		f_read(&fd, keyx, sizeof(keyx), &br);
 		f_close(&fd);
 		keyxArg = keyx;
@@ -321,7 +320,7 @@ int PastaMode(){
 	return loadExecReboot();
 }
 
-void FirmLoader(TCHAR firm_path[]){
+void FirmLoader(wchar_t *firm_path){
 
 	UINT fsz;
 	if (loadFirm(firm_path, &fsz))

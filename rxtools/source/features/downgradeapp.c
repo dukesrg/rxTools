@@ -20,7 +20,6 @@
 #include "downgradeapp.h"
 #include "screenshot.h"
 #include "fs.h"
-#include "fatfs/ff.h"
 #include "console.h"
 #include "draw.h"
 #include "lang.h"
@@ -260,7 +259,7 @@ static unsigned int HashGen(unsigned char* file, unsigned int size)
 	return ~crc;
 }
 
-int checkDgFile(TCHAR* path, unsigned int hash)
+int checkDgFile(wchar_t *path, unsigned int hash)
 {
 	unsigned char* buf = (unsigned char*)0x21000000;
 	unsigned int rb, fixedsize = 0x00400000;
@@ -281,7 +280,7 @@ int checkDgFile(TCHAR* path, unsigned int hash)
 void downgradeMSET()
 {
 	File dg;
-	TCHAR *dgpath = _T("0:msetdg.bin");
+	wchar_t *dgpath = L"0:msetdg.bin";
 	unsigned int titleid_low[6] = { 0x00020000, 0x00021000, 0x00022000, 0x00026000, 0x00027000, 0x00028000 }; //JPN, USA, EUR, CHN, KOR, TWN
 	unsigned int mset_hash[10] = { 0x96AEC379, 0xED315608, 0x3387F2CD, 0xEDAC05D7, 0xACC1BE62, 0xF0FF9F08, 0x565BCF20, 0xA04654C6, 0x2164C3C0, 0xD40B12F4 }; //JPN, USA, EUR, CHN, KOR, TWN
 	unsigned short mset_ver[10] = { 3074, 5127, 3078, 5128, 3075, 5127, 8, 1026, 2049, 8 };

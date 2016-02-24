@@ -25,7 +25,6 @@
 #include "lang.h"
 #include "screenshot.h"
 #include "fs.h"
-#include "fatfs/ff.h"
 #include "console.h"
 #include "draw.h"
 #include "hid.h"
@@ -39,7 +38,7 @@
 #include "menu.h"
 #include "jsmn/jsmn.h"
 
-#define DATA_PATH	_T("rxtools/data")
+#define DATA_PATH	L"rxtools/data"
 #define KEYFILENAME	"slot0x25KeyX.bin"
 
 static char cfgLang[CFG_STR_MAX_LEN] = "en.json";
@@ -54,7 +53,7 @@ Cfg cfgs[] = {
 	[CFG_LANG] = { "CFG_LANG", CFG_TYPE_STRING, { .s = cfgLang } }
 };
 
-static const TCHAR jsonPath[] = _T("/rxTools/data/system.json");
+static const wchar_t *jsonPath= L"/rxTools/data/system.json";
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
 	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
@@ -236,7 +235,7 @@ int readCfg()
 
 static FRESULT saveFirm(uint32_t id, const void *p, DWORD n)
 {
-	TCHAR path[64];
+	wchar_t path[_MAX_LFN];
 	UINT bw;
 	FRESULT r;
 	FIL f;
@@ -384,7 +383,7 @@ static void incBar(Bar *b)
 
 static int InstallData()
 {
-	static TCHAR date[] = DATA_PATH "/data.bin";
+	static wchar_t *date = DATA_PATH "/data.bin";
 	Bar b;
 	int r;
 
@@ -424,7 +423,7 @@ static int InstallData()
 
 int CheckInstallationData(){
 	File file;
-	TCHAR str[64];
+	wchar_t str[_MAX_LFN];
 
 	switch (getMpInfo()) {
 		case MPINFO_CTR:

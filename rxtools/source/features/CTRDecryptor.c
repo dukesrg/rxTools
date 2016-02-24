@@ -21,7 +21,6 @@
 #include "CTRDecryptor.h"
 #include "screenshot.h"
 #include "fs.h"
-#include "fatfs/ff.h"
 #include "console.h"
 #include "draw.h"
 #include "hid.h"
@@ -86,7 +85,7 @@ void ProcessExeFS(PartitionInfo* info){ //We expect Exefs to take just a block. 
 	}
 }
 
-int ProcessCTR(TCHAR* path){
+int ProcessCTR(wchar_t *path){
 	PartitionInfo myInfo;
 	File myFile;
 	if(FileOpen(&myFile, path, 0)){

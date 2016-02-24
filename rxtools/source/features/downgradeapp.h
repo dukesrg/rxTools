@@ -15,18 +15,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef DOWNGRADEAPP_H
-#define DOWNGRADEAPP_H
+#pragma once
 
 #include <stdint.h>
-#include <fatfs/ff.h>
+#include "fs.h"
 
 typedef struct {
         unsigned int drive;
         uint32_t tidLo;
         uint32_t tidHi;
-        TCHAR tmd[64];
-        TCHAR content[64];
+        wchar_t tmd[_MAX_LFN];
+        wchar_t content[_MAX_LFN];
 } AppInfo;
 
 //Utilities
@@ -38,5 +37,3 @@ int CheckRegion(int drive);
 void downgradeMSET();
 void installFBI();
 void restoreHS();
-
-#endif

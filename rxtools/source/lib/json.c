@@ -17,7 +17,7 @@
 
 #include "json.h"
 
-int jsonLoad(Json *json, const TCHAR *path) {
+int jsonLoad(Json *json, const wchar_t *path) {
 	jsmn_parser p;
 	size_t len;
 	File fd;

@@ -20,7 +20,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <wchar.h>
-#include "fatfs/ff.h"
 #include "fs.h"
 #include "draw.h"
 #include "lang.h"
@@ -251,7 +250,7 @@ uint32_t GetPixel(uint8_t *screen, uint32_t x, uint32_t y){
 
 //----------------New Splash Screen Stuff------------------
 
-void DrawSplash(Screen *screen, TCHAR *splash_file) {
+void DrawSplash(Screen *screen, wchar_t *splash_file) {
 	unsigned int n = 0, bin_size;
 	File Splash;
 	if(FileOpen(&Splash, splash_file, 0))

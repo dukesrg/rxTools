@@ -33,7 +33,7 @@
 //---- GLOBAL VARIABLES ----
 int i;
 
-size_t AdvFileManagerList(const TCHAR *path, TCHAR ***ls) {
+size_t AdvFileManagerList(const wchar_t *path, wchar_t ***ls) {
 	size_t count = 0;
 
 	if (wcscmp(path, L""))
@@ -154,7 +154,7 @@ void AdvFileManagerSelect(panel_t* Panel){
 	}
 }
 
-void AdvFileManagerFileAction(TCHAR filePath[])
+void AdvFileManagerFileAction(wchar_t *filePath)
 {
 	FILINFO fno;	
 	memset(&fno, 0, sizeof(FILINFO));

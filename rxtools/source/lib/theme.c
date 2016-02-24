@@ -18,7 +18,7 @@
 #include "jsmn/jsmn.h"
 #include "theme.h"
 
-const TCHAR *themePath = _T("/rxTools/theme");
+const wchar_t *themePath = L"/rxTools/theme";
 char jst[THEME_JSON_SIZE];
 jsmntok_t tokt[THEME_JSON_TOKENS];
 Json themeJson = {jst, THEME_JSON_SIZE, tokt, THEME_JSON_TOKENS};

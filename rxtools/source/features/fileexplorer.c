@@ -27,15 +27,15 @@
 
 //---- GLOBAL VARIABLES ----
 int pointer = 0;
-TCHAR **files;
+wchar_t **files;
 size_t count;
 int i;
 int beginning = 0;
-TCHAR dir[1000] = L"/";
+wchar_t dir[_MAX_LFN] = L"/";
 int opened_folder = 0;
 
 
-size_t file_list(const TCHAR *path, TCHAR ***ls) {
+size_t file_list(const wchar_t *path, wchar_t ***ls) {
 	size_t count = 0;
 	DIR myDir;
 	FILINFO curInfo;
@@ -117,7 +117,7 @@ void FileExplorerBack(){
 /* This writes the path to p if it is a file.
 It returns written bytes to p if it succeeded in opening file or directory.
 Otherwise it returns a negative value */
-int FileExplorerSelect(TCHAR *p, size_t n){
+int FileExplorerSelect(wchar_t *p, size_t n){
 	//enter file/folder
 	int u;
 	int isafile = 0;
@@ -148,7 +148,7 @@ int FileExplorerSelect(TCHAR *p, size_t n){
 Can be called from where you want and returns the selected file!
 */
 
-int FileExplorerMain(TCHAR *p, size_t n){
+int FileExplorerMain(wchar_t *p, size_t n){
 	count = file_list(dir, &files);
 	while (true)
 	{

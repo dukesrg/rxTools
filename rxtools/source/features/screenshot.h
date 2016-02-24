@@ -15,10 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef SCREENSHOT_H
-#define SCREENSHOT_H
+#pragma once
 
 void ScreenShot();
 void TryScreenShot();
-
-#endif

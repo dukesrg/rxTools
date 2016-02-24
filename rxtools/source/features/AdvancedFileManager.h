@@ -15,21 +15,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef ADVANCEDFILEMANAGER_H
-#define ADVANCEDFILEMANAGER_H
+#pragma once
 
 #include <wchar.h>
 #include "console.h"
 #include "draw.h"
-
-#pragma once
+#include "fs.h"
 
 typedef struct
 {
 	int pointer, beginning, openedFolder;
 	size_t count;
-	TCHAR **files;
-	TCHAR dir[1000];
+	wchar_t **files;
+	wchar_t dir[_MAX_LFN];
 	int enabled; 
 } panel_t;
 
@@ -37,7 +35,6 @@ void AdvFileManagerShow(Screen *screen, panel_t* Panel, int x);
 void AdvFileManagerNextSelection(panel_t* Panel);
 void AdvFileManagerPrevSelection(panel_t* Panel);
 void AdvFileManagerSelect(panel_t* Panel);
-void AdvFileManagerFileAction(TCHAR filePath[]);
+void AdvFileManagerFileAction(wchar_t *filePath);
 void AdvFileManagerBack(panel_t* Panel);
 void AdvFileManagerMain();
-#endif

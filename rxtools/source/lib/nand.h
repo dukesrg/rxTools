@@ -18,9 +18,6 @@
 #pragma once
 
 #include <stdint.h>
-#include "fatfs/ff.h"
-
-#define File FIL
 
 enum {
 	TWLN = 0x00012E00,

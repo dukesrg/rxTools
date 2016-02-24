@@ -31,7 +31,7 @@
 #define MENU_JSON_TOKENS	0x400
 
 extern Json menuJson;
-extern const TCHAR *menuPath;
+extern const wchar_t *menuPath;
 
 typedef struct{
 	char Str[CONSOLE_MAX_LINE_LENGTH+1];

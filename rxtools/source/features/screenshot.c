@@ -22,7 +22,6 @@
 #include "draw.h"
 #include "hid.h"
 #include "fs.h"
-#include "fatfs/ff.h"
 #include "stdio.h"
 
 void ScreenShot(){

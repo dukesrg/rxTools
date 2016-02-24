@@ -82,7 +82,7 @@ static FRESULT initKeyX()
 	FRESULT r;
 	FIL f;
 
-	r = f_open(&f, _T("slot0x25KeyX.bin"), FA_READ);
+	r = f_open(&f, L"slot0x25KeyX.bin", FA_READ);
 	if (r != FR_OK)
 		return r;
 
@@ -148,7 +148,7 @@ static void warn(const wchar_t *format, ...)
 
 __attribute__((section(".text.start"), noreturn)) void _start()
 {
-	static const TCHAR fontPath[] = _T("") SYS_PATH "/" FONT_NAME;
+	static const wchar_t *fontPath= L"" SYS_PATH "/" FONT_NAME;
 	void *fontBuf;
 	UINT btr, br;
 	int r;

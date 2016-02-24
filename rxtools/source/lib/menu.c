@@ -41,10 +41,10 @@ Menu *MenuChain[100];
 int openedMenus = 0;
 int saved_index = 0;
 
-char jsm[LANG_JSON_SIZE];
-jsmntok_t tokm[LANG_JSON_TOKENS];
+char jsm[MENU_JSON_SIZE];
+jsmntok_t tokm[MENU_JSON_TOKENS];
 Json menuJson = {jsm, MENU_JSON_SIZE, tokm, MENU_JSON_TOKENS};
-const TCHAR *menuPath = _T("") SYS_PATH "/gui.json";
+const wchar_t *menuPath = L"" SYS_PATH "/gui.json";
 
 #define MENU_MAX_LEVELS 4
 #define MENU_LEVEL_BIT_WIDTH 8 * sizeof(int) / MENU_MAX_LEVELS
@@ -70,26 +70,16 @@ typedef enum {
 	NAV_NEXT
 } menunav;
 
-static void Reboot() {
-	fadeOut();
-	i2cWriteRegister(I2C_DEV_MCU, 0x20, 4);
-	while(1);
-}
+//default text colors
+TextColors itemColor = {WHITE, TRANSPARENT},
+	selectedColor = {BLACK, WHITE},
+	disabledColor = {GREY, TRANSPARENT},
+	selecteddisabledColor = {BLACK, GREY},
+	descriptionColor = {YELLOW, TRANSPARENT},
+	valueColor = {BLUE, TRANSPARENT};
 
-static void Shutdown() {
-	fadeOut();
-	i2cWriteRegister(I2C_DEV_MCU, 0x20, 1);
-	while(1);
-}
 
-static void rxE() {
-	rxMode(1);
-}
-
-static void rxS() {
-	rxMode(0);
-}
-
+/*
 #define OPTION_MAX_SIZE 32
 typedef struct {
 	wchar_t name[OPTION_MAX_SIZE];
@@ -134,16 +124,25 @@ Options *getLangs(){
 	langitems.count = langNum;
 	return &langitems;
 }
+*/
+
+static void Shutdown(int arg) {
+	fadeOut();
+	i2cWriteRegister(I2C_DEV_MCU, 0x20, (arg) ? (uint8_t)(1<<0):(uint8_t)(1<<2));
+	while(1);
+}
+
+int EmuNANDExists(int foo){
+	return checkEmuNAND();
+}
 
 #define FUNC_KEY_MAX_SIZE 32
 struct {
 	char key[FUNC_KEY_MAX_SIZE];
-	void( *func)();
+	void *func;
 } Func[] = { 
-	{"FUNC_RXE", &rxE},
-	{"FUNC_RXS", &rxS},
-	{"FUNC_PASTA", (void(*)())&PastaMode},
-	{"FUNC_REBOOT", &Reboot},
+	{"FUNC_RXMODE", &rxMode},
+	{"FUNC_PASTA", &PastaMode},
 	{"FUNC_SHUTDOWN", &Shutdown},
 	{"FUNC_DEC_CTR", &CTRDecryptor},
 	{"FUNC_DEC_TK", &DecryptTitleKeys},
@@ -161,13 +160,13 @@ struct {
 	{"FUNC_INS_FBI", &installFBI},
 	{"FUNC_INS_HS", &restoreHS},
 	{"FUNC_AFM", &AdvFileManagerMain},
-	{"FUNC_CHK_E", (void(*)())&checkEmuNAND},
-	{"FUNC_OPT_LANG", (void(*)())&getLangs}
+	{"FUNC_CHK_E", &EmuNANDExists},
+	{"FUNC_CHK_F", &FileExists},
+	{"FUNC_OPT_LANG", NULL}
 };
 
 int menuPosition = 0;
-//int icaption, idescr, ihead;
-int ifunc, ienabled;
+int ifunc, ienabled, iparam, sparam;
 
 int menuNavigate(int pos, menunav nav) {
 	int bitlevel = sizeof(int) * 8 - menuLevel(pos) * MENU_LEVEL_BIT_WIDTH;
@@ -204,13 +203,6 @@ void MenuInit(Menu* menu){
 	if (menuPosition == 0) //select first upper menu on start;
 		menuPosition = menuNavigate(menuPosition, NAV_DOWN);
 }
-
-TextColors itemColor = {WHITE, TRANSPARENT},
-	selectedColor = {BLACK, WHITE},
-	disabledColor = {GREY, TRANSPARENT},
-	selecteddisabledColor = {BLACK, GREY},
-	descriptionColor = {YELLOW, TRANSPARENT},
-	valueColor = {BLUE, TRANSPARENT};
 
 void MenuShow(){
 //	wchar_t str[_MAX_LFN];
@@ -269,6 +261,7 @@ void MenuPrevSelection(){
 	}else{
 //		MyMenu->Current = MyMenu->nEntryes - 1;
 	}
+
 }
 
 void (*getFunc(int idx))() {
@@ -283,10 +276,26 @@ void (*getFunc(int idx))() {
 void MenuSelect(){
 	if (ifunc > 0)
 	{
-		void(*func)();
-		if (ienabled == 0 || ((func = getFunc(ienabled)) != NULL && ((int(*)())func)()))
-			if (((func = getFunc(ifunc)) != NULL))
+		if (iparam != 0) {
+			int param = 0;
+			int(*check)(int);
+			void(*func)(int);
+			for (int k = menuJson.tok[iparam].start; k < menuJson.tok[iparam].end; param = param * 10 + menuJson.js[k++] - '0');
+			if ((ienabled == 0 || ((check = (int(*)(int))getFunc(ienabled)) != NULL && check(param))) && ((func = (void(*)(int))getFunc(ifunc)) != NULL))
+				func(param);
+		} else if (sparam != 0) {
+			wchar_t str[256];
+			int(*check)(wchar_t *);
+			void(*func)(wchar_t *);
+			swprintf(str, menuJson.tok[sparam].end - menuJson.tok[sparam].start + 1, L"%s", menuJson.js + menuJson.tok[sparam].start);
+			if ((ienabled == 0 || ((check = (int(*)(wchar_t *))getFunc(ienabled)) != NULL && check(str))) && ((func = (void(*)(wchar_t*))getFunc(ifunc)) != NULL))
+				func(str);
+		} else {
+			int(*check)();
+			void(*func)();
+			if ((ienabled == 0 || ((check = (int(*)())getFunc(ienabled)) != NULL && check())) && ((func = (void(*)())getFunc(ifunc)) != NULL))
 				func();
+		}
 		MenuShow();
 	}
 	else
@@ -307,6 +316,7 @@ void MenuClose(){
 	if (openedMenus > 0){
 		OpenAnimation();
 	}
+
 }
 
 void MenuRefresh(){
@@ -333,7 +343,7 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 		return 1;
 	else if (menuJson.tok[s].type == JSMN_OBJECT) {
 		int mask, i, j = 0, k;
-		int idescr = 0, icaption = 0, ien = 0, iselect = 0, ivalue = 0;
+		int idescr = 0, icaption = 0, ien = 0, iselect = 0, ivalue = 0, ipar = 0, spar = 0;
 		uint32_t submenuy = font24.h + font16.h;
 		int targetlevel = menuLevel(targetposition);
 		menuapply apply = APPLY_NONE;
@@ -371,10 +381,7 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 			switch (menuJson.js[menuJson.tok[s+j].start]){
 				case 'c': //"caption"
 					j++;
-//					if (menulevel == 2 && (apply == APPLY_TARGET || apply == APPLY_ANCESTOR))
-//						ihead = s + j;
-//					if (apply == APPLY_TARGET)
-						icaption = s + j;
+					icaption = s + j;
 					break;
 				case 'd': //"description"
 					j++;
@@ -403,6 +410,23 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 					if (apply == APPLY_TARGET)
 						iselect = s + j;
 					break;
+				case 'p': //"parameter"
+					j++;
+					switch(menuJson.tok[s + j].type) {
+						case JSMN_PRIMITIVE:							
+							ipar = s + j;
+							if (apply == APPLY_TARGET)
+								iparam = s + j;
+							break;
+						case JSMN_STRING:							
+							spar = s + j;
+							if (apply == APPLY_TARGET)
+								sparam = s + j;
+							break;
+						default:
+							break;
+					}
+					break;
 				case 'v': //"value"
 					j++;
 					if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
@@ -416,16 +440,34 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 			}
 		}
 
-		TextColors c,s;
-		void(*func)();
-		if (ien == 0 || ((func = getFunc(ien)) != NULL && ((int(*)())func)())) {
+		TextColors c = disabledColor,
+			s = selecteddisabledColor;
+
+		if (ien == 0){ 
 			c = itemColor;
 			s = selectedColor;
-		}
-		else
-		{
-		 	c = disabledColor;
-			s = selecteddisabledColor;
+		} else if (ipar != 0) {
+			int param = 0;
+			int(*check)(int);
+			for (int k = menuJson.tok[ipar].start; k < menuJson.tok[ipar].end; param = param * 10 + menuJson.js[k++] - '0');
+			if (ien == 0 || ((check = (int(*)(int))getFunc(ien)) != NULL && check(param))) {
+				c = itemColor;
+				s = selectedColor;
+			}
+		} else if (spar != 0) {
+			wchar_t str[256];
+			int(*check)(wchar_t *);
+			swprintf(str, menuJson.tok[spar].end - menuJson.tok[spar].start + 1, L"%s", menuJson.js + menuJson.tok[spar].start);
+			if (ien == 0 || ((check = (int(*)(wchar_t *))getFunc(ien)) != NULL && check(str))) {
+				c = itemColor;
+				s = selectedColor;
+			}
+		} else {
+			int(*check)();
+			if (ien == 0 || ((check = (int(*)())getFunc(ien)) != NULL && check())) {
+				c = itemColor;
+				s = selectedColor;
+			}
 		}
 
 		if (idescr > 0)
@@ -463,7 +505,7 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 			case 1:
 				if (apply == APPLY_TARGET)
 					DrawSubString(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), -1, 0, font24.h, &s, &font24);
-				else if (apply == APPLY_DESCENDANT)
+				else if (apply == APPLY_DESCENDANT && menulevel - 1 == targetlevel + 1)
 					*itemy += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), 0, *itemy, bottomTmpScreen.w / 2, 0, &c, &font16);
 				break;
 			case 2:
@@ -473,12 +515,16 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 					*itemy += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), 0, *itemy, bottomTmpScreen.w / 2, 0, &c, &font16);
 				else if (apply == APPLY_TARGET)
 					*itemy += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), 0, *itemy, bottomTmpScreen.w / 2, 0, &s, &font16);
-				else if (apply == APPLY_DESCENDANT)
-					*itemy += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), bottomTmpScreen.w / 2, *itemy, bottomTmpScreen.w / 2, 0, &c, &font16);
+//				else if (apply == APPLY_DESCENDANT)
+//					*itemy += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), bottomTmpScreen.w / 2, *itemy, bottomTmpScreen.w / 2, 0, &c, &font16);
 				break;
 			case 3:
-				if (apply == APPLY_ANCESTOR)
-					DrawSubString(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), -1, 0, font24.h, &s, &font24);
+				if (apply == APPLY_ANCESTOR) {
+					if ((menulevel - 1) == 1)
+						DrawSubString(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), -1, 0, font24.h, &s, &font24);
+					else
+						DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), 0, *itemy, bottomTmpScreen.w / 2, 0, &s, &font16);
+				}
 				else if (apply == APPLY_SIBLING)
 					*itemy += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[icaption].start, menuJson.tok[icaption].end - menuJson.tok[icaption].start), bottomTmpScreen.w / 2, *itemy, bottomTmpScreen.w / 2, 0, &c, &font16);
 				else if (apply == APPLY_TARGET)
@@ -497,8 +543,7 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 
 int menuTry(int targetposition, int currentposition) {
 	ClearScreen(&bottomTmpScreen, BLACK);
-	ifunc = 0;
-	ienabled = 0;
+	ienabled = ifunc = iparam = sparam = 0;
 	int foundposition = 0;
 	menuParse(0, OBJ_NONE, 0, 0, targetposition, &foundposition, NULL);
 	if (foundposition == 0)

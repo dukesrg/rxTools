@@ -15,8 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef PADGEN_H
-#define PADGEN_H
+#pragma once
 
 #define MAXENTRIES 1024
 
@@ -30,7 +29,6 @@ typedef struct {
     uint32_t n_entries;
     SdInfoEntry entries[MAXENTRIES];
 } __attribute__((packed, aligned(16))) SdInfo;
-
 
 typedef struct {
     uint8_t   CTR[16];
@@ -49,7 +47,6 @@ typedef struct {
     NcchInfoEntry entries[MAXENTRIES];
 } __attribute__((packed, aligned(16))) NcchInfo;
 
-
 typedef struct {
     uint32_t  keyslot;
     uint32_t  setKeyY;
@@ -63,5 +60,3 @@ uint32_t CreatePad(PadInfo *info, int index);
 uint32_t NcchPadgen();
 uint32_t SdPadgen();
 void PadGen();
-
-#endif

@@ -17,14 +17,14 @@
 
 #include "log.h"
 
-#include "fatfs/ff.h"
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "fatfs/ff.h"
 
-#define LOG_FILENAME _T("rxTools/rx.log")
+#define LOG_FILENAME L"rxTools/rx.log"
 #define LOGSTR_LENMAX (512)
 loglevel_t loglevel = ll_fatal;
 FIL* logfile = NULL;

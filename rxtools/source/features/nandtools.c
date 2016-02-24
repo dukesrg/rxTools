@@ -36,15 +36,15 @@ uint32_t selectedFile;
 void SelectFile();
 
 static struct {
-    TCHAR* name;
-    TCHAR* path;
+    wchar_t *name;
+    wchar_t *path;
 } CoolFiles[] = {
-    {_T("movable.sed"), _T("private")},
-    {_T("SecureInfo_A"), _T("rw/sys")},
-    {_T("LocalFriendCodeSeed_B"), _T("rw/sys")},
-    {_T("rand_seed"), _T("rw/sys")},
-    {_T("ticket.db"), _T("dbs")},
-    {_T("import.db"), _T("dbs")},
+    {L"movable.sed", L"private"},
+    {L"SecureInfo_A", L"rw/sys"},
+    {L"LocalFriendCodeSeed_B", L"rw/sys"},
+    {L"rand_seed", L"rw/sys"},
+    {L"ticket.db", L"dbs"},
+    {L"import.db", L"dbs"},
 };
 
 static Menu CoolFilesMenu = {

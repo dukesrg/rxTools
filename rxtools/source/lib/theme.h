@@ -22,5 +22,5 @@
 #define THEME_JSON_SIZE		0x2000
 #define THEME_JSON_TOKENS	0x200
 
-extern const TCHAR *themePath;
+extern const wchar_t *themePath;
 extern Json themeJson;
