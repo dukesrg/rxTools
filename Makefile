@@ -88,8 +88,10 @@ release-licenses:
 
 release-rxtools: all-target-rxtools
 	@mkdir -p release/$(SYS_PATH)
+	@mkdir -p release/arm9loaderhax
 	@cp rxtools/build/code.bin release/$(SYS_PATH)
 	@cp rxtools/gui.json release/$(SYS_PATH)
+	@cp rxtools/build/arm9loaderhax.bin release/arm9loaderhax
 
 release-doc:
 	@cp README.md "docs/QuickStartGuide(v3.0_BETA).pdf" release

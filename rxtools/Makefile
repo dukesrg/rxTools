@@ -21,7 +21,7 @@ BUILD := build
 DEPS_DIR := $(BUILD)/.deps
 SOURCE := source
 
-all: $(BUILD)/code.bin
+all: $(BUILD)/code.bin $(BUILD)/arm9loaderhax.bin
 
 include $(RXTOOLSMK)
 
@@ -51,7 +51,8 @@ CCOBJS := $(addprefix $(BUILD)/,main.o features/CTRDecryptor.o \
 	features/reboot.o lib/json.o lib/theme.o lib/tmd.o lib/progress.o lib/cfnt.o \
 	lib/timer.o lib/aes.o lib/sha.o lib/rsa.o lib/movable_sed.o lib/bootsector.o)
 
-OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o lib/delay.o)
+OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o vect.o lib/delay.o)
+
 DEPS	:= $(subst $(BUILD)/,$(DEPS_DIR)/,$(CCOBJS))
 
 $(call DEPDIR,$(BUILD)/rxtools.elf $(OBJS) $(DEPS))
@@ -59,6 +60,9 @@ $(call DEPDIR,$(BUILD)/rxtools.elf $(OBJS) $(DEPS))
 MAKEDEP	= @$(COMPILE.c) -MM $< > $(patsubst $(BUILD)/%.o,$(DEPS_DIR)/%.d,$@)
 
 .PHONY: $(BUILD)/code.bin all clean
+
+$(BUILD)/arm9loaderhax.bin: 
+	@dd if=$(BUILD)/code.bin of=$(BUILD)/arm9loaderhax.bin skip=73728 bs=1 
 
 $(BUILD)/code.bin: $(BUILD)/rxtools.bin $(BUILD)/CakeHax/D
 	$(call Q,MAKE,CakeHax)$(MAKE) dir_out=../$(dir $@) dir_build=../$(BUILD)/CakeHax name=$(notdir $@) filepath=$(SYS_PATH)/ -C CakeHax bigpayload

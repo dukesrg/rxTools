@@ -213,7 +213,8 @@ static _Noreturn void mainLoop() {
 	}
 }
 
-__attribute__((section(".text.start"), noreturn)) void _start() {
+//__attribute__((section(".text.start"), noreturn)) void _start() {
+void toolsmain() {
 	wchar_t langDir[_MAX_LFN + 1];
 	wchar_t themeDir[_MAX_LFN + 1];
 	wchar_t path[_MAX_LFN + 1];

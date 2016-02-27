@@ -26,7 +26,7 @@ IMAGES := $(subst .png+,.png ,$(foreach d,$(THEMES),$(subst $(sp),+,$(wildcard $
 all: $(IMAGES:.png=.bgr)
 
 %.bgr:
-	$(call Q,CONVERT,$@)convert -rotate 90 $(subst +,\ ,$(addsuffix .png,$(basename $@))) $(subst +,\ ,$@);
+	$(call Q,MAGICK,$@)magick $(subst +,\ ,$(addsuffix .png,$(basename $@))) -rotate 90 $(subst +,\ ,$@);
 
 clean: $(IMAGES:.png=.rmbgr)
 
