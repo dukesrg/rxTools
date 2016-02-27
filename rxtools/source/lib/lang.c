@@ -19,13 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
-#include "fs.h"
-#include "jsmn/jsmn.h"
 #include "lang.h"
+#include "fs.h"
 
 int fontIsLoaded = 0;
 wchar_t strings[STR_NUM][STR_MAX_LEN] = {};
-const wchar_t *langPath = L"/rxTools/lang";
+const wchar_t *langPath = L"/rxTools/lang/%s";
 
 static const char *keys[STR_NUM] = {
 	[STR_LANG_NAME] = "LANG_NAME",

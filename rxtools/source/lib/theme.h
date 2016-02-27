@@ -18,9 +18,27 @@
 #pragma once
 
 #include "json.h"
+#include "fs.h"
+#include "draw.h"
 
-#define THEME_JSON_SIZE		0x2000
-#define THEME_JSON_TOKENS	0x200
+#define THEME_JSON_SIZE		0x4000
+#define THEME_JSON_TOKENS	0x400
+
+typedef struct {
+	wchar_t top1img[_MAX_LFN];
+	wchar_t top2img[_MAX_LFN];
+	wchar_t bottomimg[_MAX_LFN];
+	TextColors color;
+	TextColors selected;
+	TextColors disabled;
+	TextColors unselected;
+	TextColors hint;
+	TextColors value;
+} themeStyle;
 
 extern const wchar_t *themePath;
+extern const char *themeFile;
 extern Json themeJson;
+extern themeStyle style;
+
+void themeSet(int themeNum, char *key);

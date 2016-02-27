@@ -27,10 +27,11 @@
 uint32_t current_y = 1;
 
 Screen top1Screen = {400, 240, 3, 400*240*3, (uint8_t*)0x080FFFC0};
+Screen top1TmpScreen = {400, 240, 3, 400*240*3, (uint8_t*)0x27000000};
 Screen top2Screen = {400, 240, 3, 400*240*3, (uint8_t*)0x080FFFC8};
-Screen topTmpScreen = {400, 240, 3, 400*240*3, (uint8_t*)0x26000000};
+Screen top2TmpScreen = {400, 240, 3, 400*240*3, (uint8_t*)0x27000000+400*240*3};
 Screen bottomScreen = {320, 240, 3, 320*240*3, (uint8_t*)0x080FFFD0};
-Screen bottomTmpScreen = {320, 240, 3, 320*240*3, (uint8_t*)0x27000000};
+Screen bottomTmpScreen = {320, 240, 3, 320*240*3, (uint8_t*)0x27000000+400*240*3*2};
 
 extern uint32_t _binary_font_ascii_bin_start[];
 FontMetrics font16 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //default font metrics
@@ -62,7 +63,8 @@ void DrawClearScreenAll(void) {
 static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font)
 {
 	uint32_t char_width = character < font->dwstart ? font->sw : font->dw;
-	if (screen->w < x + char_width || y < font->h)
+	y += font->h;
+	if (screen->w < x + char_width || y < 0)
 		return 0;
 
 	uint8_t (* pScreen)[screen->h][screen->bpp] = screen->addr;
@@ -115,7 +117,7 @@ static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uin
 	return char_width;
 }
 
-uint32_t DrawSubString(Screen *screen, const wchar_t *str, int count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font)
+uint32_t DrawSubString(Screen *screen, const wchar_t *str, size_t count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font)
 {
 	uint32_t len = wcslen(str);
 	if (count < 0 || count > len)
@@ -125,7 +127,7 @@ uint32_t DrawSubString(Screen *screen, const wchar_t *str, int count, uint32_t x
 	return x - len;
 }
 
-uint32_t GetSubStringWidth(const wchar_t *str, int count, FontMetrics *font)
+uint32_t GetSubStringWidth(const wchar_t *str, size_t count, FontMetrics *font)
 {
 	uint32_t len = wcslen(str);
 	if (count < 0 || count > len)
@@ -135,7 +137,7 @@ uint32_t GetSubStringWidth(const wchar_t *str, int count, FontMetrics *font)
 	return len;
 }
 
-uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, int count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, TextColors *color, FontMetrics *font)
+uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, uint32_t x, uint32_t y, uint32_t w, uint32_t h, TextColors *color, FontMetrics *font)
 {
 	uint32_t dy = 0;
 	uint32_t len = wcslen(str);
@@ -181,7 +183,7 @@ uint32_t DrawStringRect(Screen *screen, const wchar_t *str, uint32_t x, uint32_t
 uint32_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor)
 {
 	TextColors c = {color, bgcolor};
-	return DrawSubString(screen, str, -1, x, y, &c, &font16);
+	return DrawSubString(screen, str, -1, x, y - font16.h, &c, &font16);
 }
 
 /*//[Unused]

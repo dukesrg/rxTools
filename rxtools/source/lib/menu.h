@@ -20,7 +20,6 @@
 #include <stdbool.h>
 #include <wchar.h>
 #include "console.h"
-#include "draw.h"
 #include "json.h"
 
 #define MENU_MASK_SELECTED	0x01

@@ -32,6 +32,7 @@
 #include "log.h"
 #include "AdvancedFileManager.h"
 #include "json.h"
+#include "theme.h"
 
 #define FONT_NAME "font.bin"
 
@@ -202,11 +203,12 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	install();
 	readCfg();
 
+	wchar_t path[_MAX_LFN];
+
 	r = loadStrings();
 	if (fontIsLoaded) {
 //		r = setLang(cfgs[CFG_LANG].val.s);
-		wchar_t path[_MAX_LFN];
-		swprintf(path, _MAX_LFN, L"%ls/%s", langPath, cfgs[CFG_LANG].val.s);
+		swprintf(path, _MAX_LFN, langPath, cfgs[CFG_LANG].val.s);
 		r = jsonLoad(&langJson, path);
 	}
 
@@ -217,6 +219,11 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		warn(L"Failed to load gui: %d\n", r);
 
 	drawTop();
+
+	swprintf(path, _MAX_LFN, themePath, cfgs[CFG_THEME].val.i, strlen(themeFile), themeFile);
+	if ((r = jsonLoad(&themeJson, path)) <= 0)
+		warn(L"Failed to load theme: %d\n", r);
+
 
 //	if (r < 0 || (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1))
 	if (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1)

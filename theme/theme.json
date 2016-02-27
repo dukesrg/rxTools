@@ -1,14 +1,16 @@
 {
 	"name":"rxTools",
-	"color":"ff008dc5",
-	"bgcolor":"000000",
-	"selectcolor":"ff000000",
-	"bgselectcolor":"ff008dc5",
-	"bgtop":"top.bin",
-	"bgbottomp":"base.bin",
 	"menu":{
+		"color":"ff008dc5",
+		"selected":["ff000000","ff008dc5"],
+		"disabled":"ffff0000",
+		"unselected":["ffff0000","ff008dc5"],
+		"hint":"ff008dc5",
+		"value":"ff008dc5",
+		"topimg":["top.bin","top.bin"],
+		"bottomimg":"base.bin",
 		"ITEM1":{
-			"bgbottom":"menu0.bin",
+			"bottomimg":"menu0.bin",
 			"ITEM1-1":{
 			},"ITEM1-2":{
 			},"ITEM1-3":{
@@ -16,56 +18,95 @@
 			},"ITEM1-5":{
 			}
 		},"ITEM2":{
-			"bgbottom":"menu1.bin",
+			"bottomimg":"menu1.bin",
 			"ITEM2-1":{
-				"bgbottom":"dec0.bin"
+				"bottomimg":"dec0.bin"
 			},"ITEM2-2":{
-				"bgbottom":"dec1.bin"
+				"bottomimg":"dec1.bin"
 			},"ITEM2-3":{
-				"bgbottom":"dec2.bin"
+				"bottomimg":"dec2.bin"
 			},"ITEM2-4":{
-				"bgbottom":"dec3.bin"
+				"bottomimg":"dec3.bin"
 			},"ITEM2-5":{
-				"bgbottom":"dec4.bin"
+				"bottomimg":"dec4.bin"
 			},"ITEM2-6":{
-				"bgbottom":"dec5.bin"
+				"bottomimg":"dec4.bin"
+			},"ITEM2-7":{
+				"bottomimg":"dec5.bin"
 			}
 		},"ITEM3":{
-			"bgbottom":"menu2.bin",
+			"bottomimg":"menu2.bin",
 			"ITEM3-1":{
-				"bgbottom":"dmp0.bin",
-				"ITEM3_1_1":{
-				},"ITEM3_1_2":{
-				}
+				"bottomimg":"dmp0.bin"
 			},"ITEM3-2":{
-				"bgbottom":"dmp1.bin"
+				"bottomimg":"dmp1.bin",
+				"ITEM3-2-1":{
+				},"ITEM3-2-2":{
+				},"ITEM3-2-3":{
+				},"ITEM3-2-4":{
+				},"ITEM3-2-5":{
+				},"ITEM3-2-6":{
+				},"ITEM3-2-7":{
+				},"ITEM3-2-8":{
+				}
 			},"ITEM3-3":{
-				"bgbottom":"dmp2.bin"
+				"bottomimg":"dmp1.bin"
 			},"ITEM3-4":{
-				"bgbottom":"dmp3.bin"
+				"bottomimg":"dmp2.bin"
+			},"ITEM3-5":{
+				"bottomimg":"dmp2.bin",
+				"ITEM3-5-1":{
+				},"ITEM3-5-2":{
+				},"ITEM3-5-3":{
+				},"ITEM3-5-4":{
+				},"ITEM3-5-5":{
+				},"ITEM3-5-6":{
+				},"ITEM3-5-7":{
+				},"ITEM3-5-8":{
+				}
+			},"ITEM3-6":{
+				"bottomimg":"dmp3.bin"
 			}
 		},"ITEM4":{
-			"bgbottom":"menu3.bin",
+			"bottomimg":"menu3.bin",
 			"ITEM4-1":{
-				"bgbottom":"inj0.bin"
+				"bottomimg":"inj0.bin"
 			},"ITEM4-2":{
-				"bgbottom":"inj1.bin"
+				"bottomimg":"inj1.bin",
+				"ITEM4-2-1":{
+				},"ITEM4-2-2":{
+				},"ITEM4-2-3":{
+				},"ITEM4-2-4":{
+				},"ITEM4-2-5":{
+				},"ITEM4-2-6":{
+				},"ITEM4-2-7":{
+				},"ITEM4-2-8":{
+				}
+			},"ITEM4-3":{
+				"bottomimg":"inj1.bin",
+				"ITEM4-3-1":{
+				},"ITEM4-3-2":{
+				},"ITEM4-3-3":{
+				},"ITEM4-3-4":{
+				},"ITEM4-3-5":{
+				},"ITEM4-3-6":{
+				},"ITEM4-3-7":{
+				},"ITEM4-3-8":{
+				}
 			}
 		},"ITEM5":{
-			"bgbottom":"menu4.bin",
+			"bottomimg":"menu4.bin",
 			"ITEM5-1":{
-				"bgbottom":"adv0.bin"
+				"bottomimg":"adv0.bin"
 			},"ITEM5-2":{
-				"bgbottom":"adv1.bin"
+				"bottomimg":"adv1.bin"
 			},"ITEM5-3":{
-				"bgbottom":"adv2.bin"
+				"bottomimg":"adv2.bin"
 			},"ITEM5-4":{
-				"bgbottom":"adv3.bin"
-			},"ITEM5-5":{
-				"bgbottom":"adv4.bin"
+				"bottomimg":"adv4.bin"
 			}
 		},"ITEM6":{
-			"bgbottom":"app.bin",
+			"bottomimg":"app.bin",
 			"ITEM6-1":{
 			},"ITEM6-2":{
 			},"ITEM6-3":{
@@ -73,10 +114,9 @@
 			},"ITEM6-5":{
 			},"ITEM6-6":{
 			},"ITEM6-7":{
-			},"ITEM6-8":{
 			}
 		},"ITEM7":{
-			"bgbottom":"menu6.bin"
+			"bottomimg":"menu6.bin"
 		}
 	}
 }

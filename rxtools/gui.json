@@ -2,180 +2,186 @@
 	"menu":{
 		"ITEM1":{
 			"caption":"Boot",
-			"description":"Boot options.",
+			"hint":"Boot options.",
 			"ITEM1-1":{
-				"caption":"rxMode emuNAND",
-				"description":"Apply patches and reboot the console into rxMode on emuNand, if present.",
+				"caption":"rxMode EmuNAND",
+				"hint":"Apply patches and reboot the console into rxMode on EmuNAND, if present.",
 				"enabled":"FUNC_CHK_E",
 				"function":"FUNC_RXMODE",
 				"parameter":1
 			},"ITEM1-2":{
-				"caption":"rxMode sysNAND",
-				"description":"Apply patches and reboot the console into rxMode on sysNand.",
+				"caption":"rxMode SysNAND",
+				"hint":"Apply patches and reboot the console into rxMode on SysNAND.",
 				"function":"FUNC_RXMODE",
 				"parameter":0
 			},"ITEM1-3":{
           			"caption":"PastaMode",
-				"description":"Patches signature checks and load in sysNAND with GBA and DSi support.",
+				"hint":"Patches signature checks and load in SysNAND with GBA and DSi support.",
 				"function":"FUNC_PASTA"
 			},"ITEM1-4":{
 				"caption":"Reboot",
-				"description":"Reboot the console.",
+				"hint":"Reboot the console.",
 				"function":"FUNC_SHUTDOWN",
 				"parameter":0
 			},"ITEM1-5":{
 				"caption":"Shutdown",
-				"description":"Turn off the console.",
+				"hint":"Turn off the console.",
 				"function":"FUNC_SHUTDOWN",
 				"parameter":1
 			}
 		},"ITEM2":{
 			"caption":"Decrypt",
-			"description":"Decryption options.",
+			"hint":"Decryption options.",
 			"ITEM2-1":{
-				"caption":"Decrypt CTR Titles",
-				"description":"Decrypt 3DS titles directly on the console.",
+				"caption":"CTR Titles",
+				"hint":"Decrypt 3DS titles directly on the console.",
 				"function":"FUNC_DEC_CTR"
 			},"ITEM2-2":{
-				"caption":"Decrypt Title Keys",
-				"description":"Decrypt title keys stored in tickets.db which is needed to decrypt CDN content.",
+				"caption":"Title Keys",
+				"hint":"Decrypt title keys stored in tickets.db which is needed to decrypt CDN content.",
 				"function":"FUNC_DEC_TK"
 			},"ITEM2-3":{
-				"caption":"Decrypt encTitleKeys.bin",
-				"description":"Decrypt the private key of a game.",
+				"caption":"encTitleKeys.bin",
+				"hint":"Decrypt the private key of a game.",
 				"function":"FUNC_DEC_TKF"
 			},"ITEM2-4":{
 				"caption":"Generate Xorpads",
-				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles.",
+				"hint":"Generate XORpads needed to decrypt and encrypt 3DS titles.",
 				"function":"FUNC_GEN_T_PAD"
 			},"ITEM2-5":{
-				"caption":"Decrypt partitions",
-				"description":"Dump and decrypt all sysNAND or emuNAND partitions (except the TWL partition for now).",
-				"function":"FUNC_DEC_PAR"
+				"caption":"EmuNAND partitions",
+				"hint":"Dump and decrypt all EmuNAND partitions (except the TWL partition for now).",
+				"function":"FUNC_DEC_PAR",
+				"parameter":1
 			},"ITEM2-6":{
+				"caption":"SysNAND partitions",
+				"hint":"Dump and decrypt all SysNAND partitions (except the TWL partition for now).",
+				"function":"FUNC_DEC_PAR",
+				"parameter":0
+			},"ITEM2-7":{
 				"caption":"Generate fat16 Xorpad",
-				"description":"Generate XORpad needed to decrypt main NAND partition.",
+				"hint":"Generate XORpad needed to decrypt main NAND partition.",
 				"function":"FUN_GEN_PAR_PAD"
 			}
 		},"ITEM3":{
 			"caption":"Dump",
-			"description":"Dumping options.",
+			"hint":"Dumping options.",
 			"ITEM3-1":{
-				"caption":"Dump sysNAND",
-				"description":"Backup your sysNAND partition. It is highly recommended to backup your sysNAND partition.",
-				"function":"FUNC_DMP_N",
-				"parameter":0
-			},"ITEM3-2":{
-				"caption":"Dump emuNAND",
-				"description":"Backup your emuNAND partition.",
+				"caption":"EmuNAND",
+				"hint":"Backup your EmuNAND partition.",
 				"enabled":"FUNC_CHK_E",
 				"function":"FUNC_DMP_N",
 				"parameter":1
-			},"ITEM3-3":{
-				"caption":"Dump system titles",
-				"description":"Dump all 3DS titles from sysNAND.",
-				"function":"FUNC_DMP_NT"
-			},"ITEM3-4":{
-				"caption":"Dump sysNAND files",
-				"description":"Dump various important files from sysNAND.",
-				"ITEM3-4-1":{
-					"caption":"movable.sed",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:private/movable.sed"
-				},"ITEM3-4-2":{
-					"caption":"SecureInfo_A",
-					"enabled":"FUNC_CHK_F",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/SecureInfo_A"
-				},"ITEM3-4-3":{
-					"caption":"SecureInfo_B",
-					"enabled":"FUNC_CHK_F",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/SecureInfo_B"
-				},"ITEM3-4-4":{
-					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"FUNC_CHK_F",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM3-4-5":{
-					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"FUNC_CHK_F",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM3-4-6":{
-					"caption":"rand_seed",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/rand_seed"
-				},"ITEM3-4-7":{
-					"caption":"ticket.db",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:dbs/ticket.db"
-				},"ITEM3-4-8":{
-					"caption":"import.db",
-					"function":"FUNC_DMP_NF",
-					"parameter":"1:dbs/import.db"
-				}
-			},"ITEM3-5":{
-				"caption":"Dump emuNAND files",
-				"description":"Dump various important files from emuNAND.",
+			},"ITEM3-2":{
+				"caption":"EmuNAND files",
+				"hint":"Dump various important files from EmuNAND.",
 				"enabled":"FUNC_CHK_E",
-				"parameter":0,
-				"ITEM3-5-1":{
+				"parameter":1,
+				"ITEM3-2-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:private/movable.sed"
-				},"ITEM3-5-2":{
+				},"ITEM3-2-2":{
 					"caption":"SecureInfo_A",
 					"enabled":"FUNC_CHK_F",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:rw/sys/SecureInfo_A"
-				},"ITEM3-5-3":{
+				},"ITEM3-2-3":{
 					"caption":"SecureInfo_B",
 					"enabled":"FUNC_CHK_F",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:rw/sys/SecureInfo_B"
-				},"ITEM3-5-4":{
+				},"ITEM3-2-4":{
 					"caption":"LocalFriendCodeSeed_A",
 					"enabled":"FUNC_CHK_F",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM3-5-5":{
+				},"ITEM3-2-5":{
 					"caption":"LocalFriendCodeSeed_B",
 					"enabled":"FUNC_CHK_F",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM3-5-6":{
+				},"ITEM3-2-6":{
 					"caption":"rand_seed",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:rw/sys/rand_seed"
-				},"ITEM3-5-7":{
+				},"ITEM3-2-7":{
 					"caption":"ticket.db",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:dbs/ticket.db"
-				},"ITEM3-5-8":{
+				},"ITEM3-2-8":{
 					"caption":"import.db",
 					"function":"FUNC_DMP_NF",
 					"parameter":"2:/dbs/import.db"
 				}
+			},"ITEM3-3":{
+				"caption":"SysNAND",
+				"hint":"Backup your SysNAND partition. It is highly recommended to backup your SysNAND partition.",
+				"function":"FUNC_DMP_N",
+				"parameter":0
+			},"ITEM3-4":{
+				"caption":"System titles",
+				"hint":"Dump all 3DS titles from SysNAND.",
+				"function":"FUNC_DMP_NT"
+			},"ITEM3-5":{
+				"caption":"SysNAND files",
+				"hint":"Dump various important files from SysNAND.",
+				"ITEM3-5-1":{
+					"caption":"movable.sed",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:private/movable.sed"
+				},"ITEM3-5-2":{
+					"caption":"SecureInfo_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/SecureInfo_A"
+				},"ITEM3-5-3":{
+					"caption":"SecureInfo_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/SecureInfo_B"
+				},"ITEM3-5-4":{
+					"caption":"LocalFriendCodeSeed_A",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM3-5-5":{
+					"caption":"LocalFriendCodeSeed_B",
+					"enabled":"FUNC_CHK_F",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM3-5-6":{
+					"caption":"rand_seed",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:rw/sys/rand_seed"
+				},"ITEM3-5-7":{
+					"caption":"ticket.db",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:dbs/ticket.db"
+				},"ITEM3-5-8":{
+					"caption":"import.db",
+					"function":"FUNC_DMP_NF",
+					"parameter":"1:dbs/import.db"
+				}
 			},"ITEM3-6":{
-				"caption":"Dump ARM9 RAM",
-				"description":"Dump ARM9 RAM (for development purposes).",
+				"caption":"ARM9 RAM",
+				"hint":"Dump ARM9 RAM (for development purposes).",
 				"function":"FUNC_DMP_RAM"
 			}
 		},"ITEM4":{
 			"caption":"Inject",
-			"description":"Injection options.",
+			"hint":"Injection options.",
 			"ITEM4-1":{
-				"caption":"Inject emuNAND partitions",
-				"description":"Encrypt and write partitions from files on SD card into emuNAND (except the TWL partition for now).",
+				"caption":"EmuNAND partitions",
+				"hint":"Encrypt and write partitions from files on SD card into EmuNAND (except the TWL partition for now).",
 				"enabled":"FUNC_CHK_E",
 				"function":"FUNC_INJ_N",
-				"parameter":0,
+				"parameter":0
 			},"ITEM4-2":{
-				"caption":"Inject emuNAND files",
-				"description":"Inject various important files from SD card into emuNAND.",
+				"caption":"EmuNAND files",
+				"hint":"Inject various important files from SD card into EmuNAND.",
 				"enabled":"FUNC_CHK_E",
-				"parameter":0,
+				"parameter":1,
 				"ITEM4-2-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_INJ_NF",
@@ -214,8 +220,8 @@
 					"parameter":"2:/dbs/import.db"
 				}				
 			},"ITEM4-3":{
-				"caption":"Inject sysNAND files",
-				"description":"Inject various important files from SD card into sysNAND.",
+				"caption":"SysNAND files",
+				"hint":"Inject various important files from SD card into SysNAND.",
 				"ITEM4-3-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_INJ_NF",
@@ -256,31 +262,31 @@
 			}
 		},"ITEM5":{
 			"caption":"Advanced",
-			"description":"Advanced options.",
+			"hint":"Advanced options.",
 			"ITEM5-1":{
-				"caption":"Downgrade MSET on sysNAND",
-				"description":"Install old MSET in sysNAND to be able to use the DS profile exploit on firmwares 5.x-9.2.",
+				"caption":"Downgrade MSET",
+				"hint":"Install old MSET in SysNAND to be able to use the DS profile exploit on firmwares 5.x-9.2.",
 				"function":"FUNC_DG_MSET"
 			},"ITEM5-2":{
-				"caption":"Install FBI over H&S App",
-				"description":"Install FBI (a legal .cia installed) over Health&Safety application in sysNAND.",
+				"caption":"Install FBI",
+				"hint":"Install FBI (a legal .cia installed) over Health&Safety application in SysNAND.",
 				"function":"FUNC_INS_FBI"
 			},"ITEM5-3":{
-				"caption":"Restore original H&S App",
-				"description":"Uninstall FBI .cia installer and restore the original Health&Safety application.",
+				"caption":"Restore H&S App",
+				"hint":"Uninstall FBI .cia installer and restore the original Health&Safety application.",
 				"function":"FUNC_INS_HS"
 			},"ITEM5-4":{
 				"caption":"Advanced File Manager",
-				"description":"Choose a firmare file on SD card and load it.",
+				"hint":"Choose a firmare file on SD card and load it.",
 				"function":"FUNC_AFM"
 			}
 		},"ITEM6":{
 			"caption":"Settings",
-			"description":"Change settings.",
+			"hint":"Change settings.",
 			"ITEM6-1":{
 				"caption":"Force UI boot",
 				"value":"CFG_GUI"
-			},"ITEM6_2":{
+			},"ITEM6-2":{
 				"caption":"Theme",
 				"value":"CFG_THEME"
 			},"ITEM6-3":{
@@ -293,7 +299,7 @@
 				"caption":"Enable 3D UI",
 				"value":"CFG_3D"
 			},"ITEM6-6":{
-				"caption":"Autoboot into sysNAND",
+				"caption":"Autoboot SysNAND",
 				"value":"CFG_ABSYSN"
 			},"ITEM6-7":{
 				"caption":"Language",
@@ -302,7 +308,7 @@
 			}
 		},"ITEM7":{
 			"caption":"Credits",
-			"description":"Show credits."
+			"hint":"Show credits."
 		}
 	}
 }
