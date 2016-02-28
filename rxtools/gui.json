@@ -285,24 +285,38 @@
 			"hint":"Change settings.",
 			"ITEM6-1":{
 				"caption":"Force UI boot",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_GUI"
 			},"ITEM6-2":{
 				"caption":"Theme",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_THEME"
 			},"ITEM6-3":{
 				"caption":"Random theme",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_RANDOM"
 			},"ITEM6-4":{
 				"caption":"Show AGB_FIRM BIOS",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_AGB"
 			},"ITEM6-5":{
 				"caption":"Enable 3D UI",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_3D"
 			},"ITEM6-6":{
 				"caption":"Autoboot SysNAND",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_ABSYSN"
 			},"ITEM6-7":{
 				"caption":"Language",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_LANG",
 				"options":"FUNC_OPT_LANG"
 			}

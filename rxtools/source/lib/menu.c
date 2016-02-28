@@ -144,8 +144,45 @@ static void Shutdown(int arg) {
 	while(1);
 }
 
-bool EmuNANDExists(int foo){
+bool EmuNANDExists(int foo) {
 	return checkEmuNAND();
+}
+
+int getConfig(int idx) {
+	int i;
+	for(i = 0; i < CFG_NUM && strncmp(cfgs[i].key, menuJson.js + menuJson.tok[idx].start, menuJson.tok[idx].end - menuJson.tok[idx].start) != 0; i++);
+	return i < CFG_NUM ? i : -1;
+}
+
+void ConfigToggle(int idx) {
+	if ((idx = getConfig(idx)) >= 0) {
+		switch (cfgs[idx].type) {
+			case CFG_TYPE_STRING:
+				break;
+			case CFG_TYPE_INT:
+				break;
+			case CFG_TYPE_BOOLEAN:
+				cfgs[idx].val.b = !cfgs[idx].val.b;
+				break;
+		}
+		writeCfg();
+		MenuRefresh();
+	}
+}
+
+bool ConfigCheck(int idx) {
+	if ((idx = getConfig(idx)) >= 0) {
+		switch (cfgs[idx].type) {
+			case CFG_TYPE_STRING:
+//				break;
+			case CFG_TYPE_INT:
+//				break;
+			case CFG_TYPE_BOOLEAN:
+				return true;
+				break;
+		}
+	}
+	return false;
 }
 
 #define FUNC_KEY_MAX_SIZE 32
@@ -174,6 +211,8 @@ struct {
 	{"FUNC_AFM", &AdvFileManagerMain},
 	{"FUNC_CHK_E", &EmuNANDExists},
 	{"FUNC_CHK_F", &FileExists},
+	{"FUNC_CHK_CFG", &ConfigCheck},
+	{"FUNC_CFG_TOGGLE", &ConfigToggle},
 	{"FUNC_OPT_LANG", NULL}
 };
 
@@ -221,22 +260,10 @@ void MenuShow(){
 
 void MenuNextSelection(){
 	menuPosition = menuNavigate(menuPosition, NAV_NEXT);
-/*	if(MyMenu->Current + 1 < MyMenu->nEntryes){
-		MyMenu->Current++;
-	}else{
-//		MyMenu->Current = 0;
-	}
-*/
 }
 
 void MenuPrevSelection(){
 	menuPosition = menuNavigate(menuPosition, NAV_PREV);
-/*	if(MyMenu->Current > 0){
-		MyMenu->Current--;
-	}else{
-//		MyMenu->Current = MyMenu->nEntryes - 1;
-	}
-*/
 }
 
 void (*getFunc(int idx))() {
@@ -249,7 +276,14 @@ void (*getFunc(int idx))() {
 }
 
 void MenuSelect(){
-	if (siblings[target.index].parami != 0) { //target item have an integer parameter for callback
+	if (siblings[target.index].value != 0) { //target item have a settings key mapped
+		bool(*check)(int);
+		void(*func)(int);
+		if (siblings[target.index].enabled == 0 || ((check = (bool(*)(int))getFunc(siblings[target.index].enabled)) != NULL && check(siblings[target.index].value))) {
+			if(target.func != 0 && (func = (void(*)(int))getFunc(target.func)) != NULL)
+				func(siblings[target.index].value);
+		}
+	} else if (siblings[target.index].parami != 0) { //target item have an integer parameter for callback
 		bool(*check)(int);
 		void(*func)(int);
 		int param = strtol(menuJson.js + menuJson.tok[siblings[target.index].parami].start, NULL, 0);
@@ -292,7 +326,7 @@ void MenuClose(){
 }
 
 void MenuRefresh(){
-	ConsoleInit();
+/*	ConsoleInit();
 	MyMenu->Showed = 0;
 	ConsoleSetTitle(lang(MyMenu->Name, -1));
 	for (int i = 0; i < MyMenu->nEntryes; i++){
@@ -304,11 +338,20 @@ void MenuRefresh(){
 		ConsoleShow();
 		MyMenu->Showed = 1;
 	}
+*/
+	menuPosition = menuTry(menuPosition, menuPosition);
 }
 
 //New menu system
 
 int menuParse(int s, objtype type, int menulevel, int menuposition, int targetposition, int *foundposition) {
+	if (s == 0) { //parse from the begining - initialize data structures;
+		memset(ancestors, 0, sizeof(ancestors));
+		target = (Target){0};
+		for (int i = 0; i < sizeof(siblings)/sizeof(siblings[0]); siblings[i++] = (Sibling){0});
+//		siblings[siblingcount = 0] = (Sibling){0};
+		siblingcount = 0;
+	}
 	if (s == menuJson.count)
 		return 0;
 	if (menuJson.tok[s].type == JSMN_PRIMITIVE || menuJson.tok[s].type == JSMN_STRING)
@@ -322,7 +365,6 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 
 //		if (menulevel >= 2)
 //			ancestors[menulevel - 2] = 0;
-//		siblings[siblingcount] = (Sibling){0};
 		for (i = 0; i < menuJson.tok[s].size; i++) {
 			j++;
 			mask = (0xffffffff << (8 * sizeof(unsigned int) - targetlevel * MENU_LEVEL_BIT_WIDTH));
@@ -430,6 +472,7 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 
 		if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
 			siblingcount++;
+//			siblings[siblingcount++] = (Sibling){0};
 
 		return j + 1;
 	} else if (menuJson.tok[s].type == JSMN_ARRAY) {
@@ -450,19 +493,9 @@ int menuTry(int targetposition, int currentposition) {
 	bool(*checki)(int);
 	bool(*checks)(wchar_t*);
 
-	memset(ancestors, 0, sizeof(ancestors));
-	for (i = 0; i< sizeof(siblings)/sizeof(siblings[0]); siblings[i++] = (Sibling){0});
-	target = (Target){0};
-	siblingcount = 0;
-
 	menuParse(0, OBJ_NONE, 0, 0, targetposition, &foundposition);
-	if (foundposition == 0) { //fallback in case requested menu not exists
-		memset(ancestors, 0, sizeof(ancestors));
-		for (i = 0; i< sizeof(siblings)/sizeof(siblings[0]); siblings[i++] = (Sibling){0});
-		target = (Target){0};
-		siblingcount = 0;
+	if (foundposition == 0) //fallback in case requested menu not exists
 		menuParse(0, OBJ_NONE, 0, 0, currentposition, &foundposition);
-	}
 
 /*	if (wcslen(style.top1img) > 0) {
 		DrawSplash(&top1TmpScreen, style.top1img);
@@ -484,27 +517,24 @@ int menuTry(int targetposition, int currentposition) {
 		x += font24.dw + DrawSubString(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start), -1, x, 0, &style.color, &font24);
 
 	for (i = 0; i < sizeof(siblings)/sizeof(siblings[0]) && siblings[i].caption != 0; i++) {
-		if (siblings[i].value != 0) {
-			for (j = 0; j < CFG_NUM; j++) {
-				if (strncmp(cfgs[j].key, menuJson.js + menuJson.tok[siblings[i].value].start, menuJson.tok[siblings[i].value].end - menuJson.tok[siblings[i].value].start) == 0) {
-					switch (cfgs[j].type) {
-						case CFG_TYPE_STRING:
-							DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
-							break;
-						case CFG_TYPE_INT:
-							swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
-							DrawStringRect(&bottomTmpScreen, str, bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
-							break;
-						case CFG_TYPE_BOOLEAN:
-							DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
-							break;
-					}
+		if ((siblings[i].value != 0) && (j = getConfig(siblings[i].value)) >= 0) {
+			switch (cfgs[j].type) {
+				case CFG_TYPE_STRING:
+					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
 					break;
-				}
+				case CFG_TYPE_INT:
+					swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
+					DrawStringRect(&bottomTmpScreen, str, bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
+					break;
+				case CFG_TYPE_BOOLEAN:
+					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
+					break;
 			}
 		}
 		if (siblings[i].enabled == 0) {
 			enabled = true;
+		} else if (siblings[i].value != 0) { //item have a settings key mapped
+			enabled = (check = (bool(*)(int))getFunc(siblings[i].enabled)) != NULL && check(siblings[i].value);
 		} else if (siblings[i].parami != 0) { //item have an integer parameter for enabled check callback function
 			enabled = (checki = (bool(*)(int))getFunc(siblings[i].enabled)) != NULL && checki(strtol(menuJson.js + menuJson.tok[siblings[i].parami].start, NULL, 0));
 		} else if (siblings[i].params != 0) { //item have a string parameter for enabled check callback function
