@@ -162,7 +162,6 @@ enum {
 };
 
 extern int fontIsLoaded;
-extern const wchar_t *langPath;
 extern wchar_t strings[STR_NUM][STR_MAX_LEN];
 
 void preloadStringsA(void);
@@ -170,11 +169,15 @@ void preloadStringsU(void);
 void switchStrings(void);
 int loadStrings(void);
 
+#define LANG_CODE_LENGTH	5
+#define LANG_CODE_NONE		""
+#define LANG_CODE_DEFAULT	"en"
+
 #define LANG_JSON_SIZE		0x2000
 #define LANG_JSON_TOKENS	0x200
 
-extern Json langJson;
-
 wchar_t *lang(char *key, int keylen);
+int langLoad(char *code);
+int langLoadNext(char *code);
 
 #endif

@@ -158,6 +158,8 @@ void ConfigToggle(int idx) {
 	if ((idx = getConfig(idx)) >= 0) {
 		switch (cfgs[idx].type) {
 			case CFG_TYPE_STRING:
+				if (idx == CFG_LANG)
+					langLoadNext(cfgs[idx].val.s);
 				break;
 			case CFG_TYPE_INT:
 				break;
@@ -254,7 +256,7 @@ void MenuInit(Menu* menu){
 
 void MenuShow(){
 	memcpy(bottomScreen.addr, bottomTmpScreen.addr, bottomScreen.size);
-//	memcpy(top1Screen.addr, top1TmpScreen.addr, top1Screen.size);
+	memcpy(top1Screen.addr, top1TmpScreen.addr, top1Screen.size);
 //	memcpy(top2Screen.addr, top2TmpScreen.addr, top2Screen.size);
 }
 
@@ -319,26 +321,9 @@ void MenuSelect(){
 
 void MenuClose(){
 	menuPosition = menuNavigate(menuPosition, NAV_UP);
-/*	if (openedMenus > 0){
-		OpenAnimation();
-	}
-*/
 }
 
 void MenuRefresh(){
-/*	ConsoleInit();
-	MyMenu->Showed = 0;
-	ConsoleSetTitle(lang(MyMenu->Name, -1));
-	for (int i = 0; i < MyMenu->nEntryes; i++){
-		print(L"%ls %ls\n", i == MyMenu->Current ? strings[STR_CURSOR] : strings[STR_NO_CURSOR], lang(MyMenu->Option[i].Str, -1));
-	}
-	int x = 0, y = 0;
-	ConsoleGetXY(&x, &y);
-	if (!MyMenu->Showed){
-		ConsoleShow();
-		MyMenu->Showed = 1;
-	}
-*/
 	menuPosition = menuTry(menuPosition, menuPosition);
 }
 
@@ -349,7 +334,6 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 		memset(ancestors, 0, sizeof(ancestors));
 		target = (Target){0};
 		for (int i = 0; i < sizeof(siblings)/sizeof(siblings[0]); siblings[i++] = (Sibling){0});
-//		siblings[siblingcount = 0] = (Sibling){0};
 		siblingcount = 0;
 	}
 	if (s == menuJson.count)
@@ -363,8 +347,6 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 		if (type == OBJ_MENU)
 			menulevel++;
 
-//		if (menulevel >= 2)
-//			ancestors[menulevel - 2] = 0;
 		for (i = 0; i < menuJson.tok[s].size; i++) {
 			j++;
 			mask = (0xffffffff << (8 * sizeof(unsigned int) - targetlevel * MENU_LEVEL_BIT_WIDTH));
@@ -472,7 +454,6 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 
 		if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
 			siblingcount++;
-//			siblings[siblingcount++] = (Sibling){0};
 
 		return j + 1;
 	} else if (menuJson.tok[s].type == JSMN_ARRAY) {
@@ -497,17 +478,17 @@ int menuTry(int targetposition, int currentposition) {
 	if (foundposition == 0) //fallback in case requested menu not exists
 		menuParse(0, OBJ_NONE, 0, 0, currentposition, &foundposition);
 
-/*	if (wcslen(style.top1img) > 0) {
+	if (wcslen(style.top1img) > 0) {
 		DrawSplash(&top1TmpScreen, style.top1img);
-		if (wcslen(style.top2img) > 0)
-			DrawSplash(&top2TmpScreen, style.top2img);
-		else
-			memcpy(top2TmpScreen.addr, top1TmpScreen.addr, top1Screen.size);
+//		if (wcslen(style.top2img) > 0)
+//			DrawSplash(&top2TmpScreen, style.top2img);
+//		else
+//			memcpy(top2TmpScreen.addr, top1TmpScreen.addr, top1Screen.size);
 	} else {
 		ClearScreen(&top1TmpScreen, BLACK);
-		ClearScreen(&top2TmpScreen, BLACK);
+//		ClearScreen(&top2TmpScreen, BLACK);
 	}
-*/
+
 	if (wcslen(style.bottomimg) > 0)
 		DrawSplash(&bottomTmpScreen, style.bottomimg);
 	else

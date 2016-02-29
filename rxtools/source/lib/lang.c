@@ -24,7 +24,8 @@
 
 int fontIsLoaded = 0;
 wchar_t strings[STR_NUM][STR_MAX_LEN] = {};
-const wchar_t *langPath = L"/rxTools/lang/%s";
+const wchar_t *langDir = L"/rxTools/lang";
+const wchar_t *langPath = L"%ls/%s.json";
 
 static const char *keys[STR_NUM] = {
 	[STR_LANG_NAME] = "LANG_NAME",
@@ -268,8 +269,7 @@ int loadStrings()
 	int l, r, len;
 	File fd;
 
-	swprintf(path, _MAX_LFN, L"%ls/%s",
-		langPath, fontIsLoaded ? cfgs[CFG_LANG].val.s : "en.json");
+	swprintf(path, _MAX_LFN, langPath, langDir, fontIsLoaded ? cfgs[CFG_LANG].val.s : "en");
 	if (!FileOpen(&fd, path, 0))
 		return 1;
 
@@ -320,18 +320,18 @@ int loadStrings()
 
 #define STR_TRANS_CNT 8
 wchar_t wstr[STR_TRANS_CNT][STR_MAX_LEN];
-char str[STR_MAX_LEN];
 int itrans = 0;
 
 char jsl[LANG_JSON_SIZE];
 jsmntok_t tokl[LANG_JSON_TOKENS];
-Json langJson = {jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
+Json langJson;
 
 wchar_t *lang(char *key, int keylen)
 {
+	int i, len = 0;
+	char str[STR_MAX_LEN];
 	if (keylen < 0)
 		keylen = strlen(key);
-	int i, len;
 	for (i = 1; i < langJson.count; i+=2) {
 		len = langJson.tok[i].end - langJson.tok[i].start;
 		if (langJson.tok[i].type == JSMN_STRING && keylen == len && memcmp(key, langJson.js + langJson.tok[i].start, len) == 0) {
@@ -339,16 +339,60 @@ wchar_t *lang(char *key, int keylen)
 			if (len > STR_MAX_LEN - 1)
 				len = STR_MAX_LEN - 1;
 			strncpy(str, langJson.js + langJson.tok[i+1].start, len);
-			key = str;
-			keylen = len;
 			break;
 		}
 	}
+	if (len == 0) {
+		if ((len = keylen) > STR_MAX_LEN - 1)
+			len = STR_MAX_LEN - 1;
+		strncpy(str, key, len);
+	}
+	str[len] = 0;
 	if (itrans >= STR_TRANS_CNT)
 		itrans = 0;
-	if (keylen > STR_MAX_LEN - 1)
-		keylen = STR_MAX_LEN - 1;
-	mbstowcs(wstr[itrans], key, keylen + 1);
-	wstr[itrans][keylen] = 0;
+	mbstowcs(wstr[itrans], str, len + 1);
 	return wstr[itrans++];
+}
+
+int langLoad(char *code) {
+	wchar_t path[_MAX_LFN + 1];
+
+	swprintf(path, _MAX_LFN + 1, langPath, langDir, code);
+	langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
+	if (jsonLoad(&langJson, path) <= 0) {
+		swprintf(path, _MAX_LFN + 1, langPath, langDir, LANG_CODE_DEFAULT);
+		langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
+		strcpy(code, jsonLoad(&langJson, path) > 0 ? LANG_CODE_DEFAULT : LANG_CODE_NONE);
+	}
+	return langJson.count;
+}
+
+int langLoadNext(char *code) {
+	DIR dir;
+	FILINFO fno;
+	static wchar_t lfn[_MAX_LFN + 1];
+	fno.lfname = lfn;
+	fno.lfsize = _MAX_LFN + 1;
+	wchar_t path[_MAX_LFN + 1];
+	wchar_t *current, *fn;
+
+	swprintf(path, _MAX_LFN + 1, langPath, langDir, code);
+	current = wcsrchr(path, L'/') + 1;
+	strcpy(code, LANG_CODE_NONE);
+	if (f_opendir(&dir, langDir) == FR_OK) {
+		while (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0) {
+			if (fno.fname[0] != L'.' && ~fno.fattrib & AM_DIR) {
+				fn = *fno.lfname ? fno.lfname : fno.fname;
+				if (strcmp(code, LANG_CODE_NONE) == 0); //get first code in case it is the only one or current is the last
+					wcstombs(code, fn, wcscspn(fn, L"."));
+				if (wcscmp(current, fn) == 0)
+					break;
+			}
+		}
+		if (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0 && ~fno.fattrib & AM_DIR) {
+			fn = *fno.lfname ? fno.lfname : fno.fname;
+			wcstombs(code, fn, wcscspn(fn, L"."));
+		}
+	}
+	return langLoad(code);
 }

@@ -170,17 +170,17 @@ void AdvancedMenuInit(){
 
 void SettingsMenuInit(){
 	MenuInit(&SettingsMenu);
-	DIR d;
-	FILINFO fno;
-	wchar_t str[_MAX_LFN];
-	const unsigned int maxLangNum = 16;
-	wchar_t langs[maxLangNum][CFG_STR_MAX_LEN];
-	unsigned char theme_num = 0;
-	unsigned int curLang, langNum;
 
+//	DIR d;
+//	FILINFO fno;
+	wchar_t str[_MAX_LFN];
+//	const unsigned int maxLangNum = 16;
+//	wchar_t langs[maxLangNum][CFG_STR_MAX_LEN];
+	unsigned char theme_num = 0;
+//	unsigned int curLang, langNum;
+/*
 	curLang = 0;
 	langNum = 0;
-
 	if (!f_opendir(&d, langPath)) {
 		mbstowcs(str, cfgs[CFG_LANG].val.s, _MAX_LFN);
 
@@ -202,7 +202,7 @@ void SettingsMenuInit(){
 
 		f_closedir(&d);
 	}
-
+*/
 	while (true) {
 		//UPDATE SETTINGS GUI
 /*		swprintf(MyMenu->Name, CONSOLE_MAX_TITLE_LENGTH+1, L"%ls    Build: %s", lang("SETTINGS"), VERSION);
@@ -315,7 +315,7 @@ void SettingsMenuInit(){
 			}
 			else if (MyMenu->Current == 6)
 			{
-				if (pad_state & BUTTON_LEFT && curLang > 0)
+/*				if (pad_state & BUTTON_LEFT && curLang > 0)
 					curLang--;
 				else if (pad_state & BUTTON_RIGHT && curLang + 1 < langNum)
 					curLang++;
@@ -324,13 +324,13 @@ void SettingsMenuInit(){
 					CFG_STR_MAX_LEN);
 				switchStrings();
 				if (fontIsLoaded) {
-//					setLang(cfgs[CFG_LANG].val.s);
-					wchar_t path[_MAX_LFN];
-					swprintf(path, _MAX_LFN, L"%ls/%s", langPath, cfgs[CFG_LANG].val.s);
-					langJson.len = LANG_JSON_SIZE;
-					langJson.count = LANG_JSON_TOKENS;
-					jsonLoad(&langJson, path);
-				}
+*/					langLoad(cfgs[CFG_LANG].val.s);
+//					wchar_t path[_MAX_LFN];
+//					swprintf(path, _MAX_LFN, L"%ls/%s", langPath, cfgs[CFG_LANG].val.s);
+//					langJson.len = LANG_JSON_SIZE;
+//					langJson.count = LANG_JSON_TOKENS;
+//					jsonLoad(&langJson, path);
+//				}
 			}
 			else if (MyMenu->Current == 7)
 			{

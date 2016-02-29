@@ -98,24 +98,27 @@ int themeParse(int s, char *key, int *idx) {
 				case 't': //"topimg"
 					if (themeJson.tok[s+j+1].type == JSMN_STRING)
 						idx[TOP1] = idx[TOP2] = s + j + 1;
-					if (themeJson.tok[s].type == JSMN_ARRAY) {
+					else if (themeJson.tok[s+j+1].type == JSMN_ARRAY && themeJson.tok[s+j+1].size > 0) {
 						idx[TOP1] = s + j + 2;
-						idx[TOP2] = s + j + 3;
+						if (themeJson.tok[s+j+1].size > 1)
+							idx[TOP2] = s + j + 3;
 					}
 					j += themeParse(s+j+1, key, idx);
 					break;
+				case 'm': //"menu"
 				default:
 					if (isTarget) { //target object - get member indexes and terminate
 						themeParse(s+j+1, key, idx);
 						return 0;
 					} else {
 						int localidx[IDX_COUNT] = {0};
-						if ((k = themeParse(s+j+1, key, localidx)) == 0) {
-						//object is in target chain - set inherited indexes and terminate
-							for (k = 0; k < IDX_COUNT; k++)
-								if (idx[k] == 0)
-									idx[k] = localidx[k];
-							return 0;
+						if ((k = themeParse(s+j+1, key, localidx)) == 0 || themeJson.js[themeJson.tok[s+j].start] == 'm') {
+						//object is in target chain - set inherited indexes and terminate or apply root 'menu' for unset parameters
+							for (int l = 0; l < IDX_COUNT; l++)
+								if (idx[l] == 0)
+									idx[l] = localidx[l];
+							if (k == 0)
+								return 0;
 						}
 					}
 					j += k;
@@ -134,9 +137,10 @@ int themeParse(int s, char *key, int *idx) {
 int colorParse(int s, char *key, int *idx, int coloridx) {
 	if (themeJson.tok[s].type == JSMN_STRING)
 		idx[coloridx] = s;
-	if (themeJson.tok[s].type == JSMN_ARRAY) {
+	else if (themeJson.tok[s].type == JSMN_ARRAY && themeJson.tok[s].size > 0) {
 		idx[coloridx] = s + 1;
-		idx[coloridx + 1] = s + 2;
+		if (themeJson.tok[s].size > 1)
+			idx[coloridx + 1] = s + 2;
 	}
 	return themeParse(s, key, idx);
 }

@@ -254,11 +254,10 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	wchar_t path[_MAX_LFN];
 
 	r = loadStrings();
-	if (fontIsLoaded) {
-//		r = setLang(cfgs[CFG_LANG].val.s);
-		swprintf(path, _MAX_LFN, langPath, cfgs[CFG_LANG].val.s);
-		r = jsonLoad(&langJson, path);
-	}
+	if (fontIsLoaded)
+		r = langLoad(cfgs[CFG_LANG].val.s);
+//		swprintf(path, _MAX_LFN, langPath, cfgs[CFG_LANG].val.s);
+//		r = jsonLoad(&langJson, path);
 
 	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);

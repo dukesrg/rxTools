@@ -41,7 +41,7 @@
 #define DATA_PATH	L"rxtools/data"
 #define KEYFILENAME	"slot0x25KeyX.bin"
 
-static char cfgLang[CFG_STR_MAX_LEN] = "en.json";
+static char cfgLang[CFG_STR_MAX_LEN] = "en";
 
 Cfg cfgs[] = {
 	[CFG_GUI] = { "CFG_GUI", CFG_TYPE_BOOLEAN, { .i = 0 } },
