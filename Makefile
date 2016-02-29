@@ -23,6 +23,12 @@ SET_DATNAME := DATNAME=$(SYS_PATH)/$(CODE_FILE)
 export INCDIR := -I$(CURDIR)/include
 export RXTOOLSMK := $(CURDIR)/common.mk
 
+export GIT_VERSION := $(shell git rev-parse --short HEAD)
+
+ifeq ($(GIT_VERSION),)
+    GIT_VERSION := "N/A"
+endif
+
 CFLAGS = -std=c11 -O2 -Wall -Wextra
 ROPFLAGS = $(SET_DATNAME) DISPNAME=rxTools GRAPHICS=../logo
 BRAHFLAGS = name=$(CODE_FILE) filepath=$(SYS_PATH)/ \
@@ -84,7 +90,7 @@ release-rxtools: all-target-rxtools
 	@cp rxtools/gui.json release/$(SYS_PATH)
 
 release-doc:
-	@cp README.md docs/QuickStartGuide_v3.0.pdf release
+	@cp README.md "docs/QuickStartGuide(v3.0_BETA).pdf" release
 
 release-lang:
 	mkdir -p release/rxTools/lang
