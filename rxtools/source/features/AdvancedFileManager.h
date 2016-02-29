@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef ADVANCEDFILEMANAGER_H
+#define ADVANCEDFILEMANAGER_H
 
 #include <wchar.h>
 #include "console.h"
@@ -38,3 +39,5 @@ void AdvFileManagerSelect(panel_t* Panel);
 void AdvFileManagerFileAction(wchar_t *filePath);
 void AdvFileManagerBack(panel_t* Panel);
 void AdvFileManagerMain();
+
+#endif

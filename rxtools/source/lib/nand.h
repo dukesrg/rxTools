@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef NAND_H
+#define NAND_H
 
 #include <stdint.h>
 
@@ -38,3 +39,5 @@ void nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, uns
 void nand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, unsigned int partition);
 void emunand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, unsigned int partition);
 void emunand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, unsigned int partition);
+
+#endif

@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef LANG_H
+#define LANG_H
 
 #include <wchar.h>
 #include "configuration.h"
@@ -175,3 +176,5 @@ int loadStrings(void);
 extern Json langJson;
 
 wchar_t *lang(char *key, int keylen);
+
+#endif

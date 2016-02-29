@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef JSON_H
+#define JSON_H
 
 #include <stdlib.h>
 #include "jsmn/jsmn.h"
@@ -29,3 +30,5 @@ typedef struct {
 } Json;
 
 int jsonLoad(Json *json, const wchar_t *path);
+
+#endif

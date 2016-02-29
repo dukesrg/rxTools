@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef MPCORE_H
+#define MPCORE_H
 
 typedef enum {
 	MPINFO_CTR = 1,
@@ -26,3 +27,5 @@ static inline MpInfo getMpInfo()
 {
         return *(MpInfo *)0x10140FFC;
 }
+
+#endif

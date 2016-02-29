@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef CTR_DECRYPTOR_H
+#define CTR_DECRYPTOR_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -30,3 +31,5 @@ typedef struct{
 
 uint32_t DecryptPartition(PartitionInfo* info);
 void CTRDecryptor();
+
+#endif

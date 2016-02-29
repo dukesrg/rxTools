@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef NCCH_H
+#define NCCH_H
 
 typedef enum
 {
@@ -58,3 +59,5 @@ typedef struct
 
 void ncch_get_counter(ctr_ncchheader header, unsigned char counter[16], unsigned char type);
 unsigned int getle32(const unsigned char* p);
+
+#endif

@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef NAND_DUMPER_H
+#define NAND_DUMPER_H
 
 #include "menu.h"
 
@@ -31,3 +32,5 @@ void DumpNandPartitions();
 void GenerateNandXorpads();
 void DumpNANDSystemTitles();
 void RebuildNand();
+
+#endif

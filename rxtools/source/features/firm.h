@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef CFW_H
+#define CFW_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -60,3 +61,5 @@ static inline int getFirmPatchPath(wchar_t *s, TitleIdLo id)
 {
 	return swprintf(s, _MAX_LFN, firmPatchPathFmt, TID_HI_FIRM, id);
 }
+
+#endif

@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef PADGEN_H
+#define PADGEN_H
 
 #define MAXENTRIES 1024
 
@@ -60,3 +61,5 @@ uint32_t CreatePad(PadInfo *info, int index);
 uint32_t NcchPadgen();
 uint32_t SdPadgen();
 void PadGen();
+
+#endif

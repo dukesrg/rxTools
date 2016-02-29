@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef HID_H
+#define HID_H
 
 #include <stdint.h>
 
@@ -37,3 +38,5 @@
 uint32_t InputWait();
 uint32_t GetInput();
 void WaitForButton(uint32_t button);
+
+#endif

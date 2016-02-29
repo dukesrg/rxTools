@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef MENU_H
+#define MENU_H
 
 #include <stdbool.h>
 #include <wchar.h>
@@ -64,3 +65,5 @@ extern Menu* MyMenu;
 
 int menuTry(int targetposition, int currentposition);
 int menuLevel(int pos);
+
+#endif

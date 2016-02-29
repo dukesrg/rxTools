@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef TITLE_KEY_DECRYPT_H
+#define TITLE_KEY_DECRYPT_H
 
 #include <stdint.h>
 
@@ -48,3 +49,5 @@ void DecryptTitleKeys();
 void DecryptTitleKeyFile(void);
 int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive);
 int getTitleKeyWithCetk(uint8_t dst[16], const wchar_t *path);
+
+#endif

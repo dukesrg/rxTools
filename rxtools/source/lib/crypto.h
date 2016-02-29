@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef CRYPTO_H
+#define CRYPTO_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -69,3 +70,5 @@ uint32_t aes_getwritecount();
 uint32_t aes_getreadcount();
 uint32_t aescnt_checkwrite();
 uint32_t aescnt_checkread();
+
+#endif

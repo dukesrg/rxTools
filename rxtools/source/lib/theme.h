@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef THEME_H
 
 #include "json.h"
 #include "fs.h"
@@ -42,3 +42,5 @@ extern Json themeJson;
 extern themeStyle style;
 
 void themeSet(int themeNum, char *key);
+
+#endif

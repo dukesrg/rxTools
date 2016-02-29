@@ -15,8 +15,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
-
+#ifndef FILEEXPLORER_H
+#define FILEEXPLORER_H
+ 
 #include <wchar.h>
 #include "console.h"
 
@@ -26,3 +27,5 @@ void FileExplorerPrevSelection();
 int FileExplorerSelect(wchar_t *p, size_t n);
 void FileExplorerBack();
 int FileExplorerMain(wchar_t *p, size_t n);
+
+#endif

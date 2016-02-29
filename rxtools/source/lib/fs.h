@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef FS_H
+#define FS_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -35,3 +36,5 @@ void FileClose(File *Handle);
 bool FileExists(const wchar_t *path);
 ////////////////////////////////////////////////////////////////Advanced FileSystem Operations
 uint32_t FSFileCopy(wchar_t *target, wchar_t *source);
+
+#endif

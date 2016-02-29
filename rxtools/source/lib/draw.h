@@ -15,7 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#pragma once
+#ifndef DRAW_H
+#define DRAW_H
 
 #include <stdint.h>
 #include <wchar.h>
@@ -104,3 +105,5 @@ void OpenAnimation();
 //Unused functions.
 //void DrawHex(uint8_t *screen, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
 //void DrawHexWithName(uint8_t *screen, const wchar_t *str, uint32_t hex, uint32_t x, uint32_t y, uint32_t color, uint32_t bgcolor);
+
+#endif
