@@ -326,10 +326,58 @@ char jsl[LANG_JSON_SIZE];
 jsmntok_t tokl[LANG_JSON_TOKENS];
 Json langJson;
 
+int langLoad(char *code, langSeek seek) {
+	DIR dir;
+	FILINFO fno;
+	wchar_t *fn, *pathfn;
+	wchar_t pattern[_MAX_LFN + 1];
+	wchar_t path[_MAX_LFN + 1];
+	wchar_t targetfn[_MAX_LFN + 1];
+	wchar_t prevfn[_MAX_LFN + 1] = L"";
+	wchar_t lfn[_MAX_LFN + 1];
+	fno.lfname = lfn;
+	fno.lfsize = _MAX_LFN + 1;
+
+	swprintf(pattern, _MAX_LFN + 1, langPath, prevfn, "*");
+	fn = wcsrchr(pattern, L'/') + 1;
+	if (f_findfirst(&dir, &fno, langDir, fn) == FR_OK) {
+		swprintf(path, _MAX_LFN + 1, langPath, langDir, code);
+		wcscpy(targetfn, pathfn = wcsrchr(path, L'/') + 1);
+		wcscpy(pathfn, fn = *fno.lfname ? fno.lfname : fno.fname);
+		do {
+			if (wcscmp((fn = *fno.lfname ? fno.lfname : fno.fname), targetfn) == 0) {
+				if (seek == LANG_SET)
+					wcscpy(pathfn, targetfn);
+				else if (seek == LANG_NEXT && f_findnext(&dir, &fno) == FR_OK && fno.fname[0] != 0)
+					wcscpy(pathfn, *fno.lfname ? fno.lfname : fno.fname);
+				else if (seek == LANG_PREV && !*prevfn)
+					continue;
+				break;
+			}
+			if (seek == LANG_PREV)
+				wcscpy(prevfn, fn);
+		} while (f_findnext(&dir, &fno) == FR_OK && fno.fname[0]);
+		if (seek == LANG_PREV && *prevfn)
+			wcscpy(pathfn, prevfn);
+			
+		langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
+		if (jsonLoad(&langJson, path) > 0)
+			code[wcstombs(code, pathfn, wcscspn(pathfn, L"."))] = 0;
+		else {
+			swprintf(path, _MAX_LFN + 1, langPath, langDir, LANG_CODE_DEFAULT);
+			langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
+			strcpy(code, jsonLoad(&langJson, path) > 0 ? LANG_CODE_DEFAULT : LANG_CODE_NONE);
+		}
+	} else
+		langJson.count = 0; //no money - no honey
+	f_closedir(&dir);
+	return langJson.count;
+}
+
 wchar_t *lang(char *key, int keylen)
 {
 	int i, len = 0;
-	char str[STR_MAX_LEN];
+	char str[STR_MAX_LEN] = "";
 	if (keylen < 0)
 		keylen = strlen(key);
 	for (i = 1; i < langJson.count; i+=2) {
@@ -342,57 +390,15 @@ wchar_t *lang(char *key, int keylen)
 			break;
 		}
 	}
-	if (len == 0) {
+	if (!*str) {
 		if ((len = keylen) > STR_MAX_LEN - 1)
 			len = STR_MAX_LEN - 1;
 		strncpy(str, key, len);
 	}
 	str[len] = 0;
+
 	if (itrans >= STR_TRANS_CNT)
 		itrans = 0;
 	mbstowcs(wstr[itrans], str, len + 1);
 	return wstr[itrans++];
-}
-
-int langLoad(char *code) {
-	wchar_t path[_MAX_LFN + 1];
-
-	swprintf(path, _MAX_LFN + 1, langPath, langDir, code);
-	langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
-	if (jsonLoad(&langJson, path) <= 0) {
-		swprintf(path, _MAX_LFN + 1, langPath, langDir, LANG_CODE_DEFAULT);
-		langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
-		strcpy(code, jsonLoad(&langJson, path) > 0 ? LANG_CODE_DEFAULT : LANG_CODE_NONE);
-	}
-	return langJson.count;
-}
-
-int langLoadNext(char *code) {
-	DIR dir;
-	FILINFO fno;
-	static wchar_t lfn[_MAX_LFN + 1];
-	fno.lfname = lfn;
-	fno.lfsize = _MAX_LFN + 1;
-	wchar_t path[_MAX_LFN + 1];
-	wchar_t *current, *fn;
-
-	swprintf(path, _MAX_LFN + 1, langPath, langDir, code);
-	current = wcsrchr(path, L'/') + 1;
-	strcpy(code, LANG_CODE_NONE);
-	if (f_opendir(&dir, langDir) == FR_OK) {
-		while (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0) {
-			if (fno.fname[0] != L'.' && ~fno.fattrib & AM_DIR) {
-				fn = *fno.lfname ? fno.lfname : fno.fname;
-				if (strcmp(code, LANG_CODE_NONE) == 0); //get first code in case it is the only one or current is the last
-					wcstombs(code, fn, wcscspn(fn, L"."));
-				if (wcscmp(current, fn) == 0)
-					break;
-			}
-		}
-		if (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0 && ~fno.fattrib & AM_DIR) {
-			fn = *fno.lfname ? fno.lfname : fno.fname;
-			wcstombs(code, fn, wcscspn(fn, L"."));
-		}
-	}
-	return langLoad(code);
 }

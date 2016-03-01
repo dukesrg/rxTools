@@ -315,22 +315,7 @@ void SettingsMenuInit(){
 			}
 			else if (MyMenu->Current == 6)
 			{
-/*				if (pad_state & BUTTON_LEFT && curLang > 0)
-					curLang--;
-				else if (pad_state & BUTTON_RIGHT && curLang + 1 < langNum)
-					curLang++;
-
-				wcstombs(cfgs[CFG_LANG].val.s, langs[curLang],
-					CFG_STR_MAX_LEN);
-				switchStrings();
-				if (fontIsLoaded) {
-*/					langLoad(cfgs[CFG_LANG].val.s);
-//					wchar_t path[_MAX_LFN];
-//					swprintf(path, _MAX_LFN, L"%ls/%s", langPath, cfgs[CFG_LANG].val.s);
-//					langJson.len = LANG_JSON_SIZE;
-//					langJson.count = LANG_JSON_TOKENS;
-//					jsonLoad(&langJson, path);
-//				}
+				langLoad(cfgs[CFG_LANG].val.s, LANG_NEXT);
 			}
 			else if (MyMenu->Current == 7)
 			{

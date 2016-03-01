@@ -67,8 +67,7 @@ void FileClose(File *Handle) {
 }
 
 bool FileExists(const wchar_t *path) {
-	FIL file;
-	return f_open(&file, path, FA_READ | FA_OPEN_EXISTING) == FR_OK && f_close(&file) == FR_OK;
+	return f_stat(path, NULL) == FR_OK;
 }
 
 ////////////////////////////////////////////////////////////////Advanced FileSystem Operations

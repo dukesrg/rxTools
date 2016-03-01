@@ -159,7 +159,7 @@ void ConfigToggle(int idx) {
 		switch (cfgs[idx].type) {
 			case CFG_TYPE_STRING:
 				if (idx == CFG_LANG)
-					langLoadNext(cfgs[idx].val.s);
+					langLoad(cfgs[idx].val.s, LANG_NEXT);
 				break;
 			case CFG_TYPE_INT:
 				break;

@@ -176,8 +176,13 @@ int loadStrings(void);
 #define LANG_JSON_SIZE		0x2000
 #define LANG_JSON_TOKENS	0x200
 
+typedef enum {
+	LANG_SET,
+	LANG_NEXT,
+	LANG_PREV
+} langSeek;
+
+int langLoad(char *code, langSeek seek);
 wchar_t *lang(char *key, int keylen);
-int langLoad(char *code);
-int langLoadNext(char *code);
 
 #endif

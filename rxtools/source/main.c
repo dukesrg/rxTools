@@ -10,7 +10,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU General Public Licenselan
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
@@ -255,9 +255,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	r = loadStrings();
 	if (fontIsLoaded)
-		r = langLoad(cfgs[CFG_LANG].val.s);
-//		swprintf(path, _MAX_LFN, langPath, cfgs[CFG_LANG].val.s);
-//		r = jsonLoad(&langJson, path);
+		r = langLoad(cfgs[CFG_LANG].val.s, LANG_SET);
 
 	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);
