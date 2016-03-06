@@ -1,5 +1,5 @@
 {
-	"name":"rxTools",
+	"name":"rxTools old",
 	"menu":{
 		"color":"ff008dc5",
 		"selected":["ff000000","ff008dc5"],
@@ -8,9 +8,8 @@
 		"hint":"ff008dc5",
 		"value":"ff008dc5",
 		"topimg":["top.bin","top.bin"],
-		"bottomimg":"base.bin",
+		"bottomimg":"bottom.bin",
 		"ITEM1":{
-			"bottomimg":"menu0.bin",
 			"ITEM1-1":{
 			},"ITEM1-2":{
 			},"ITEM1-3":{
@@ -18,28 +17,17 @@
 			},"ITEM1-5":{
 			}
 		},"ITEM2":{
-			"bottomimg":"menu1.bin",
 			"ITEM2-1":{
-				"bottomimg":"dec0.bin"
 			},"ITEM2-2":{
-				"bottomimg":"dec1.bin"
 			},"ITEM2-3":{
-				"bottomimg":"dec2.bin"
 			},"ITEM2-4":{
-				"bottomimg":"dec3.bin"
 			},"ITEM2-5":{
-				"bottomimg":"dec4.bin"
 			},"ITEM2-6":{
-				"bottomimg":"dec4.bin"
 			},"ITEM2-7":{
-				"bottomimg":"dec5.bin"
 			}
 		},"ITEM3":{
-			"bottomimg":"menu2.bin",
 			"ITEM3-1":{
-				"bottomimg":"dmp0.bin"
 			},"ITEM3-2":{
-				"bottomimg":"dmp1.bin",
 				"ITEM3-2-1":{
 				},"ITEM3-2-2":{
 				},"ITEM3-2-3":{
@@ -50,11 +38,8 @@
 				},"ITEM3-2-8":{
 				}
 			},"ITEM3-3":{
-				"bottomimg":"dmp1.bin"
 			},"ITEM3-4":{
-				"bottomimg":"dmp2.bin"
 			},"ITEM3-5":{
-				"bottomimg":"dmp2.bin",
 				"ITEM3-5-1":{
 				},"ITEM3-5-2":{
 				},"ITEM3-5-3":{
@@ -65,14 +50,10 @@
 				},"ITEM3-5-8":{
 				}
 			},"ITEM3-6":{
-				"bottomimg":"dmp3.bin"
 			}
 		},"ITEM4":{
-			"bottomimg":"menu3.bin",
 			"ITEM4-1":{
-				"bottomimg":"inj0.bin"
 			},"ITEM4-2":{
-				"bottomimg":"inj1.bin",
 				"ITEM4-2-1":{
 				},"ITEM4-2-2":{
 				},"ITEM4-2-3":{
@@ -83,7 +64,6 @@
 				},"ITEM4-2-8":{
 				}
 			},"ITEM4-3":{
-				"bottomimg":"inj1.bin",
 				"ITEM4-3-1":{
 				},"ITEM4-3-2":{
 				},"ITEM4-3-3":{
@@ -95,18 +75,12 @@
 				}
 			}
 		},"ITEM5":{
-			"bottomimg":"menu4.bin",
 			"ITEM5-1":{
-				"bottomimg":"adv0.bin"
 			},"ITEM5-2":{
-				"bottomimg":"adv1.bin"
 			},"ITEM5-3":{
-				"bottomimg":"adv2.bin"
 			},"ITEM5-4":{
-				"bottomimg":"adv4.bin"
 			}
 		},"ITEM6":{
-			"bottomimg":"app.bin",
 			"ITEM6-1":{
 			},"ITEM6-2":{
 			},"ITEM6-3":{
@@ -115,7 +89,6 @@
 			},"ITEM6-6":{
 			}
 		},"ITEM7":{
-			"bottomimg":"menu6.bin"
 		}
 	}
 }

@@ -33,13 +33,13 @@ typedef struct {
 		int i;
 		int b;
 		char *s;
+//		wchar_t *s;
 	} val;
 } Cfg;
 
 enum {
 	CFG_GUI,
 	CFG_THEME,
-	CFG_RANDOM,
 	CFG_AGB,
 	CFG_3D,
 	CFG_ABSYSN,
@@ -52,7 +52,7 @@ extern Cfg cfgs[];
 
 void InstallConfigData();
 
-void trySetLangFromTheme(int onswitch);
+//void trySetLangFromTheme(int onswitch);
 
 int writeCfg();
 int readCfg();

@@ -60,7 +60,7 @@ static void install()
 
 static void drawTop()
 {
-	wchar_t str[_MAX_LFN];
+/*	wchar_t str[_MAX_LFN];
 
 	if (cfgs[CFG_3D].val.i) {
 		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", cfgs[CFG_THEME].val.i);
@@ -75,6 +75,7 @@ static void drawTop()
 		memcpy(top1Screen.addr, tmpScreen.addr, top1Screen.size);
 		memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
 	}
+*/
 }
 
 static FRESULT initKeyX()
@@ -251,7 +252,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	postinstall:
 	readCfg();
 
-	wchar_t path[_MAX_LFN];
+//	wchar_t path[_MAX_LFN];
 
 	r = loadStrings();
 	if (fontIsLoaded)
@@ -265,10 +266,11 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	drawTop();
 
-	swprintf(path, _MAX_LFN, themePath, cfgs[CFG_THEME].val.i, strlen(themeFile), themeFile);
-	if ((r = jsonLoad(&themeJson, path)) <= 0)
+//	swprintf(path, _MAX_LFN, themePath, cfgs[CFG_THEME].val.i, strlen(themeFile), themeFile);
+//	if ((r = jsonLoad(&themeJson, path)) <= 0)
+	r = themeLoad(cfgs[CFG_THEME].val.s, THEME_SET);
+	if (r < 0)
 		warn(L"Failed to load theme: %d\n", r);
-
 
 //	if (r < 0 || (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1))
 	if (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1) {

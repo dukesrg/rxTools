@@ -169,13 +169,6 @@ void preloadStringsU(void);
 void switchStrings(void);
 int loadStrings(void);
 
-#define LANG_CODE_LENGTH	5
-#define LANG_CODE_NONE		""
-#define LANG_CODE_DEFAULT	"en"
-
-#define LANG_JSON_SIZE		0x2000
-#define LANG_JSON_TOKENS	0x200
-
 typedef enum {
 	LANG_SET,
 	LANG_NEXT,

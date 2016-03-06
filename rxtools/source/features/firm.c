@@ -189,9 +189,9 @@ int rxMode(int emu)
 
 			WaitForButton(BUTTON_A);
 
-			swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
-				cfgs[CFG_THEME].val.i);
-			DrawSplash(&bottomScreen, path);
+//			swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
+//				cfgs[CFG_THEME].val.i);
+//			DrawSplash(&bottomScreen, path);
 		}
 	} else
 		sector = 0;
@@ -273,11 +273,11 @@ patchFail:
 
 void rxModeWithSplash(int emu)
 {
-	wchar_t s[_MAX_LFN];
+//	wchar_t s[_MAX_LFN];
 
-	swprintf(s, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
-		cfgs[CFG_THEME].val.i);
-	DrawSplash(&bottomScreen, s);
+//	swprintf(s, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
+//		cfgs[CFG_THEME].val.i);
+//	DrawSplash(&bottomScreen, s);
 	rxMode(emu);
 }
 

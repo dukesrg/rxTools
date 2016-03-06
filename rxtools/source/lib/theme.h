@@ -21,13 +21,16 @@
 #include "fs.h"
 #include "draw.h"
 
-#define THEME_JSON_SIZE		0x4000
-#define THEME_JSON_TOKENS	0x400
+typedef enum {
+	THEME_SET,
+	THEME_NEXT,
+	THEME_PREV
+} themeSeek;
 
 typedef struct {
-	wchar_t top1img[_MAX_LFN];
-	wchar_t top2img[_MAX_LFN];
-	wchar_t bottomimg[_MAX_LFN];
+	wchar_t top1img[_MAX_LFN + 1];
+	wchar_t top2img[_MAX_LFN + 1];
+	wchar_t bottomimg[_MAX_LFN + 1];
 	TextColors color;
 	TextColors selected;
 	TextColors disabled;
@@ -36,11 +39,9 @@ typedef struct {
 	TextColors value;
 } themeStyle;
 
-extern const wchar_t *themePath;
-extern const char *themeFile;
-extern Json themeJson;
 extern themeStyle style;
 
-void themeSet(int themeNum, char *key);
+int themeLoad(char *name, themeSeek seek);
+void themeStyleSet(char *key);
 
 #endif

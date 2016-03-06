@@ -42,11 +42,11 @@
 #define KEYFILENAME	"slot0x25KeyX.bin"
 
 static char cfgLang[CFG_STR_MAX_LEN] = "en";
+static char cfgTheme[(_MAX_LFN + 1) * 2] = "";
 
 Cfg cfgs[] = {
 	[CFG_GUI] = { "CFG_GUI", CFG_TYPE_BOOLEAN, { .i = 0 } },
-	[CFG_THEME] = { "CFG_THEME", CFG_TYPE_INT, { .i = 0 } },
-	[CFG_RANDOM] = { "CFG_RANDOM", CFG_TYPE_BOOLEAN, { .i = 0 } },
+	[CFG_THEME] = { "CFG_THEME", CFG_TYPE_STRING, { .s = cfgTheme } },
 	[CFG_AGB] = { "CFG_AGB", CFG_TYPE_BOOLEAN, { .i = 0 } },
 	[CFG_3D] = { "CFG_3D", CFG_TYPE_BOOLEAN, { .i = 1 } },
 	[CFG_ABSYSN] = { "CFG_ABSYSN", CFG_TYPE_BOOLEAN, { .i = 0 } },
@@ -225,8 +225,10 @@ int readCfg()
 					break;
 #endif
 
+				
 				memcpy(cfgs[j].val.s, buf + t[i].start, len);
 				cfgs[j].val.s[len] = 0;
+//				cfgs[j].val.s[mbstowcs(cfgs[j].val.s, buf + t[i].start, len)] = 0;
 		}
 	}
 
@@ -459,24 +461,24 @@ int CheckInstallationData(){
 }
 
 void InstallConfigData(){
-	wchar_t path[_MAX_LFN];
+//	wchar_t path[_MAX_LFN];
 
 	if(CheckInstallationData() == 0)
 		return;
 
-	trySetLangFromTheme(0);
+//	trySetLangFromTheme(0);
 	writeCfg();
 
-	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg0TOP.bin",
+/*	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg0TOP.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&top1Screen, path);
 	DrawSplash(&top2Screen, path);
 	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg0.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&bottomScreen, path);
-
-	int res = InstallData();
-	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg1%c.bin",
+*/
+	/*int res = */InstallData();
+/*	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg1%c.bin",
 		cfgs[CFG_THEME].val.i, res == 0 ? 'O' : 'E');
 	DrawSplash(&bottomScreen, path);
 	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin",
@@ -488,10 +490,10 @@ void InstallConfigData(){
 	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&top2Screen, path);
-
+*/
 	InputWait();
 }
-
+/*
 void trySetLangFromTheme(int onswitch) {
 	File MyFile;
 	wchar_t str[_MAX_LFN];
@@ -515,3 +517,4 @@ void trySetLangFromTheme(int onswitch) {
 	}
 	FileClose(&MyFile);
 }
+*/

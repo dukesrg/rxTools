@@ -160,6 +160,8 @@ void ConfigToggle(int idx) {
 			case CFG_TYPE_STRING:
 				if (idx == CFG_LANG)
 					langLoad(cfgs[idx].val.s, LANG_NEXT);
+				else if (idx == CFG_THEME)
+					themeLoad(cfgs[idx].val.s, THEME_NEXT);
 				break;
 			case CFG_TYPE_INT:
 				break;
@@ -353,7 +355,9 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 			if (menuJson.tok[s+j+1].type == JSMN_OBJECT && menulevel > 0){
 				menuposition += 1 << ((MENU_MAX_LEVELS - menulevel) * MENU_LEVEL_BIT_WIDTH);
 				if (menuposition == (targetposition & mask << MENU_LEVEL_BIT_WIDTH)) //set parent menu style
-					themeSet(cfgs[CFG_THEME].val.i, menuJson.js + menuJson.tok[s+j].start);
+//					themeSet(cfgs[CFG_THEME].val.i, menuJson.js + menuJson.tok[s+j].start);
+					themeStyleSet(menuJson.js + menuJson.tok[s+j].start);
+
 //				mask << MENU_LEVEL_BIT_WIDTH;
 //				if((menuposition & mask) == (targetposition & mask)){
 //					apply = APPLY_ANCESTOR;
@@ -414,7 +418,8 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 					break;
 				case 'm': //"menu"
 					if (targetlevel == 1) //top menu level - set 'menu' style
-						themeSet(cfgs[CFG_THEME].val.i, menuJson.js + menuJson.tok[s+j].start);
+//						themeSet(cfgs[CFG_THEME].val.i, menuJson.js + menuJson.tok[s+j].start);
+						themeStyleSet(menuJson.js + menuJson.tok[s+j].start);
 					k = menuParse(s+j+1, OBJ_MENU, menulevel, menuposition, targetposition, foundposition);
 					if (k == 0)
 						return 0;

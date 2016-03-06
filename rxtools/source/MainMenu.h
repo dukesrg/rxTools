@@ -287,10 +287,10 @@ void SettingsMenuInit(){
 						memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
 					}
 					cfgs[CFG_THEME].val.i = theme_num;
-					trySetLangFromTheme(1);
+//					trySetLangFromTheme(1);
 				}
 			}
-			else if (MyMenu->Current == 2) cfgs[CFG_RANDOM].val.i ^= 1;
+//			else if (MyMenu->Current == 2) cfgs[CFG_RANDOM].val.i ^= 1;
 			else if (MyMenu->Current == 3) cfgs[CFG_AGB].val.i ^= 1;
 			else if (MyMenu->Current == 4)
 			{

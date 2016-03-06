@@ -19,10 +19,14 @@
 #include <wchar.h>
 #include "theme.h"
 
-#include "lang.h"
+const wchar_t *themeDir = L"/rxTools/theme";
+const wchar_t *themeFile = L"theme.json";
+const wchar_t *themePath = L"%ls/%ls/%ls";
+wchar_t themeName[_MAX_LFN + 1] = L"";
 
-const wchar_t *themePath = L"/rxTools/theme/%d/%.*s";
-const char *themeFile = "theme.json";
+#define THEME_JSON_SIZE		0x4000
+#define THEME_JSON_TOKENS	0x400
+
 char jst[THEME_JSON_SIZE];
 jsmntok_t tokt[THEME_JSON_TOKENS];
 Json themeJson = {jst, THEME_JSON_SIZE, tokt, THEME_JSON_TOKENS};
@@ -145,27 +149,26 @@ int colorParse(int s, char *key, int *idx, int coloridx) {
 	return themeParse(s, key, idx);
 }
 
-void setImg(wchar_t *path, int themeNum, int index) {
-	if (index > 0)
-		swprintf(path, _MAX_LFN, themePath, themeNum, themeJson.tok[index].end - themeJson.tok[index].start, themeJson.js + themeJson.tok[index].start);
-}
-
-void setColor(uint32_t *color, int index) {
+void setImg(wchar_t *path, int index) {
 	if (index > 0) {
-		*color = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 16);
-//		wchar_t str[sizeof(uint32_t)*2+1];
-//		mbstowcs(str, themeJson.js + themeJson.tok[index].start, sizeof(str)/sizeof(str[0])-1);
-//		*color = wcstoul(str, NULL, 16);
+		wchar_t fn[_MAX_LFN + 1];
+		fn[mbstowcs(fn, themeJson.js + themeJson.tok[index].start, themeJson.tok[index].end - themeJson.tok[index].start)] = 0;
+		swprintf(path, _MAX_LFN, themePath, themeDir, themeName, fn);
 	}
 }
 
-void themeSet(int themeNum, char *key) {
+void setColor(uint32_t *color, int index) {
+	if (index > 0)
+		*color = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 16);
+}
+
+void themeStyleSet(char *key) {
 	style = styleDefault;
 	int idx[IDX_COUNT] = {0};
 	themeParse(0, key, idx);
-	setImg(style.top1img, themeNum, idx[TOP1]);
-	setImg(style.top2img, themeNum, idx[TOP2]);
-	setImg(style.bottomimg, themeNum, idx[BOTTOM]);
+	setImg(style.top1img, idx[TOP1]);
+	setImg(style.top2img, idx[TOP2]);
+	setImg(style.bottomimg, idx[BOTTOM]);
 	setColor(&style.color.fg, idx[COLORFG]);
 	setColor(&style.color.bg, idx[COLORBG]);
 	setColor(&style.selected.fg, idx[SELECTEDFG]);
@@ -178,4 +181,55 @@ void themeSet(int themeNum, char *key) {
 	setColor(&style.hint.bg, idx[HINTBG]);
 	setColor(&style.value.fg, idx[VALUEFG]);
 	setColor(&style.value.bg, idx[VALUEBG]);
+}
+
+int themeLoad(char *name, themeSeek seek) {
+	DIR dir;
+	FILINFO fno;
+	wchar_t *fn;
+	wchar_t path[_MAX_LFN + 1];
+	wchar_t pathfn[_MAX_LFN + 1];
+	wchar_t targetfn[_MAX_LFN + 1];
+	wchar_t prevfn[_MAX_LFN + 1] = L"";
+	wchar_t lfn[_MAX_LFN + 1];
+	fno.lfname = lfn;
+	fno.lfsize = _MAX_LFN + 1;
+
+	targetfn[mbstowcs(targetfn, name, _MAX_LFN + 1)] = 0;
+
+	if (f_findfirst(&dir, &fno, themeDir, L"*") == FR_OK) {
+		wcscpy(pathfn, *fno.lfname ? fno.lfname : fno.fname);
+		do {
+			fn = *fno.lfname ? fno.lfname : fno.fname;
+			if (swprintf(path, _MAX_LFN + 1, themePath, themeDir, fn, themeFile) > 0 && f_stat(path, NULL) == FR_OK) {
+				if (wcscmp(fn, targetfn) == 0) {
+					if (seek == THEME_SET)
+						wcscpy(pathfn, targetfn);
+					else if (seek == THEME_NEXT) {
+						while (f_findnext(&dir, &fno) == FR_OK && *fno.fname) {
+							fn = *fno.lfname ? fno.lfname : fno.fname;
+							if (swprintf(path, _MAX_LFN + 1, themePath, themeDir, fn, themeFile) > 0 && f_stat(path, NULL) == FR_OK) {
+								wcscpy(pathfn, fn);
+								break;
+							}
+						}
+					} else if (seek == THEME_PREV && !*prevfn)
+						continue;
+					break;
+				} else if (seek == THEME_PREV)
+					wcscpy(prevfn, fn);
+			}
+		} while (f_findnext(&dir, &fno) == FR_OK && *fno.fname);
+		if (seek == THEME_PREV && *prevfn)
+			wcscpy(pathfn, prevfn);
+		swprintf(path, _MAX_LFN + 1, themePath, themeDir, pathfn, themeFile);
+		themeJson = (Json){jst, THEME_JSON_SIZE, tokt, THEME_JSON_TOKENS};
+		if (jsonLoad(&themeJson, path) > 0) {
+			wcscpy(themeName, pathfn);
+			name[wcstombs(name, pathfn, (wcslen(pathfn)+1)*2)] = 0;
+		}
+	} else
+		themeJson.count = 0;
+	f_closedir(&dir);
+	return themeJson.count;
 }

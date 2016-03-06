@@ -322,6 +322,13 @@ int loadStrings()
 wchar_t wstr[STR_TRANS_CNT][STR_MAX_LEN];
 int itrans = 0;
 
+#define LANG_CODE_LENGTH	5
+#define LANG_CODE_NONE		""
+#define LANG_CODE_DEFAULT	"en"
+
+#define LANG_JSON_SIZE		0x2000
+#define LANG_JSON_TOKENS	0x200
+
 char jsl[LANG_JSON_SIZE];
 jsmntok_t tokl[LANG_JSON_TOKENS];
 Json langJson;

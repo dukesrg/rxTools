@@ -245,9 +245,9 @@ void AdvFileManagerMain(){
 	while (true)
 	{
 		//Background
-		wchar_t str[_MAX_LFN];
-		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/FM.bin", cfgs[CFG_THEME].val.i);
-		DrawSplash(screentmp.addr, str);
+//		wchar_t str[_MAX_LFN];
+//		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/FM.bin", cfgs[CFG_THEME].val.i);
+//		DrawSplash(&screentmp, str);
 
 		AdvFileManagerShow(&screentmp, &Panels[0], 0);
 		AdvFileManagerShow(&screentmp, &Panels[1], 155);
