@@ -1,13 +1,28 @@
 {
 	"name":"rxTools old",
 	"menu":{
-		"color":"ff008dc5",
-		"selected":["ff000000","ff008dc5"],
-		"disabled":"ffff0000",
-		"unselected":["ffff0000","ff008dc5"],
-		"hint":"ff008dc5",
-		"value":"ff008dc5",
-		"topimg":["top.bin","top.bin"],
+		"caption":{
+			"x":12,
+			"y":0,
+			"color":"ff008dc5"
+		},"items":{
+			"x":8,
+			"y":40,
+			"width":152,
+			"color":"ff008dc5",
+			"selected":["ff000000","ff008dc5"],
+			"disabled":"ffff0000",
+			"unselected":["ffff0000","ff008dc5"]
+		},"description":{
+			"x":186,
+			"y":48,
+			"width":104,
+			"height":144,
+			"color":"ff008dc5"
+		},"value":{
+			"x":160,
+			"color":"ff008dc5"
+		},"topimg":["top.bin","top.bin"],
 		"bottomimg":"bottom.bin",
 		"ITEM1":{
 			"ITEM1-1":{
@@ -86,7 +101,6 @@
 			},"ITEM6-3":{
 			},"ITEM6-4":{
 			},"ITEM6-5":{
-			},"ITEM6-6":{
 			}
 		},"ITEM7":{
 		}

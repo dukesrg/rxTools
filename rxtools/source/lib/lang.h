@@ -22,7 +22,7 @@
 #include "configuration.h"
 #include "json.h"
 
-#define STR_MAX_LEN 128
+#define STR_MAX_LEN 96
 
 enum {
 	STR_LANG_NAME,

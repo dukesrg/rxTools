@@ -42,13 +42,12 @@
 #define KEYFILENAME	"slot0x25KeyX.bin"
 
 static char cfgLang[CFG_STR_MAX_LEN] = "en";
-static char cfgTheme[(_MAX_LFN + 1) * 2] = "";
+static char cfgTheme[CFG_STR_MAX_LEN] = "";
 
 Cfg cfgs[] = {
 	[CFG_GUI] = { "CFG_GUI", CFG_TYPE_BOOLEAN, { .i = 0 } },
 	[CFG_THEME] = { "CFG_THEME", CFG_TYPE_STRING, { .s = cfgTheme } },
 	[CFG_AGB] = { "CFG_AGB", CFG_TYPE_BOOLEAN, { .i = 0 } },
-	[CFG_3D] = { "CFG_3D", CFG_TYPE_BOOLEAN, { .i = 1 } },
 	[CFG_ABSYSN] = { "CFG_ABSYSN", CFG_TYPE_BOOLEAN, { .i = 0 } },
 	[CFG_LANG] = { "CFG_LANG", CFG_TYPE_STRING, { .s = cfgLang } }
 };

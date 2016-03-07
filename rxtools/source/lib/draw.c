@@ -149,9 +149,8 @@ uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, uin
 		w = screen->w - x;
 	if (h == 0 || y + h > screen->h)
 		h = screen->h - y;
-	h += y - font->h;
 	uint32_t i, j, k, sw;
-	for (i = 0; i < count && y <= h; ) {
+	for (i = 0; i < count && (dy += font->h) <= h; ) {
 		sw = 0;
 		k = 0;
 		j = wcsspn(str + i, L" "); //include leading spaces
@@ -170,7 +169,6 @@ uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, uin
 		DrawSubString(screen, str + i, j, x, y, color, font);
 		i += j + wcsspn(str + i + j, L" "); //skip the rest of spaces to the next line start
 		y += font->h;
-		dy += font->h;
 	}
 	return dy;
 }

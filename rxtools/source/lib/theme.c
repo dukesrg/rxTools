@@ -24,8 +24,8 @@ const wchar_t *themeFile = L"theme.json";
 const wchar_t *themePath = L"%ls/%ls/%ls";
 wchar_t themeName[_MAX_LFN + 1] = L"";
 
-#define THEME_JSON_SIZE		0x4000
-#define THEME_JSON_TOKENS	0x400
+#define THEME_JSON_SIZE		0x2000
+#define THEME_JSON_TOKENS	0x200
 
 char jst[THEME_JSON_SIZE];
 jsmntok_t tokt[THEME_JSON_TOKENS];
@@ -36,27 +36,59 @@ themeStyle style, styleDefault = {
 	L"",
 	L"",
 	{WHITE, TRANSPARENT},
+	{0, 0, 0, 24},
+	{WHITE, TRANSPARENT},
 	{BLACK, WHITE},
 	{GREY, TRANSPARENT},
 	{BLACK, GREY},
+	{0, 24, 160, 0},
 	{WHITE, TRANSPARENT},
-	{WHITE, TRANSPARENT}
+	{160, 24, 0, 0},
+	{WHITE, TRANSPARENT},
+	{160, 24, 0, 16}
 };
+
+typedef enum {
+	OBJ_NONE,
+	OBJ_MENU,
+	OBJ_CAPTION,
+	OBJ_ITEMS,
+	OBJ_DESCRIPTION,
+	OBJ_VALUE
+} objtype;
 
 enum {
 	TOP1,
 	TOP2,
 	BOTTOM,
-	COLORFG,
-	COLORBG,
-	SELECTEDFG,
-	SELECTEDBG,
-	DISABLEDFG,
-	DISABLEDBG,
-	UNSELECTEDFG,
-	UNSELECTEDBG,
-	HINTFG,
-	HINTBG,
+	CAPTIONFG,
+	CAPTIONBG,
+	CAPTIONX,
+	CAPTIONY,
+	CAPTIONW,
+	CAPTIONH,
+	ITEMSX,
+	ITEMSY,
+	ITEMSW,
+	ITEMSH,
+	ITEMSCOLORFG,
+	ITEMSCOLORBG,
+	ITEMSSELECTEDFG,
+	ITEMSSELECTEDBG,
+	ITEMSDISABLEDFG,
+	ITEMSDISABLEDBG,
+	ITEMSUNSELECTEDFG,
+	ITEMSUNSELECTEDBG,
+	DESCRIPTIONX,
+	DESCRIPTIONY,
+	DESCRIPTIONW,
+	DESCRIPTIONH,
+	DESCRIPTIONFG,
+	DESCRIPTIONBG,
+	VALUEX,
+	VALUEY,
+	VALUEW,
+	VALUEH,
 	VALUEFG,
 	VALUEBG,
 	IDX_COUNT
@@ -64,7 +96,7 @@ enum {
 
 int colorParse(int s, char *key, int *idx, int coloridx);
 
-int themeParse(int s, char *key, int *idx) {
+int themeParse(int s, objtype type, char *key, int *idx) {
 	if (s == themeJson.count || key == NULL)
 		return 0;
 	if (themeJson.tok[s].type == JSMN_PRIMITIVE || themeJson.tok[s].type == JSMN_STRING)
@@ -77,27 +109,53 @@ int themeParse(int s, char *key, int *idx) {
 			if (themeJson.tok[s+j+1].type == JSMN_OBJECT && strncmp(key, themeJson.js + themeJson.tok[s+j].start, themeJson.tok[s+j].end - themeJson.tok[s+j].start) == 0)
 				isTarget = true;
 
-			switch (themeJson.js[themeJson.tok[s+j].start]){
+			switch (themeJson.js[themeJson.tok[s+j].start]) {
 				case 'b': //"bottomimg"
 					idx[BOTTOM] = s + ++j;
 					break;
-				case 'c': //"color"
-					j += colorParse(s+j+1, key, idx, COLORFG);
+				case 'c'://"color"
+					switch(type) {
+						case OBJ_CAPTION: //"color"
+							j += colorParse(s+j+1, key, idx, CAPTIONFG);
+							break;
+						case OBJ_ITEMS:
+							j += colorParse(s+j+1, key, idx, ITEMSCOLORFG);
+							break;
+						case OBJ_DESCRIPTION:
+							j += colorParse(s+j+1, key, idx, DESCRIPTIONFG);
+							break;
+						case OBJ_VALUE:
+							j += colorParse(s+j+1, key, idx, VALUEFG);
+							break;
+						case OBJ_MENU: //"caption"
+							type = OBJ_CAPTION;
+						default:
+							j += themeParse(s+j+1, type, key, idx);
+					}
+					break;
+				case 'd':
+					switch(type) {
+						case OBJ_ITEMS: //"disabled"
+							j += colorParse(s+j+1, key, idx, ITEMSDISABLEDFG);
+							break;
+						default: //"description"
+							j += themeParse(s+j+1, OBJ_DESCRIPTION, key, idx);
+					}
+					break;
+				case 'i': //"items"
+					j += themeParse(s+j+1, OBJ_ITEMS, key, idx);
 					break;
 				case 's': //"selected"
-					j += colorParse(s+j+1, key, idx, SELECTEDFG);
-					break;
-				case 'd': //"disabled"
-					j += colorParse(s+j+1, key, idx, DISABLEDFG);
+					j += colorParse(s+j+1, key, idx, ITEMSSELECTEDFG);
 					break;
 				case 'u': //"unselected"
-					j += colorParse(s+j+1, key, idx, UNSELECTEDFG);
+					j += colorParse(s+j+1, key, idx, ITEMSUNSELECTEDFG);
 					break;
-				case 'h': //"hint"
-					j += colorParse(s+j+1, key, idx, HINTFG);
+/*				case 'h': //"hint"
+					j += colorParse(s+j+1, key, idx, DESCRIPTIONFG);
 					break;
-				case 'v': //"value"
-					j += colorParse(s+j+1, key, idx, VALUEFG);
+*/				case 'v': //"value"
+					j += themeParse(s+j+1, OBJ_VALUE, key, idx);
 					break;
 				case 't': //"topimg"
 					if (themeJson.tok[s+j+1].type == JSMN_STRING)
@@ -107,16 +165,89 @@ int themeParse(int s, char *key, int *idx) {
 						if (themeJson.tok[s+j+1].size > 1)
 							idx[TOP2] = s + j + 3;
 					}
-					j += themeParse(s+j+1, key, idx);
+					j += themeParse(s+j+1, type, key, idx);
+					break;
+				case 'h': //"height"
+					switch(type) {
+						case OBJ_CAPTION:
+							idx[CAPTIONH] = s + ++j;
+							break;
+						case OBJ_ITEMS:
+							idx[ITEMSH] = s + ++j;
+							break;
+						case OBJ_DESCRIPTION:
+							idx[DESCRIPTIONH] = s + ++j;
+							break;
+						case OBJ_VALUE:
+							idx[VALUEH] = s + ++j;
+							break;
+						default:
+							j++;
+					}
+					break;
+				case 'w': //"width"
+					switch(type) {
+						case OBJ_CAPTION:
+							idx[CAPTIONW] = s + ++j;
+							break;
+						case OBJ_ITEMS:
+							idx[ITEMSW] = s + ++j;
+							break;
+						case OBJ_DESCRIPTION:
+							idx[DESCRIPTIONW] = s + ++j;
+							break;
+						case OBJ_VALUE:
+							idx[VALUEW] = s + ++j;
+							break;
+						default:
+							j++;
+					}
+					break;
+				case 'x': //"x"
+					switch(type) {
+						case OBJ_CAPTION:
+							idx[CAPTIONX] = s + ++j;
+							break;
+						case OBJ_ITEMS:
+							idx[ITEMSX] = s + ++j;
+							break;
+						case OBJ_DESCRIPTION:
+							idx[DESCRIPTIONX] = s + ++j;
+							break;
+						case OBJ_VALUE:
+							idx[VALUEX] = s + ++j;
+							break;
+						default:
+							j++;
+					}
+					break;
+				case 'y': //"y"
+					switch(type) {
+						case OBJ_CAPTION:
+							idx[CAPTIONY] = s + ++j;
+							break;
+						case OBJ_ITEMS:
+							idx[ITEMSY] = s + ++j;
+							break;
+						case OBJ_DESCRIPTION:
+							idx[DESCRIPTIONY] = s + ++j;
+							break;
+						case OBJ_VALUE:
+							idx[VALUEY] = s + ++j;
+							break;
+						default:
+							j++;
+					}
 					break;
 				case 'm': //"menu"
+					type = OBJ_MENU;
 				default:
 					if (isTarget) { //target object - get member indexes and terminate
-						themeParse(s+j+1, key, idx);
+						themeParse(s+j+1, type, key, idx);
 						return 0;
 					} else {
 						int localidx[IDX_COUNT] = {0};
-						if ((k = themeParse(s+j+1, key, localidx)) == 0 || themeJson.js[themeJson.tok[s+j].start] == 'm') {
+						if ((k = themeParse(s+j+1, type, key, localidx)) == 0 || themeJson.js[themeJson.tok[s+j].start] == 'm') {
 						//object is in target chain - set inherited indexes and terminate or apply root 'menu' for unset parameters
 							for (int l = 0; l < IDX_COUNT; l++)
 								if (idx[l] == 0)
@@ -132,7 +263,7 @@ int themeParse(int s, char *key, int *idx) {
 	} else if (themeJson.tok[s].type == JSMN_ARRAY) {
 		int i, j = 0;
 		for (i = 0; i < themeJson.tok[s].size; i++)
-			j += themeParse(s+j+1, key, idx);
+			j += themeParse(s+j+1, type, key, idx);
 		return j + 1;
 	}
 	return 0;
@@ -146,7 +277,7 @@ int colorParse(int s, char *key, int *idx, int coloridx) {
 		if (themeJson.tok[s].size > 1)
 			idx[coloridx + 1] = s + 2;
 	}
-	return themeParse(s, key, idx);
+	return themeParse(s, OBJ_NONE, key, idx);
 }
 
 void setImg(wchar_t *path, int index) {
@@ -162,25 +293,48 @@ void setColor(uint32_t *color, int index) {
 		*color = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 16);
 }
 
+void setInt(uint32_t *val, int index) {
+	if (index > 0)
+		*val = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 0);
+}
+
 void themeStyleSet(char *key) {
 	style = styleDefault;
 	int idx[IDX_COUNT] = {0};
-	themeParse(0, key, idx);
+	themeParse(0, OBJ_NONE, key, idx);
 	setImg(style.top1img, idx[TOP1]);
 	setImg(style.top2img, idx[TOP2]);
 	setImg(style.bottomimg, idx[BOTTOM]);
-	setColor(&style.color.fg, idx[COLORFG]);
-	setColor(&style.color.bg, idx[COLORBG]);
-	setColor(&style.selected.fg, idx[SELECTEDFG]);
-	setColor(&style.selected.bg, idx[SELECTEDBG]);
-	setColor(&style.disabled.fg, idx[DISABLEDFG]);
-	setColor(&style.disabled.bg, idx[DISABLEDBG]);
-	setColor(&style.unselected.fg, idx[UNSELECTEDFG]);
-	setColor(&style.unselected.bg, idx[UNSELECTEDBG]);
-	setColor(&style.hint.fg, idx[HINTFG]);
-	setColor(&style.hint.bg, idx[HINTBG]);
-	setColor(&style.value.fg, idx[VALUEFG]);
-	setColor(&style.value.bg, idx[VALUEBG]);
+	setColor(&style.captionColor.fg, idx[CAPTIONFG]);
+	setColor(&style.captionColor.bg, idx[CAPTIONBG]);
+	setColor(&style.itemsColor.fg, idx[ITEMSCOLORFG]);
+	setColor(&style.itemsColor.bg, idx[ITEMSCOLORBG]);
+	setColor(&style.itemsSelected.fg, idx[ITEMSSELECTEDFG]);
+	setColor(&style.itemsSelected.bg, idx[ITEMSSELECTEDBG]);
+	setColor(&style.itemsDisabled.fg, idx[ITEMSDISABLEDFG]);
+	setColor(&style.itemsDisabled.bg, idx[ITEMSDISABLEDBG]);
+	setColor(&style.itemsUnselected.fg, idx[ITEMSUNSELECTEDFG]);
+	setColor(&style.itemsUnselected.bg, idx[ITEMSUNSELECTEDBG]);
+	setColor(&style.descriptionColor.fg, idx[DESCRIPTIONFG]);
+	setColor(&style.descriptionColor.bg, idx[DESCRIPTIONBG]);
+	setColor(&style.valueColor.fg, idx[VALUEFG]);
+	setColor(&style.valueColor.bg, idx[VALUEBG]);
+	setInt(&style.captionRect.x, idx[CAPTIONX]);
+	setInt(&style.captionRect.y, idx[CAPTIONY]);
+	setInt(&style.captionRect.w, idx[CAPTIONW]);
+	setInt(&style.captionRect.h, idx[CAPTIONH]);
+	setInt(&style.itemsRect.x, idx[ITEMSX]);
+	setInt(&style.itemsRect.y, idx[ITEMSY]);
+	setInt(&style.itemsRect.w, idx[ITEMSW]);
+	setInt(&style.itemsRect.h, idx[ITEMSH]);
+	setInt(&style.descriptionRect.x, idx[DESCRIPTIONX]);
+	setInt(&style.descriptionRect.y, idx[DESCRIPTIONY]);
+	setInt(&style.descriptionRect.w, idx[DESCRIPTIONW]);
+	setInt(&style.descriptionRect.h, idx[DESCRIPTIONH]);
+	setInt(&style.valueRect.x, idx[VALUEX]);
+	setInt(&style.valueRect.y, idx[VALUEY]);
+	setInt(&style.valueRect.w, idx[VALUEW]);
+	setInt(&style.valueRect.h, idx[VALUEH]);
 }
 
 int themeLoad(char *name, themeSeek seek) {
@@ -226,7 +380,7 @@ int themeLoad(char *name, themeSeek seek) {
 		themeJson = (Json){jst, THEME_JSON_SIZE, tokt, THEME_JSON_TOKENS};
 		if (jsonLoad(&themeJson, path) > 0) {
 			wcscpy(themeName, pathfn);
-			name[wcstombs(name, pathfn, (wcslen(pathfn)+1)*2)] = 0;
+			name[wcstombs(name, pathfn, 31)] = 0;
 		}
 	} else
 		themeJson.count = 0;

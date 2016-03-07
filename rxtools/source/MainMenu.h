@@ -273,7 +273,7 @@ void SettingsMenuInit(){
 				if (found)
 				{
 					theme_num = i;
-					if (cfgs[CFG_3D].val.i) {
+/*					if (cfgs[CFG_3D].val.i) {
 						swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", theme_num);
 						DrawSplash(&top1Screen, str);
 						swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin", theme_num);
@@ -286,7 +286,7 @@ void SettingsMenuInit(){
 						memcpy(top1Screen.addr, tmpScreen.addr, top1Screen.size);
 						memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
 					}
-					cfgs[CFG_THEME].val.i = theme_num;
+*/					cfgs[CFG_THEME].val.i = theme_num;
 //					trySetLangFromTheme(1);
 				}
 			}
@@ -294,7 +294,7 @@ void SettingsMenuInit(){
 			else if (MyMenu->Current == 3) cfgs[CFG_AGB].val.i ^= 1;
 			else if (MyMenu->Current == 4)
 			{
-				cfgs[CFG_3D].val.i ^= 1;
+/*				cfgs[CFG_3D].val.i ^= 1;
 				if (cfgs[CFG_3D].val.i) {
 					swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", theme_num);
 					DrawSplash(&top1Screen, str);
@@ -308,7 +308,7 @@ void SettingsMenuInit(){
 					memcpy(top1Screen.addr, tmpScreen.addr, top1Screen.size);
 					memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
 				}
-			}
+*/			}
 			else if (MyMenu->Current == 5)
 			{
 				cfgs[CFG_ABSYSN].val.i ^= 1;

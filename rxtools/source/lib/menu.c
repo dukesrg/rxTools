@@ -76,7 +76,7 @@ int ancestors[MENU_MAX_LEVELS - 1]; //item ancestors to fraw menu path
 typedef struct { //target item properties
 	int index;
 	int func;
-	int hint;
+	int description;
 } Target;
 Target target;
 
@@ -401,17 +401,22 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 							j++;
 					}
 					break;
+				case 'd': //"description"
+					j++;
+					if (apply == APPLY_TARGET)
+						target.description = s + j;
+					break;
 				case 'e': //"enabled"
 					j++;
 					if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
 						siblings[siblingcount].enabled = s + j;
 					break;
-				case 'h': //"hint"
+/*				case 'h': //"hint"
 					j++;
 					if (apply == APPLY_TARGET)
 						target.hint = s + j;
 					break;
-				case 'f': //"function"
+*/				case 'f': //"function"
 					j++;
 					if (apply == APPLY_TARGET)
 						target.func = s + j;
@@ -472,7 +477,7 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 
 int menuTry(int targetposition, int currentposition) {
 	int i, j, foundposition = 0;
-	uint32_t x = 0, y = font24.h;
+	uint32_t x, y;
 	bool enabled;
 	wchar_t str[_MAX_LFN];
 	bool(*check)();
@@ -482,6 +487,9 @@ int menuTry(int targetposition, int currentposition) {
 	menuParse(0, OBJ_NONE, 0, 0, targetposition, &foundposition);
 	if (foundposition == 0) //fallback in case requested menu not exists
 		menuParse(0, OBJ_NONE, 0, 0, currentposition, &foundposition);
+
+	x = style.captionRect.x;
+	y = style.itemsRect.y;
 
 	if (wcslen(style.top1img) > 0) {
 		DrawSplash(&top1TmpScreen, style.top1img);
@@ -500,20 +508,20 @@ int menuTry(int targetposition, int currentposition) {
 		ClearScreen(&bottomTmpScreen, BLACK);
 
 	for (i = 0; i < sizeof(ancestors)/sizeof(ancestors[0]) && ancestors[i] != 0; i++)
-		x += font24.dw + DrawSubString(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start), -1, x, 0, &style.color, &font24);
+		x += font24.dw + DrawSubString(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start), -1, x, style.captionRect.y, &style.captionColor, &font24);
 
 	for (i = 0; i < sizeof(siblings)/sizeof(siblings[0]) && siblings[i].caption != 0; i++) {
 		if ((siblings[i].value != 0) && (j = getConfig(siblings[i].value)) >= 0) {
 			switch (cfgs[j].type) {
 				case CFG_TYPE_STRING:
-					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
+					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
 					break;
 				case CFG_TYPE_INT:
 					swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
-					DrawStringRect(&bottomTmpScreen, str, bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
+					DrawStringRect(&bottomTmpScreen, str, style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
 					break;
 				case CFG_TYPE_BOOLEAN:
-					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), bottomTmpScreen.w / 2, y, bottomTmpScreen.w / 2, 0, &style.value, &font16);
+					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
 					break;
 			}
 		}
@@ -530,11 +538,11 @@ int menuTry(int targetposition, int currentposition) {
 			enabled = (check = (bool(*)())getFunc(siblings[i].enabled)) != NULL && check();
 		}
 		if (i == target.index) {
-			if (target.hint != 0)
-				DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[target.hint].start, menuJson.tok[target.hint].end - menuJson.tok[target.hint].start), bottomTmpScreen.w / 2, font24.h, 0, 0, &style.hint, &font16);
-			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), 0, y, bottomTmpScreen.w / 2, 0, enabled ? &style.selected : &style.unselected, &font16);
+			if (target.description != 0)
+				DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[target.description].start, menuJson.tok[target.description].end - menuJson.tok[target.description].start), style.descriptionRect.x, style.descriptionRect.y, style.descriptionRect.w, style.descriptionRect.h, &style.descriptionColor, &font16);
+			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h, enabled ? &style.itemsSelected : &style.itemsUnselected, &font16);
 		} else
-			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), 0, y, bottomTmpScreen.w / 2, 0, enabled ? &style.color : &style.disabled, &font16);
+			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h, enabled ? &style.itemsColor : &style.itemsDisabled, &font16);
 	}
 	
 	return foundposition;

@@ -76,6 +76,13 @@ typedef struct{
 	uint32_t bg;
 } TextColors;
 
+typedef struct{
+	uint32_t x;
+	uint32_t y;
+	uint32_t w;
+	uint32_t h;
+} TextRect;
+
 extern Screen top1Screen, top1TmpScreen, top2Screen, top2TmpScreen, bottomScreen, bottomTmpScreen;
 extern FontMetrics font16, font24;
 

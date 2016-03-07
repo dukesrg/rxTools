@@ -18,7 +18,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
-#define CFG_STR_MAX_LEN 16
+#define CFG_STR_MAX_LEN 32
 
 typedef enum {
 	CFG_TYPE_INT,
@@ -41,7 +41,6 @@ enum {
 	CFG_GUI,
 	CFG_THEME,
 	CFG_AGB,
-	CFG_3D,
 	CFG_ABSYSN,
 	CFG_LANG,
 
@@ -51,8 +50,6 @@ enum {
 extern Cfg cfgs[];
 
 void InstallConfigData();
-
-//void trySetLangFromTheme(int onswitch);
 
 int writeCfg();
 int readCfg();
