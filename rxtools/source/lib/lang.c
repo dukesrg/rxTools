@@ -381,7 +381,7 @@ int langLoad(char *code, langSeek seek) {
 	return langJson.count;
 }
 
-wchar_t *lang(char *key, int keylen)
+wchar_t *lang(const char *key, int keylen)
 {
 	int i, len = 0;
 	char str[STR_MAX_LEN] = "";

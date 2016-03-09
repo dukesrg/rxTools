@@ -56,11 +56,6 @@ void MenuSelect();
 void MenuClose();
 void MenuRefresh();
 
-extern bool bootGUI;
-extern unsigned char Theme;
-extern bool agb_bios;
-extern bool theme_3d;
-extern unsigned char language;
 extern Menu* MyMenu;
 
 int menuTry(int targetposition, int currentposition);

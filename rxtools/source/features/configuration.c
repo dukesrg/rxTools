@@ -45,10 +45,13 @@ static char cfgLang[CFG_STR_MAX_LEN] = "en";
 static char cfgTheme[CFG_STR_MAX_LEN] = "";
 
 Cfg cfgs[] = {
-	[CFG_GUI] = { "CFG_GUI", CFG_TYPE_BOOLEAN, { .i = 0 } },
+	[CFG_BOOT_DEFAULT] = { "CFG_BOOT_DEFAULT", CFG_TYPE_INT, { .i = BOOT_UI } },
+	[CFG_FORCE_UI] = { "CFG_FORCE_UI", CFG_TYPE_INT, { .i = KEY_L } },
+	[CFG_FORCE_EMUNAND] = { "CFG_FORCE_EMUNAND", CFG_TYPE_INT, { .i = KEY_Y } },
+	[CFG_FORCE_SYSNAND] = { "CFG_FORCE_SYSNAND", CFG_TYPE_INT, { .i = KEY_X } },
+	[CFG_FORCE_PASTA] = { "CFG_FORCE_PASTA", CFG_TYPE_INT, { .i = KEY_B } },
 	[CFG_THEME] = { "CFG_THEME", CFG_TYPE_STRING, { .s = cfgTheme } },
 	[CFG_AGB] = { "CFG_AGB", CFG_TYPE_BOOLEAN, { .i = 0 } },
-	[CFG_ABSYSN] = { "CFG_ABSYSN", CFG_TYPE_BOOLEAN, { .i = 0 } },
 	[CFG_LANG] = { "CFG_LANG", CFG_TYPE_STRING, { .s = cfgLang } }
 };
 
@@ -168,7 +171,7 @@ int readCfg()
 	char buf[256];
 	jsmn_parser parser;
 	File fd;
-	unsigned int i, j, k;
+	unsigned int i, j;
 	int r;
 	size_t len;
 
@@ -199,12 +202,7 @@ int readCfg()
 		i++;
 		switch (cfgs[j].type) {
 			case CFG_TYPE_INT:
-				cfgs[j].val.i = 0;
-				for (k = t[i].start; k < t[i].end; k++) {
-					cfgs[j].val.i *= 10;
-					cfgs[j].val.i += buf[k] - 48;
-				}
-
+				cfgs[j].val.i = strtoul(buf + t[i].start, NULL, 0);
 				break;
 
 			case CFG_TYPE_BOOLEAN:

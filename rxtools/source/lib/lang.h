@@ -176,6 +176,6 @@ typedef enum {
 } langSeek;
 
 int langLoad(char *code, langSeek seek);
-wchar_t *lang(char *key, int keylen);
+wchar_t *lang(const char *key, int keylen);
 
 #endif

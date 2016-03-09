@@ -14,13 +14,13 @@
 			"disabled":"ffff0000",
 			"unselected":["ffff0000","ff008dc5"]
 		},"description":{
-			"x":186,
+			"x":176,
 			"y":48,
 			"width":104,
 			"height":144,
 			"color":"ff008dc5"
 		},"value":{
-			"x":160,
+			"x":186,
 			"color":"ff008dc5"
 		},"topimg":["top.bin","top.bin"],
 		"bottomimg":"base.bin",

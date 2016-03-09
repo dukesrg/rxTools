@@ -91,6 +91,13 @@ Sibling siblings[1 << MENU_MAX_LEVELS];
 
 int siblingcount; //number of siblings in current menu
 
+const char *bootoptions[BOOT_COUNT] = {
+	"rxTools UI",
+	"rxMode EmuNAND",
+	"rxMode SysNAND",
+	"Pasta mode"
+};
+
 /*
 #define OPTION_MAX_SIZE 32
 typedef struct {
@@ -154,6 +161,34 @@ int getConfig(int idx) {
 	return i < CFG_NUM ? i : -1;
 }
 
+int nextKey(int idx) {
+	do {
+		if (++idx >= KEY_COUNT)
+			idx = 0;
+	} while (keys[idx].mask == 0);
+	return idx;
+}
+
+int prevKey(int idx) {
+	do {
+		if (--idx < 0)
+			idx = KEY_COUNT - 1;
+	} while (keys[idx].mask == 0);
+	return idx;
+}
+
+int nextBoot(int idx) {
+	if (++idx >= BOOT_COUNT)
+		idx = 0;
+	return idx;
+}
+
+int prevBoot(int idx) {
+	if (--idx < 0)
+		idx = BOOT_COUNT - 1;
+	return idx;
+}
+
 void ConfigToggle(int idx) {
 	if ((idx = getConfig(idx)) >= 0) {
 		switch (cfgs[idx].type) {
@@ -164,6 +199,10 @@ void ConfigToggle(int idx) {
 					themeLoad(cfgs[idx].val.s, THEME_NEXT);
 				break;
 			case CFG_TYPE_INT:
+				if (idx == CFG_FORCE_UI || idx == CFG_FORCE_EMUNAND || idx == CFG_FORCE_SYSNAND || idx == CFG_FORCE_PASTA)
+					cfgs[idx].val.i = nextKey(cfgs[idx].val.i);
+				else if (idx == CFG_BOOT_DEFAULT)
+					cfgs[idx].val.i = nextBoot(cfgs[idx].val.i);
 				break;
 			case CFG_TYPE_BOOLEAN:
 				cfgs[idx].val.b = !cfgs[idx].val.b;
@@ -517,8 +556,14 @@ int menuTry(int targetposition, int currentposition) {
 					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
 					break;
 				case CFG_TYPE_INT:
-					swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
-					DrawStringRect(&bottomTmpScreen, str, style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+					if (j == CFG_FORCE_UI || j == CFG_FORCE_EMUNAND || j == CFG_FORCE_SYSNAND || j == CFG_FORCE_PASTA)
+						DrawStringRect(&bottomTmpScreen, lang(keys[cfgs[j].val.i].name, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+					else if (j == CFG_BOOT_DEFAULT)
+						DrawStringRect(&bottomTmpScreen, lang(bootoptions[cfgs[j].val.i], -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+					else {
+						swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
+						DrawStringRect(&bottomTmpScreen, str, style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+					}
 					break;
 				case CFG_TYPE_BOOLEAN:
 					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);

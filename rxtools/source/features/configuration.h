@@ -38,13 +38,24 @@ typedef struct {
 } Cfg;
 
 enum {
-	CFG_GUI,
+	CFG_BOOT_DEFAULT,
+	CFG_FORCE_UI,
+	CFG_FORCE_EMUNAND,
+	CFG_FORCE_SYSNAND,
+	CFG_FORCE_PASTA,
 	CFG_THEME,
 	CFG_AGB,
-	CFG_ABSYSN,
 	CFG_LANG,
 
 	CFG_NUM
+};
+
+enum {
+	BOOT_UI,
+	BOOT_EMUNAND,
+	BOOT_SYSNAND,
+	BOOT_PASTA,
+	BOOT_COUNT
 };
 
 extern Cfg cfgs[];

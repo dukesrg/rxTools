@@ -8,7 +8,7 @@
 		},"items":{
 			"x":8,
 			"y":40,
-			"width":152,
+			"width":176,
 			"color":"ff93a1ab",
 			"selected":["ffffffff","00000000"],
 			"disabled":"ff7f0000",
@@ -20,7 +20,7 @@
 			"height":144,
 			"color":"ffffffff"
 		},"value":{
-			"x":160,
+			"x":186,
 			"color":"ffffffff"
 		},"topimg":["top.bin","top.bin"],
 		"bottomimg":"bottom.bin",

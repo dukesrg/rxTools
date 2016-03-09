@@ -15,7 +15,7 @@
 				"function":"FUNC_RXMODE",
 				"parameter":0
 			},"ITEM1-3":{
-          			"caption":"PastaMode",
+          			"caption":"Pasta mode",
 				"description":"Patches signature checks and load in SysNAND with GBA and DSi support.",
 				"function":"FUNC_PASTA"
 			},"ITEM1-4":{
@@ -284,26 +284,41 @@
 			"caption":"Settings",
 			"description":"Change settings.",
 			"ITEM6-1":{
-				"caption":"Force UI boot",
+				"caption":"Default boot",
 				"enabled":"FUNC_CHK_CFG",
 				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_GUI"
+				"value":"CFG_BOOT_DEFAULT"
 			},"ITEM6-2":{
+				"caption":"Force rxTools UI",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
+				"value":"CFG_FORCE_UI"
+			},"ITEM6-3":{
+				"caption":"Force rxMode EmuNAND",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
+				"value":"CFG_FORCE_EMUNAND"
+			},"ITEM6-4":{
+				"caption":"Force rxMode SysNAND",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
+				"value":"CFG_FORCE_SYSNAND"
+			},"ITEM6-5":{
+				"caption":"Force Pasta mode",
+				"enabled":"FUNC_CHK_CFG",
+				"function":"FUNC_CFG_TOGGLE",
+				"value":"CFG_FORCE_PASTA"
+			},"ITEM6-6":{
 				"caption":"Theme",
 				"enabled":"FUNC_CHK_CFG",
 				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_THEME"
-			},"ITEM6-3":{
+			},"ITEM6-7":{
 				"caption":"Show AGB_FIRM BIOS",
 				"enabled":"FUNC_CHK_CFG",
 				"function":"FUNC_CFG_TOGGLE",
 				"value":"CFG_AGB"
-			},"ITEM6-4":{
-				"caption":"Autoboot SysNAND",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_ABSYSN"
-			},"ITEM6-5":{
+			},"ITEM6-8":{
 				"caption":"Language",
 				"enabled":"FUNC_CHK_CFG",
 				"function":"FUNC_CFG_TOGGLE",

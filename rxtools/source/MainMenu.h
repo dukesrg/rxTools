@@ -232,7 +232,7 @@ void SettingsMenuInit(){
 		{
 			if (MyMenu->Current == 0)
 			{
-				cfgs[CFG_GUI].val.i ^= 1;
+//				cfgs[CFG_GUI].val.i ^= 1;
 			}
 			else if (MyMenu->Current == 1) //theme selection
 			{
@@ -311,7 +311,7 @@ void SettingsMenuInit(){
 */			}
 			else if (MyMenu->Current == 5)
 			{
-				cfgs[CFG_ABSYSN].val.i ^= 1;
+//				cfgs[CFG_ABSYSN].val.i ^= 1;
 			}
 			else if (MyMenu->Current == 6)
 			{

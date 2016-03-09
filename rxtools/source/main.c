@@ -266,18 +266,19 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	drawTop();
 
-//	swprintf(path, _MAX_LFN, themePath, cfgs[CFG_THEME].val.i, strlen(themeFile), themeFile);
-//	if ((r = jsonLoad(&themeJson, path)) <= 0)
 	r = themeLoad(cfgs[CFG_THEME].val.s, THEME_SET);
-	if (r < 0)
-		warn(L"Failed to load theme: %d\n", r);
 
-//	if (r < 0 || (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1))
-	if (!cfgs[CFG_GUI].val.i && HID_STATE & BUTTON_L1) {
-		if(~HID_STATE & BUTTON_Y) rxMode(1);
-		else if(~HID_STATE & BUTTON_X) rxMode(0);
-		else if(~HID_STATE & BUTTON_B) PastaMode();
-		else rxMode(cfgs[CFG_ABSYSN].val.i ? 0 : 1);
+	if (cfgs[CFG_BOOT_DEFAULT].val.i != BOOT_UI && HID_STATE & keys[cfgs[CFG_FORCE_UI].val.i].mask) {
+		if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_EMUNAND || ~HID_STATE & keys[cfgs[CFG_FORCE_EMUNAND].val.i].mask)
+			rxMode(1);
+		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_SYSNAND || ~HID_STATE & keys[cfgs[CFG_FORCE_SYSNAND].val.i].mask)
+			rxMode(0);
+		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_PASTA || ~HID_STATE & keys[cfgs[CFG_FORCE_PASTA].val.i].mask)
+			PastaMode();
+	}
+	if (r < 0) { //Fallback to Emu- or SysNAND if UI should be loaded but theme is not available
+		warn(L"Failed to load theme: %d\n", r);
+		rxMode(checkEmuNAND() ? 1 : 0);
 	}
 
 	if (sysver < 7) {
