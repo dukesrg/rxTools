@@ -3,7 +3,7 @@
 	"menu":{
 		"caption":{
 			"x":12,
-			"y":0,
+			"y":2,
 			"color":"ff008dc5"
 		},"items":{
 			"x":8,
@@ -14,16 +14,16 @@
 			"disabled":"ffff0000",
 			"unselected":["ffff0000","ff008dc5"]
 		},"description":{
-			"x":186,
-			"y":48,
-			"width":104,
-			"height":144,
-			"color":"ff008dc5"
+			"x":172,
+			"y":40,
+			"width":128,
+			"height":160,
+			"color":"ffffffff"
 		},"value":{
 			"x":186,
 			"color":"ff008dc5"
 		},"topimg":["top.bin","top.bin"],
-		"bottomimg":"bottom.bin",
+		"bottomimg":"bot_descr.bin",
 		"ITEM1":{
 			"ITEM1-1":{
 			},"ITEM1-2":{
@@ -43,6 +43,7 @@
 		},"ITEM3":{
 			"ITEM3-1":{
 			},"ITEM3-2":{
+				"bottomimg":"bottom.bin",
 				"ITEM3-2-1":{
 				},"ITEM3-2-2":{
 				},"ITEM3-2-3":{
@@ -55,6 +56,7 @@
 			},"ITEM3-3":{
 			},"ITEM3-4":{
 			},"ITEM3-5":{
+				"bottomimg":"bottom.bin",
 				"ITEM3-5-1":{
 				},"ITEM3-5-2":{
 				},"ITEM3-5-3":{
@@ -69,6 +71,7 @@
 		},"ITEM4":{
 			"ITEM4-1":{
 			},"ITEM4-2":{
+				"bottomimg":"bottom.bin",
 				"ITEM4-2-1":{
 				},"ITEM4-2-2":{
 				},"ITEM4-2-3":{
@@ -79,6 +82,7 @@
 				},"ITEM4-2-8":{
 				}
 			},"ITEM4-3":{
+				"bottomimg":"bottom.bin",
 				"ITEM4-3-1":{
 				},"ITEM4-3-2":{
 				},"ITEM4-3-3":{
@@ -96,6 +100,7 @@
 			},"ITEM5-4":{
 			}
 		},"ITEM6":{
+			"bottomimg":"bottom.bin",
 			"ITEM6-1":{
 			},"ITEM6-2":{
 			},"ITEM6-3":{
