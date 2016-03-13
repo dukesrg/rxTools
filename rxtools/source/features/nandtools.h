@@ -18,7 +18,7 @@
 #ifndef NANDTOOLS_H
 #define NANDTOOLS_H
 
-void dumpCoolFiles();
-void restoreCoolFiles();
+void dumpCoolFiles(wchar_t *path);
+void restoreCoolFiles(wchar_t *path);
 
 #endif

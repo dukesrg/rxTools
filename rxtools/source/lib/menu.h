@@ -18,24 +18,6 @@
 #ifndef MENU_H
 #define MENU_H
 
-#include <stdbool.h>
-#include <wchar.h>
-#include "console.h"
-
-typedef struct{
-	char Str[CONSOLE_MAX_LINE_LENGTH+1];
-	void( *Func)();
-	wchar_t *gfx_splash;
-} MenuEntry;
-
-typedef struct{
-	char Name[CONSOLE_MAX_LINE_LENGTH+1];
-	MenuEntry *Option;
-	int nEntryes;
-	int Current;    //The current selected option
-	bool Showed;    //Useful, to not refresh everything everytime
-} Menu;
-
 void MenuInit();
 void MenuShow();
 void MenuNextSelection();
@@ -43,7 +25,6 @@ void MenuPrevSelection();
 void MenuSelect();
 void MenuClose();
 void MenuRefresh();
-
 int menuLoad();
 int menuTry(int targetposition, int currentposition);
 int menuLevel(int pos);

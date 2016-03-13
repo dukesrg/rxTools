@@ -24,7 +24,6 @@
 #include "fatfs/ff.h"
 #include "nand.h"
 #define File FIL
-
 ////////////////////////////////////////////////////////////////Basic FileSystem Operations
 bool FSInit(void);
 void FSDeInit(void);

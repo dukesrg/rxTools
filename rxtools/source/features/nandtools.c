@@ -16,129 +16,39 @@
  */
 
 #include <stdlib.h>
-#include "menu.h"
 #include "nandtools.h"
 #include "console.h"
-#include "draw.h"
+#include "fs.h"
 #include "lang.h"
 #include "hid.h"
-#include "fs.h"
-#include "screenshot.h"
-#include "padgen.h"
-#include "crypto.h"
-#include "ncch.h"
-#include "NandDumper.h"
-#include "stdio.h"
 
-#define nCoolFiles sizeof(CoolFiles)/sizeof(CoolFiles[0])
+const wchar_t *dumppath = L"rxTools/%ls";
 
-uint32_t selectedFile;
-void SelectFile();
-
-static struct {
-    wchar_t *name;
-    wchar_t *path;
-} CoolFiles[] = {
-    {L"movable.sed", L"private"},
-    {L"SecureInfo_A", L"rw/sys"},
-    {L"LocalFriendCodeSeed_B", L"rw/sys"},
-    {L"rand_seed", L"rw/sys"},
-    {L"ticket.db", L"dbs"},
-    {L"import.db", L"dbs"},
-};
-
-static Menu CoolFilesMenu = {
-	"Choose the file to work on",
-	.Option = (MenuEntry[nCoolFiles]){
-		{ " movable.sed", &SelectFile, L"fil0.bin" },
-		{ " SecureInfo_A", &SelectFile, L"fil1.bin" },
-		{ " LocalFriendCodeSeed_B", &SelectFile, L"fil2.bin" },
-		{ " rand_seed", &SelectFile, L"fil3.bin" },
-		{ " ticket.db", &SelectFile, L"fil4.bin" },
-		{ " import.db", &SelectFile, L"fil5.bin" },
-	},
-	nCoolFiles,
-	0,
-	0
-};
-
-void SelectFile(){
-    selectedFile = CoolFilesMenu.Current;
-}
-
-void dumpCoolFiles()
+void dumpCoolFiles(wchar_t *path)
 {
-	int nandtype = NandSwitch();
-	if (nandtype == UNK_NAND) return;
+	wchar_t dest[_MAX_LFN + 1], *fn = wcsrchr(path, L'/') + 1;
 
-	selectedFile = -1;
-	MenuInit(&CoolFilesMenu);
-	MenuShow();
-
-	while (true)
-	{
-		uint32_t pad_state = InputWait();
-		if (pad_state & BUTTON_DOWN) MenuNextSelection();
-		if (pad_state & BUTTON_UP) MenuPrevSelection();
-		if (pad_state & BUTTON_A) { MenuSelect(); break; }
-		if (pad_state & BUTTON_B) break;
-		TryScreenShot();
-		MenuShow();
-	}
-
-	if (selectedFile == -1) return;
 	ConsoleInit();
 	ConsoleSetTitle(strings[STR_DUMP], strings[STR_FILES]);
 
-	wchar_t dest[_MAX_LFN], tmpstr[_MAX_LFN];
-	swprintf(dest, _MAX_LFN, L"rxTools/%ls", CoolFiles[selectedFile].name);
-	swprintf(tmpstr, _MAX_LFN, L"%d:%ls/%ls",
-		nandtype, CoolFiles[selectedFile].path,
-		CoolFiles[selectedFile].name);
-	print(strings[STR_DUMPING], tmpstr, dest);
+	swprintf(dest, _MAX_LFN + 1, dumppath, fn);
+	print(strings[STR_DUMPING], path, dest);
 	ConsoleShow();
 
-	unsigned int res = FSFileCopy(dest, tmpstr);
-	if (res != 0 && (selectedFile == 1 || selectedFile == 2)){
-		if (selectedFile == 1)
-		{
-			/* Fix for SecureInfo_B */
-			swprintf(dest, _MAX_LFN, L"rxTools/%.11ls%c",
-				CoolFiles[selectedFile].name, 'B');
-
-			swprintf(tmpstr, _MAX_LFN, L"%d:%ls/%.11ls%c",
-				nandtype, CoolFiles[selectedFile].path,
-				CoolFiles[selectedFile].name, 'B');
-		}
-		else if (selectedFile == 2)
-		{
-			/* Fix for LocalFriendCodeSeed_A */
-			swprintf(dest, _MAX_LFN, L"rxTools/%.20ls%c",
-				CoolFiles[selectedFile].name, 'A');
-			swprintf(tmpstr, _MAX_LFN, L"%d:%ls/%.20ls%c",
-				nandtype, CoolFiles[selectedFile].path,
-				CoolFiles[selectedFile].name, 'A');
-		}
-		print(strings[STR_FAILED]);
-		print(strings[STR_DUMPING], tmpstr, dest);
-		ConsoleShow();
-		res = FSFileCopy(dest, tmpstr);
-	}
-
-	switch ((res >> 8) & 0xFF)
+	switch ((FSFileCopy(dest, path) >> 8) & 0xFF)
 	{
 		case 0:
 			print(strings[STR_COMPLETED]);
 			break;
 		case 1:
-			print(strings[STR_ERROR_OPENING], tmpstr);
+			print(strings[STR_ERROR_OPENING], path);
 			break;
 		case 2:
 			print(strings[STR_ERROR_CREATING], dest);
 			break;
 		case 3:
 		case 4:
-			print(strings[STR_ERROR_READING], tmpstr);
+			print(strings[STR_ERROR_READING], path);
 			break;
 		case 5:
 		case 6:
@@ -154,86 +64,36 @@ void dumpCoolFiles()
 	WaitForButton(BUTTON_A);
 }
 
-void restoreCoolFiles()
+void restoreCoolFiles(wchar_t *path)
 {
-	int nandtype = NandSwitch();
-	if (nandtype == UNK_NAND) return;
+	wchar_t src[_MAX_LFN + 1], *fn = wcsrchr(path, L'/') + 1;
 
-	selectedFile = -1;
-	MenuInit(&CoolFilesMenu);
-	MenuShow();
-	while (true)
-	{
-		uint32_t pad_state = InputWait();
-		if (pad_state & BUTTON_DOWN) MenuNextSelection();
-		if (pad_state & BUTTON_UP) MenuPrevSelection();
-		if (pad_state & BUTTON_A) { MenuSelect(); break; }
-		if (pad_state & BUTTON_B) break;
-		TryScreenShot();
-		MenuShow();
-	}
-
-	if (selectedFile == -1) return;
 	ConsoleInit();
 	ConsoleSetTitle(strings[STR_INJECT], strings[STR_FILES]);
 
-	wchar_t dest[_MAX_LFN], tmpstr[_MAX_LFN];
+	swprintf(src, _MAX_LFN + 1, dumppath, fn);
 
-	swprintf(tmpstr, _MAX_LFN, L"rxTools/%ls",
-		CoolFiles[selectedFile].name);
-
-	swprintf(dest, _MAX_LFN, L"%d:%ls/%ls",
-		nandtype, CoolFiles[selectedFile].path,
-		CoolFiles[selectedFile].name);
-
-	print(strings[STR_INJECTING], tmpstr, dest);
+	print(strings[STR_INJECTING], src, path);
 	ConsoleShow();
 
-	unsigned int res = FSFileCopy(dest, tmpstr);
-	if (res != 0 && (selectedFile == 1 || selectedFile == 2)){
-		if (selectedFile == 1)
-		{
-			/* Fix for SecureInfo_B */
-			swprintf(tmpstr, _MAX_LFN, L"rxTools/%.11ls%lc",
-				CoolFiles[selectedFile].name, L'B');
-
-			swprintf(dest, _MAX_LFN, L"%d:%ls/%.11ls%lc",
-				nandtype, CoolFiles[selectedFile].path,
-				CoolFiles[selectedFile].name, L'B');
-		}
-		else if (selectedFile == 2)
-		{
-			swprintf(tmpstr, _MAX_LFN, L"rxTools/%.20s%lc",
-				CoolFiles[selectedFile].name, L'A');
-
-			swprintf(dest, _MAX_LFN, L"%d:%ls/%.20ls%lc",
-				nandtype, CoolFiles[selectedFile].path,
-				CoolFiles[selectedFile].name, L'A');
-		}
-		print(strings[STR_FAILED]);
-		print(strings[STR_INJECTING], tmpstr, dest);
-		ConsoleShow();
-		res = FSFileCopy(dest, tmpstr);
-	}
-
-	switch ((res >> 8) & 0xFF)
+	switch ((FSFileCopy(path, src) >> 8) & 0xFF)
 	{
 		case 0:
 			print(strings[STR_COMPLETED]);
 			break;
 		case 1:
-			print(strings[STR_ERROR_OPENING], tmpstr);
+			print(strings[STR_ERROR_OPENING], src);
 			break;
 		case 2:
-			print(strings[STR_ERROR_CREATING], dest);
+			print(strings[STR_ERROR_CREATING], path);
 			break;
 		case 3:
 		case 4:
-			print(strings[STR_ERROR_READING], tmpstr);
+			print(strings[STR_ERROR_READING], src);
 			break;
 		case 5:
 		case 6:
-			print(strings[STR_ERROR_WRITING], dest);
+			print(strings[STR_ERROR_WRITING], path);
 			break;
 		default:
 			print(strings[STR_FAILED]);
