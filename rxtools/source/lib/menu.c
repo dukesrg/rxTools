@@ -33,12 +33,11 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "nandtools.h"
 #include "downgradeapp.h"
 #include "AdvancedFileManager.h"
+#include "json.h"
 #include "theme.h"
 
-Menu* MyMenu;
-Menu *MenuChain[100];
-int openedMenus = 0;
-int saved_index = 0;
+#define MENU_JSON_SIZE		0x4000
+#define MENU_JSON_TOKENS	0x400
 
 char jsm[MENU_JSON_SIZE];
 jsmntok_t tokm[MENU_JSON_TOKENS];
@@ -281,16 +280,8 @@ int menuNavigate(int pos, menunav nav) {
 	return menuTry(newpos, pos);
 }
 
-void MenuInit(Menu* menu){
-	MyMenu = menu;
+void MenuInit(){
 	ConsoleInit();
-	if (openedMenus == 0) MyMenu->Current = saved_index; //if we're entering the main menu, load the index
-	else  MyMenu->Current = 0;
-    MyMenu->Showed = 0;
-	ConsoleSetTitle(lang(MyMenu->Name, -1));
-	for(int i = 0; i < MyMenu->nEntryes; i++){
-		ConsoleAddText(lang(MyMenu->Option[i].Str, -1));
-	}
 	if (menuPosition == 0) //select first upper menu on start;
 		menuPosition = menuNavigate(menuPosition, NAV_DOWN);
 }
@@ -512,6 +503,10 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 		return j + 1;
 	}
 	return 0;
+}
+
+int menuLoad() {
+	return jsonLoad(&menuJson, menuPath);
 }
 
 int menuTry(int targetposition, int currentposition) {

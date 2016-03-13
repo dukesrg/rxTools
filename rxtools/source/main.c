@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
-#include "MainMenu.h"
+#include "menu.h"
 #include "crypto.h"
 #include "fs.h"
 #include "console.h"
@@ -31,7 +31,7 @@
 #include "configuration.h"
 #include "log.h"
 #include "AdvancedFileManager.h"
-#include "json.h"
+#include "lang.h"
 #include "theme.h"
 #include "mpcore.h"
 
@@ -150,15 +150,6 @@ static _Noreturn void mainLoop()
 			MenuClose();
 		}
 
-		if (pad & BUTTON_SELECT) {
-			fadeOut();
-			ShutDown(1); //shutdown
-		}
-		if (pad & BUTTON_START) {
-			fadeOut();
-			ShutDown(0); //reboot
-		}
-
 		MenuShow();
 	}
 }
@@ -261,7 +252,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);
 
-	if ((r = jsonLoad(&menuJson, menuPath)) <= 0)
+	if ((r = menuLoad()) <= 0)
 		warn(L"Failed to load gui: %d\n", r);
 
 	drawTop();
@@ -299,7 +290,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	}
 
 	OpenAnimation();
-	MenuInit(&MainMenu);
+	MenuInit();
 	MenuShow();
 	mainLoop();
 }

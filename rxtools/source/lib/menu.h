@@ -21,23 +21,11 @@
 #include <stdbool.h>
 #include <wchar.h>
 #include "console.h"
-#include "json.h"
-
-#define MENU_MASK_SELECTED	0x01
-#define MENU_MASK_DISABLED	0x02
-#define MENU_STATE_COUNT	4
-
-#define MENU_JSON_SIZE		0x4000
-#define MENU_JSON_TOKENS	0x400
-
-extern Json menuJson;
-extern const wchar_t *menuPath;
 
 typedef struct{
 	char Str[CONSOLE_MAX_LINE_LENGTH+1];
 	void( *Func)();
 	wchar_t *gfx_splash;
-	TextColors color[MENU_STATE_COUNT];
 } MenuEntry;
 
 typedef struct{
@@ -48,7 +36,7 @@ typedef struct{
 	bool Showed;    //Useful, to not refresh everything everytime
 } Menu;
 
-void MenuInit(Menu* menu);
+void MenuInit();
 void MenuShow();
 void MenuNextSelection();
 void MenuPrevSelection();
@@ -56,8 +44,7 @@ void MenuSelect();
 void MenuClose();
 void MenuRefresh();
 
-extern Menu* MyMenu;
-
+int menuLoad();
 int menuTry(int targetposition, int currentposition);
 int menuLevel(int pos);
 
