@@ -178,6 +178,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	UINT btr, br;
 	int r;
 	FIL f;
+	uint32_t pad;
 
 	// Enable TMIO IRQ
 	*(volatile uint32_t *)0x10001000 = 0x00010000;
@@ -259,12 +260,14 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	r = themeLoad(cfgs[CFG_THEME].val.s, THEME_SET);
 
-	if (cfgs[CFG_BOOT_DEFAULT].val.i != BOOT_UI && HID_STATE & keys[cfgs[CFG_FORCE_UI].val.i].mask) {
-		if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_EMUNAND || ~HID_STATE & keys[cfgs[CFG_FORCE_EMUNAND].val.i].mask)
+	pad = GetInput();
+
+	if ((pad & keys[cfgs[CFG_FORCE_UI].val.i].mask) == 0) {
+		if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_EMUNAND || pad & keys[cfgs[CFG_FORCE_EMUNAND].val.i].mask)
 			rxMode(1);
-		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_SYSNAND || ~HID_STATE & keys[cfgs[CFG_FORCE_SYSNAND].val.i].mask)
+		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_SYSNAND || pad & keys[cfgs[CFG_FORCE_SYSNAND].val.i].mask)
 			rxMode(0);
-		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_PASTA || ~HID_STATE & keys[cfgs[CFG_FORCE_PASTA].val.i].mask)
+		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_PASTA || pad & keys[cfgs[CFG_FORCE_PASTA].val.i].mask)
 			PastaMode();
 	}
 	if (r < 0) { //Fallback to Emu- or SysNAND if UI should be loaded but theme is not available

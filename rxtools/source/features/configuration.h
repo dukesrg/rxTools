@@ -33,7 +33,6 @@ typedef struct {
 		int i;
 		int b;
 		char *s;
-//		wchar_t *s;
 	} val;
 } Cfg;
 
