@@ -15,13 +15,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <stdbool.h>
-#include "draw.h"
 #include "hid.h"
 #include "i2c.h"
 #include "screenshot.h"
+#include "draw.h"
 
-Key keys[KEY_COUNT] = {
+#define HID_PAD (*(volatile uint32_t*)0x10146000)
+
+const Key keys[KEY_COUNT] = {
 	{"KEY_A", "[A]", 1<<KEY_A},
 	{"KEY_B", "[B]", 1<<KEY_B},
 	{"KEY_SELECT", "[SELECT]", 1<<KEY_SELECT},
@@ -70,27 +71,17 @@ static void bgWork()
 }
 
 uint32_t InputWait() {
-    uint32_t pad_state_old = HID_STATE;
-    while (true) {
-        bgWork();
-
-        uint32_t pad_state = HID_STATE;
-        if (pad_state ^ pad_state_old)
-            return ~pad_state;
-    }
+	uint32_t pad_state_old = HID_PAD, pad_state;
+	do {
+		bgWork();
+	} while ((pad_state = HID_PAD) == pad_state_old);
+	return ~pad_state;
 }
 
 uint32_t GetInput() {
-    uint32_t pad_state = HID_STATE;
-    return ~pad_state;
+	return ~HID_PAD;
 }
 
-void WaitForButton(uint32_t button){
-	while (true) {
-		bgWork();
-
-        uint32_t pad_state = InputWait();
-        if (pad_state & button)
-            return;
-    }
+void WaitForButton(uint32_t mask) {
+	while(InputWait() != mask);
 }

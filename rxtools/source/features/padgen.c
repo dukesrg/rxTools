@@ -36,7 +36,7 @@ void PadGen(){
 
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 uint32_t NcchPadgen()

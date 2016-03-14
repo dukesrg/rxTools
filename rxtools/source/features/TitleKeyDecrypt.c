@@ -136,7 +136,7 @@ void DecryptTitleKeys() {
 	FileClose(&dump);
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 /** This decrypts the encTitleKeys.bin inside RxTools directory on SD. */
@@ -159,7 +159,7 @@ void DecryptTitleKeyFile(void) {
 		print(strings[STR_ERROR_OPENING], filename3);
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 	rr = f_open(&tick, filename, FA_READ | FA_OPEN_EXISTING);
@@ -168,7 +168,7 @@ void DecryptTitleKeyFile(void) {
 		print(strings[STR_ERROR_OPENING], filename);
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 
@@ -189,7 +189,7 @@ void DecryptTitleKeyFile(void) {
 		print(strings[STR_ERROR_READING], filename);
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 	keycount = line[0];
@@ -197,7 +197,7 @@ void DecryptTitleKeyFile(void) {
 		print(strings[STR_KEYS_MISMATCH], keycount, 0x10 + 0x20*keycount, f_size(&tick));
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 
@@ -212,7 +212,7 @@ void DecryptTitleKeyFile(void) {
 			print(strings[STR_ERROR_READING], filename);
 			print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 			ConsoleShow();
-			WaitForButton(BUTTON_A);
+			WaitForButton(keys[KEY_A].mask);
 			return;
 		}
 		kindex = line[0]; //Title Type which decides which common KeyY.
@@ -223,7 +223,7 @@ void DecryptTitleKeyFile(void) {
 			print(strings[STR_ERROR_READING], filename);
 			print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 			ConsoleShow();
-			WaitForButton(BUTTON_A);
+			WaitForButton(keys[KEY_A].mask);
 			return;
 		}
 		memcpy(key, line, 16);
@@ -239,7 +239,7 @@ void DecryptTitleKeyFile(void) {
 			print(strings[STR_ERROR_WRITING], filename3);
 			print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 			ConsoleShow();
-			WaitForButton(BUTTON_A);
+			WaitForButton(keys[KEY_A].mask);
 			return;
 		}
 		DecryptTitleKey(titleid, key, kindex);
@@ -249,7 +249,7 @@ void DecryptTitleKeyFile(void) {
 			print(strings[STR_ERROR_WRITING], filename3);
 			print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 			ConsoleShow();
-			WaitForButton(BUTTON_A);
+			WaitForButton(keys[KEY_A].mask);
 			return;
 		}
 		nkeys ++;
@@ -273,14 +273,14 @@ void DecryptTitleKeyFile(void) {
 		print(strings[STR_ERROR_WRITING], filename3);
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 	f_close(&tick); f_close(&dump);
 	print(strings[STR_DECRYPTED], nkeys, strings[STR_TITLE_KEYS]);
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 	return;
 }
 

@@ -103,5 +103,5 @@ void ScreenShot(){
 
 void TryScreenShot(){
 	uint32_t pad = GetInput();
-	if(pad & BUTTON_L1 && pad & BUTTON_R1) ScreenShot();
+	if(pad & keys[KEY_L].mask && pad & keys[KEY_R].mask) ScreenShot();
 }

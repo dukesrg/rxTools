@@ -52,9 +52,9 @@ int NandSwitch(){
 	ConsoleShow();
 	while (true) {
         uint32_t pad_state = InputWait();
-		if(pad_state & BUTTON_X) return SYS_NAND;
-		if(pad_state & BUTTON_Y) return EMU_NAND;
-		if(pad_state & BUTTON_B) return UNK_NAND;
+		if(pad_state & keys[KEY_X].mask) return SYS_NAND;
+		if(pad_state & keys[KEY_Y].mask) return EMU_NAND;
+		if(pad_state & keys[KEY_B].mask) return UNK_NAND;
     }
 }
 
@@ -99,7 +99,7 @@ void NandDumper(){
 				DrawString(&bottomScreen, strings[STR_PROGRESS_OK], x+(font16.dw*(progress++)), y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 			}
 			unsigned int pad = GetInput();
-			if (pad & BUTTON_B) {
+			if (pad & keys[KEY_B].mask) {
 				FileClose(&myFile);
 				goto end;
 			}
@@ -119,7 +119,7 @@ void NandDumper(){
 end:
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 void DumpNandPartitions(){
@@ -164,7 +164,7 @@ void DumpNandPartitions(){
 	}
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 void GenerateNandXorpads(){
@@ -180,7 +180,7 @@ void GenerateNandXorpads(){
 
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 void DumpNANDSystemTitles(){
@@ -229,11 +229,12 @@ void DumpNANDSystemTitles(){
 	ConsoleShow();
 	while (true) {
         uint32_t pad_state = InputWait();
-		if(pad_state & BUTTON_A){
+		if(pad_state & keys[KEY_A].mask){
 			CTRDecryptor();
 			break;
 		}
-		if(pad_state & BUTTON_B) 	break;
+		if(pad_state & keys[KEY_B].mask)
+			break;
     }
 }
 
@@ -251,7 +252,7 @@ void RebuildNand(){
 		print(strings[STR_NO_EMUNAND]);
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CANCEL]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 	print(strings[STR_PROCESSING], isEmuNand ? strings[STR_EMUNAND] : strings[STR_SYSNAND]);
@@ -280,5 +281,5 @@ void RebuildNand(){
 	}
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }

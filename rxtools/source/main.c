@@ -135,18 +135,18 @@ static _Noreturn void mainLoop()
 
 	while (true) {
 		pad = InputWait();
-		if (pad & (BUTTON_DOWN | BUTTON_RIGHT | BUTTON_R1))
+		if (pad & keys[KEY_DDOWN].mask)
 			MenuNextSelection();
 
-		if (pad & (BUTTON_UP | BUTTON_LEFT | BUTTON_L1))
+		if (pad & keys[KEY_DUP].mask)
 			MenuPrevSelection();
 
-		if (pad & BUTTON_A) {
+		if (pad & keys[KEY_A].mask) {
 			OpenAnimation();
 			MenuSelect();
 		}
 
-		if (pad & BUTTON_B) {
+		if (pad & keys[KEY_B].mask) {
 			MenuClose();
 		}
 
@@ -289,7 +289,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	if (warned) {
 		warn(strings[STR_PRESS_BUTTON_ACTION],
 			strings[STR_BUTTON_A], strings[STR_CONTINUE]);
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 	}
 
 	OpenAnimation();

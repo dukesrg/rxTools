@@ -61,7 +61,7 @@ void dumpCoolFiles(wchar_t *path)
 
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 void restoreCoolFiles(wchar_t *path)
@@ -102,5 +102,5 @@ void restoreCoolFiles(wchar_t *path)
 
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }

@@ -18,6 +18,7 @@
 #ifndef I2C_H
 #define I2C_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -52,4 +53,5 @@ uint8_t i2cReadRegister(uint8_t dev_id, uint8_t reg);
 bool i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data);
 
 bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size);
+
 #endif

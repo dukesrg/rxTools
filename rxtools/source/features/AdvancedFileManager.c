@@ -181,17 +181,17 @@ void AdvFileManagerFileAction(wchar_t *filePath)
 
 		//APP CONTROLS
 		uint32_t pad_state = InputWait();
-		if (pad_state & BUTTON_DOWN)
+		if (pad_state & keys[KEY_DDOWN].mask)
 		{
 			if (actions_idx != FILE_ACTIONS - 1) actions_idx++; //MOVE DOWN
 			else actions_idx = 0; //MOVE DOWN While at bottom -> go to top
 		}
-		else if (pad_state & BUTTON_UP)
+		else if (pad_state & keys[KEY_DUP].mask)
 		{
 			if (actions_idx != 0) actions_idx--; //MOVE UP
 			else actions_idx = FILE_ACTIONS - 1; //MOVE UP While at top -> go to bottom
 		}
-		else if (pad_state & BUTTON_A)
+		else if (pad_state & keys[KEY_A].mask)
 		{
 			switch(actions_idx)
 			{
@@ -200,7 +200,7 @@ void AdvFileManagerFileAction(wchar_t *filePath)
 				return;
 
 				case 1:			
-				while(!(pad_state & BUTTON_B))
+				while(!(pad_state & keys[KEY_B].mask))
 				{
 					ConsoleInit();
 					ConsoleSetTitle(L"File Info");
@@ -217,7 +217,7 @@ void AdvFileManagerFileAction(wchar_t *filePath)
 				return;				
 			}
 		}
-		else if (pad_state & BUTTON_B) break;	
+		else if (pad_state & keys[KEY_B].mask) break;	
 	}
 }
 
@@ -254,16 +254,16 @@ void AdvFileManagerMain(){
 		memcpy(bottomScreen.addr, screentmp.addr, bottomScreen.size); //Trick to avoid screen flickering
 
 		uint32_t pad_state = InputWait();
-		if (pad_state & BUTTON_DOWN) AdvFileManagerNextSelection(&Panels[currentPanel]);
-		else if (pad_state & BUTTON_UP) AdvFileManagerPrevSelection(&Panels[currentPanel]);
-		else if (pad_state & BUTTON_A) AdvFileManagerSelect(&Panels[currentPanel]);
-		else if (pad_state & BUTTON_B)
+		if (pad_state & keys[KEY_DDOWN].mask) AdvFileManagerNextSelection(&Panels[currentPanel]);
+		else if (pad_state & keys[KEY_DUP].mask) AdvFileManagerPrevSelection(&Panels[currentPanel]);
+		else if (pad_state & keys[KEY_A].mask) AdvFileManagerSelect(&Panels[currentPanel]);
+		else if (pad_state & keys[KEY_B].mask)
 		{
 			if (Panels[currentPanel].openedFolder == 0) break;
 			else AdvFileManagerBack(&Panels[currentPanel]);
 		}
-		else if (pad_state & BUTTON_LEFT) currentPanel = 0;
-		else if (pad_state & BUTTON_RIGHT)currentPanel = 1;
+		else if (pad_state & keys[KEY_DLEFT].mask) currentPanel = 0;
+		else if (pad_state & keys[KEY_DRIGHT].mask)currentPanel = 1;
 
 		//Change page
 		if (Panels[currentPanel].pointer - Panels[currentPanel].beginning == 10)Panels[currentPanel].beginning += 10;

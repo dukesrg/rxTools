@@ -305,7 +305,7 @@ void downgradeMSET()
 	while( checkLoop < 1 )
 	{
 		uint32_t pad_state = InputWait();
-		if ((pad_state & BUTTON_X))
+		if ((pad_state & keys[KEY_X].mask))
 		{
 			switch(region){
 				case 0:
@@ -329,7 +329,7 @@ void downgradeMSET()
 			}
 			checkLoop = 1;
 		}
-		else if ((pad_state & BUTTON_Y)  && region != 3 && region != 5)
+		else if ((pad_state & keys[KEY_Y].mask)  && region != 3 && region != 5)
 		{
 			switch(region){
 				case 0:
@@ -347,7 +347,7 @@ void downgradeMSET()
 			}
 			checkLoop = 1;
 		}
-		else if (pad_state & BUTTON_B)
+		else if (pad_state & keys[KEY_B].mask)
 		{
 			checkLoop = 1;
 			return;
@@ -451,7 +451,7 @@ void downgradeMSET()
 
 	print(strings[STR_BLANK_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 void manageFBI(bool restore)
@@ -507,12 +507,12 @@ void manageFBI(bool restore)
 		while(checkLoop < 1)
 		{
 			uint32_t pad_state = InputWait();
-			if (pad_state & BUTTON_Y)
+			if (pad_state & keys[KEY_Y].mask)
 			{
 				noHalt = true;
 				checkLoop = 1;
 			}
-			else if (pad_state & BUTTON_B)
+			else if (pad_state & keys[KEY_B].mask)
 			{
 				noHalt = false;
 				checkLoop = 1;
@@ -686,11 +686,11 @@ void manageFBI(bool restore)
 														while (checkLoop < 1)
 														{
 															uint32_t pad_state = InputWait();
-															if (pad_state & BUTTON_B)
+															if (pad_state & keys[KEY_B].mask)
 															{
 																checkLoop = 1;
 															}
-															else if (pad_state & BUTTON_X)
+															else if (pad_state & keys[KEY_X].mask)
 															{
 																print(strings[STR_DELETING], path);
 																ConsoleShow();
@@ -757,7 +757,7 @@ void manageFBI(bool restore)
 out:
 	print(strings[STR_BLANK_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 }
 
 void installFBI()

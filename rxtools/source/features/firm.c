@@ -187,7 +187,7 @@ int rxMode(int emu)
 			print(L"Press A to boot SYSNAND\n");
 			ConsoleShow();
 
-			WaitForButton(BUTTON_A);
+			WaitForButton(keys[KEY_A].mask);
 
 //			swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
 //				cfgs[CFG_THEME].val.i);
@@ -261,7 +261,7 @@ fail:
 	print(strings[STR_PRESS_BUTTON_ACTION],
 		strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();
-	WaitForButton(BUTTON_A);
+	WaitForButton(keys[KEY_A].mask);
 
 	return r;
 
@@ -330,7 +330,7 @@ void FirmLoader(wchar_t *firm_path){
 		print(strings[STR_WRONG], L"", strings[STR_FIRMWARE_FILE]);
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 		if (loadExecReboot())
@@ -340,8 +340,7 @@ void FirmLoader(wchar_t *firm_path){
 		print(strings[STR_ERROR_LAUNCHING], strings[STR_FIRMWARE_FILE]);
 		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 		ConsoleShow();
-		WaitForButton(BUTTON_A);
+		WaitForButton(keys[KEY_A].mask);
 		return;
 	}
 }
-
