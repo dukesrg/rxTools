@@ -262,13 +262,22 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	pad = GetInput();
 
-	if ((pad & keys[cfgs[CFG_FORCE_UI].val.i].mask) == 0) {
-		if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_EMUNAND || pad & keys[cfgs[CFG_FORCE_EMUNAND].val.i].mask)
+	if (~pad & keys[cfgs[CFG_FORCE_UI].val.i].mask) {
+		if (pad & keys[cfgs[CFG_FORCE_EMUNAND].val.i].mask)
 			rxMode(1);
-		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_SYSNAND || pad & keys[cfgs[CFG_FORCE_SYSNAND].val.i].mask)
+		else if (pad & keys[cfgs[CFG_FORCE_SYSNAND].val.i].mask)
 			rxMode(0);
-		else if (cfgs[CFG_BOOT_DEFAULT].val.i == BOOT_PASTA || pad & keys[cfgs[CFG_FORCE_PASTA].val.i].mask)
+		else if (pad & keys[cfgs[CFG_FORCE_PASTA].val.i].mask)
 			PastaMode();
+		else switch (cfgs[CFG_BOOT_DEFAULT].val.i) {
+			case BOOT_EMUNAND:
+				rxMode(1);
+			case BOOT_SYSNAND:
+				rxMode(0);
+			case BOOT_PASTA:
+				PastaMode();
+			default:
+		}
 	}
 	if (r < 0) { //Fallback to Emu- or SysNAND if UI should be loaded but theme is not available
 		warn(L"Failed to load theme: %d\n", r);
