@@ -276,7 +276,6 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 				rxMode(0);
 			case BOOT_PASTA:
 				PastaMode();
-			default:
 		}
 	}
 	if (r < 0) { //Fallback to Emu- or SysNAND if UI should be loaded but theme is not available

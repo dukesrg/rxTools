@@ -227,6 +227,47 @@ bool ConfigCheck(int idx) {
 	return false;
 }
 
+static uint32_t cksum(File *fp)
+{
+	uint32_t tbl[256];
+	uint8_t *buf = (uint8_t*)0x21000000;
+	size_t size;
+	uint32_t i, j, crc;
+
+	size = FileRead(fp, buf, 0x00400000, 0);
+	for (i = 0; i < 256; i++)
+	{
+		crc = i << 24;
+		for (j = 8; j > 0; j--)
+		{
+			if (crc & 0x80000000)
+				crc = (crc << 1) ^ 0x04c11db7;
+			else
+				crc = (crc << 1);
+			tbl[i] = crc;
+		}
+	}
+	crc = 0;
+	for (i = 0; i < size; i++)
+		crc = (crc << 8) ^ tbl[((crc >> 24) ^ *buf++) & 0xFF];
+	for (; size; size >>= 8)
+		crc = (crc << 8) ^ tbl[((crc >> 24) ^ size) & 0xFF];
+	return ~crc;
+}
+
+bool MsetCheck(wchar_t *path) {
+	static uint32_t mset_hash[10] = { 0x96AEC379, 0xED315608, 0x3387F2CD, 0xEDAC05D7, 0xACC1BE62, 0xF0FF9F08, 0x565BCF20, 0xA04654C6, 0x2164C3C0, 0xD40B12F4 }; //JPN, USA, EUR, CHN, KOR, TWN
+	File fp;
+	uint32_t i, crc;
+	bool res = false;
+	if (FileOpen(&fp, path, 0)) {
+		crc = cksum(&fp);
+		for (i = 0; !res && i < sizeof(mset_hash)/sizeof(mset_hash[0]); res = crc == mset_hash[i++]);
+		FileClose(&fp);
+	}
+	return res;
+}
+
 #define FUNC_KEY_MAX_SIZE 32
 struct {
 	char key[FUNC_KEY_MAX_SIZE];
@@ -254,6 +295,7 @@ struct {
 	{"FUNC_CHK_E", &EmuNANDExists},
 	{"FUNC_CHK_F", &FileExists},
 	{"FUNC_CHK_CFG", &ConfigCheck},
+	{"FUNC_CHK_MSET", &MsetCheck},
 	{"FUNC_CFG_TOGGLE", &ConfigToggle},
 	{"FUNC_OPT_LANG", NULL}
 };
@@ -328,10 +370,10 @@ void MenuSelect(){
 				menuPosition = menuNavigate(menuPosition, NAV_DOWN);
 		}
 	} else if (siblings[target.index].params != 0) { //target item have a string parameter for callback function
-		wchar_t str[_MAX_LFN];
+		wchar_t str[_MAX_LFN + 1];
 		bool(*check)(wchar_t*);
 		void(*func)(wchar_t*);
-		swprintf(str, menuJson.tok[siblings[target.index].params].end - menuJson.tok[siblings[target.index].params].start + 1, L"%s", menuJson.js + menuJson.tok[siblings[target.index].params].start);
+		swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[siblings[target.index].params].end - menuJson.tok[siblings[target.index].params].start, menuJson.js + menuJson.tok[siblings[target.index].params].start);
 		if (siblings[target.index].enabled == 0 || ((check = (bool(*)(wchar_t *))getFunc(siblings[target.index].enabled)) != NULL && check(str))) {
 			if (target.func != 0 && (func = (void(*)(wchar_t*))getFunc(target.func)) != NULL)
 				func(str);
@@ -513,7 +555,7 @@ int menuTry(int targetposition, int currentposition) {
 	int i, j, foundposition = 0;
 	uint32_t x, y;
 	bool enabled;
-	wchar_t str[_MAX_LFN];
+	wchar_t str[_MAX_LFN + 1];
 	bool(*check)();
 	bool(*checki)(int);
 	bool(*checks)(wchar_t*);
@@ -565,6 +607,7 @@ int menuTry(int targetposition, int currentposition) {
 					break;
 			}
 		}
+		enabled = false;
 		if (siblings[i].enabled == 0) {
 			enabled = true;
 		} else if (siblings[i].value != 0) { //item have a settings key mapped
@@ -572,7 +615,7 @@ int menuTry(int targetposition, int currentposition) {
 		} else if (siblings[i].parami != 0) { //item have an integer parameter for enabled check callback function
 			enabled = (checki = (bool(*)(int))getFunc(siblings[i].enabled)) != NULL && checki(strtol(menuJson.js + menuJson.tok[siblings[i].parami].start, NULL, 0));
 		} else if (siblings[i].params != 0) { //item have a string parameter for enabled check callback function
-			swprintf(str, menuJson.tok[siblings[i].params].end - menuJson.tok[siblings[i].params].start + 1, L"%s", menuJson.js + menuJson.tok[siblings[i].params].start);
+			swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[siblings[i].params].end - menuJson.tok[siblings[i].params].start, menuJson.js + menuJson.tok[siblings[i].params].start);
 			enabled = (checks = (bool(*)(wchar_t*))getFunc(siblings[i].enabled)) != NULL && checks(str);
 		} else { //item have no parameter for enabled check callback function
 			enabled = (check = (bool(*)())getFunc(siblings[i].enabled)) != NULL && check();
