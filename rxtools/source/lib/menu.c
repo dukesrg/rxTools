@@ -35,6 +35,7 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "AdvancedFileManager.h"
 #include "json.h"
 #include "theme.h"
+#include "tmd.h"
 
 #define MENU_JSON_SIZE		0x4000
 #define MENU_JSON_TOKENS	0x400
@@ -84,6 +85,7 @@ typedef struct { //siblings properties
 	int enabled;
 	int parami;
 	int params;
+	int parama;
 	int value;
 } Sibling;
 Sibling siblings[1 << MENU_MAX_LEVELS];
@@ -156,7 +158,7 @@ bool EmuNANDExists(int foo) {
 
 int getConfig(int idx) {
 	int i;
-	for(i = 0; i < CFG_NUM && strncmp(cfgs[i].key, menuJson.js + menuJson.tok[idx].start, menuJson.tok[idx].end - menuJson.tok[idx].start) != 0; i++);
+	for(i = 0; i < CFG_NUM && memcmp(cfgs[i].key, menuJson.js + menuJson.tok[idx].start, menuJson.tok[idx].end - menuJson.tok[idx].start) != 0; i++);
 	return i < CFG_NUM ? i : -1;
 }
 
@@ -300,6 +302,83 @@ struct {
 	{"FUNC_OPT_LANG", NULL}
 };
 
+static int getRegion(int drive) {
+	File fp;
+	int region = 0;
+	wchar_t str[_MAX_LFN + 1];
+	
+	swprintf(str, _MAX_LFN + 1, L"%d:rw/sys/SecureInfo_A", drive);
+	if (!FileOpen(&fp, str, 0)) {
+		str[wcslen(str) - 1] = L'B';
+		if (!FileOpen(&fp, str, 0))
+			return -1;
+	}
+	FileRead(&fp, &region, 1, 0x100);
+	FileClose(&fp);
+	if (region > 6) //unknown region
+		return -1;
+	else if (region == 3) //AUS = EUR
+		region--;
+	else if (region > 3)
+		region += 2; //make region compatible with TitleId low, octet 2, low nibble
+	return region;
+}
+
+static bool checkOption(int func, int params) {
+	if (func <= 0)
+		return false;
+	wchar_t str[_MAX_LFN + 1];
+	if (!memcmp("FUNC_CHK_E", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
+		return checkEmuNAND();
+	} else if (!memcmp("FUNC_CHK_F", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
+		if (params > 0 && menuJson.tok[params].type == JSMN_STRING) { //path
+			swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[params].end - menuJson.tok[params].start, menuJson.js + menuJson.tok[params].start);
+			return FileExists(str);
+		}
+	} else if (!memcmp("FUNC_CHK_CFG", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
+		if ((params = getConfig(params)) >= 0) {
+			switch (cfgs[params].type) {
+				case CFG_TYPE_STRING:
+//					break;
+				case CFG_TYPE_INT:
+//					break;
+				case CFG_TYPE_BOOLEAN:
+					return true;
+			}
+		}
+	} else if (!memcmp("FUNC_CHK_MSET", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
+		if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size == 6) { //path,nand number,TitleIdHi,TitleIdLo,Version,CRC
+			params++;
+			swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[params].end - menuJson.tok[params].start, menuJson.js + menuJson.tok[params].start);
+			File fp;
+			uint32_t crc;
+			if (FileOpen(&fp, str, 0)) {
+				uint32_t p[5];
+				tmd_data tmd;
+				params++;
+				for (int i = 0; i < 5; i++)
+					p[i] = strtoul(menuJson.js + menuJson.tok[params + i].start, NULL, menuJson.tok[params + i].type == JSMN_STRING ? 16 : 10);
+				if (p[1] != 0 && p[2] != 0) { //check titleId for region and existing app tmd version
+					if ((p[2] >> 12 & 0x0F) != getRegion(p[0]+1))
+						return false;
+					else
+						return true;
+					tmdLoad(&tmd, p[0]+1, p[1], p[2]);
+					if (tmd.sig_type == 0)
+						return false;
+//2do: check version
+				}
+				crc = cksum(&fp);
+				FileClose(&fp);
+				if (crc == p[4]) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 int menuNavigate(int pos, menunav nav) {
 	int bitlevel = sizeof(int) * 8 - menuLevel(pos) * MENU_LEVEL_BIT_WIDTH;
 	int newpos = pos;
@@ -359,6 +438,8 @@ void MenuSelect(){
 			if(target.func != 0 && (func = (void(*)(int))getFunc(target.func)) != NULL)
 				func(siblings[target.index].value);
 		}
+	} else if (siblings[target.index].parama != 0) {
+
 	} else if (siblings[target.index].parami != 0) { //target item have an integer parameter for callback
 		bool(*check)(int);
 		void(*func)(int);
@@ -508,18 +589,23 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 //						iselect = s + j;
 					break;
 */				case 'p': //"parameter"
-					switch(menuJson.tok[s + ++j].type) {
-						case JSMN_PRIMITIVE:							
-							if (apply == APPLY_TARGET)
-								siblings[siblingcount].parami = s + j;
+					switch(menuJson.tok[s + j + 1].type) {
+						case JSMN_PRIMITIVE:
+							if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
+								siblings[siblingcount].parami = s + j + 1;
 							break;
-						case JSMN_STRING:							
-							if (apply == APPLY_TARGET)
-								siblings[siblingcount].params = s + j;
+						case JSMN_STRING:
+							if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
+								siblings[siblingcount].params = s + j + 1;
+							break;
+						case JSMN_ARRAY:
+							if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
+								siblings[siblingcount].parama = s + j + 1;
 							break;
 						default:
 							break;
 					}
+					j += menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
 					break;
 				case 'v': //"value"
 					j++;
@@ -612,6 +698,8 @@ int menuTry(int targetposition, int currentposition) {
 			enabled = true;
 		} else if (siblings[i].value != 0) { //item have a settings key mapped
 			enabled = (check = (bool(*)(int))getFunc(siblings[i].enabled)) != NULL && check(siblings[i].value);
+		} else if (siblings[i].parama != 0) {
+			enabled = checkOption(siblings[i].enabled, siblings[i].parama);
 		} else if (siblings[i].parami != 0) { //item have an integer parameter for enabled check callback function
 			enabled = (checki = (bool(*)(int))getFunc(siblings[i].enabled)) != NULL && checki(strtol(menuJson.js + menuJson.tok[siblings[i].parami].start, NULL, 0));
 		} else if (siblings[i].params != 0) { //item have a string parameter for enabled check callback function
@@ -624,8 +712,9 @@ int menuTry(int targetposition, int currentposition) {
 			if (target.description != 0)
 				DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[target.description].start, menuJson.tok[target.description].end - menuJson.tok[target.description].start), style.descriptionRect.x, style.descriptionRect.y, style.descriptionRect.w, style.descriptionRect.h, &style.descriptionColor, &font16);
 			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h, enabled ? &style.itemsSelected : &style.itemsUnselected, &font16);
-		} else
+		} else {
 			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h, enabled ? &style.itemsColor : &style.itemsDisabled, &font16);
+		}
 	}
 	
 	return foundposition;
