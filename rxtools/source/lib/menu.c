@@ -351,28 +351,30 @@ static bool checkOption(int func, int params) {
 			params++;
 			swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[params].end - menuJson.tok[params].start, menuJson.js + menuJson.tok[params].start);
 			File fp;
-			uint32_t crc;
+			int i;
+			wchar_t apppath[_MAX_LFN + 1];
 			if (FileOpen(&fp, str, 0)) {
 				uint32_t p[5];
 				tmd_data tmd;
 				params++;
-				for (int i = 0; i < 5; i++)
+				for (i = 0; i < 5; i++)
 					p[i] = strtoul(menuJson.js + menuJson.tok[params + i].start, NULL, menuJson.tok[params + i].type == JSMN_STRING ? 16 : 10);
-				if (p[1] != 0 && p[2] != 0) { //check titleId for region and existing app tmd version
-					if ((p[2] >> 12 & 0x0F) != getRegion(p[0]+1))
-						return false;
-					else
-						return true;
-					tmdLoad(&tmd, p[0]+1, p[1], p[2]);
-					if (tmd.sig_type == 0)
-						return false;
-//2do: check version
+				tmd.header.title_id_hi = __builtin_bswap32(p[1]);
+				tmd.header.title_id_lo = __builtin_bswap32(p[2]);
+				if (p[1] != 0 && p[2] != 0 && (// skip titleID check if zero
+					(p[2] >> 12 & 0x0F) != getRegion(p[0]+1) || // region check failed
+					!tmdLoad(apppath, &tmd, p[0]+1) || // tmd/app failed
+					__builtin_bswap16(tmd.header.title_version) == p[4] // version already installed
+				)) {
+					FileClose(&fp);
+					return false; 
 				}
-				crc = cksum(&fp);
+				if (p[4] != 0 && cksum(&fp) != p[4]) { // skip CRC check if zero
+					FileClose(&fp);
+					return false;
+				}
 				FileClose(&fp);
-				if (crc == p[4]) {
-					return true;
-				}
+				return true;
 			}
 		}
 	}

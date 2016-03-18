@@ -1,32 +1,34 @@
 #ifndef TMD_H
 #define TMD_H
 
+#include <stdbool.h>
 #include <stdint.h>
+#include <wchar.h>
 
 #define TMD_MAX_CHUNKS 0x40
 
 typedef enum {
-	RSA_4096_SHA1	= 0x00010000,
-	RSA_2048_SHA1	= 0x00010001,
-	ECDSA_SHA1	= 0x00010002,
-	RSA_4096_SHA256	= 0x00010003,
-	RSA_2048_SHA256	= 0x00010004,
-	ECDSA_SHA256	= 0x00010005
-} tmd_sig_type;
+	RSA_4096_SHA1	= 0x00000100,
+	RSA_2048_SHA1	= 0x01000100,
+	ECDSA_SHA1	= 0x02000100,
+	RSA_4096_SHA256	= 0x03000100,
+	RSA_2048_SHA256	= 0x04000100,
+	ECDSA_SHA256	= 0x05000100
+} tmd_sig_type; //BE order
 
 typedef enum {
-	Encrypted = 0x0001,
-	Disc = 0x0002,
-	CFM = 0x0004,
-	Optional = 0x4000,
-	Shared = 0x8000
-} tmd_content_type;
+	Encrypted = 0x0100,
+	Disc = 0x0200,
+	CFM = 0x0400,
+	Optional = 0x0040,
+	Shared = 0x0080
+} tmd_content_type; //BE order
 
 typedef enum {
-	MainContent = 0x0000,
-	Home_Menu_Manual = 0x0001,
-	DLP_Child_Container = 0x0002
-} tmd_contend_index;
+	Main_Content = 0x0000,
+	Home_Menu_Manual = 0x0100,
+	DLP_Child_Container = 0x0200
+} tmd_contend_index; //BE order
 
 typedef struct {
 	uint8_t issuer[0x40];
@@ -35,7 +37,13 @@ typedef struct {
 	uint8_t signer_crl_version;
 	uint8_t reserved_1;
 	uint64_t system_version;
-	uint64_t title_id;
+	union {
+		uint64_t title_id;
+		struct {
+			uint32_t title_id_hi;
+			uint32_t title_id_lo;
+		};
+	};
 	uint32_t title_type;
 	uint16_t group_id;
 	uint32_t srl_public_save_data_size;
@@ -73,6 +81,6 @@ typedef struct {
 	tmd_content_chunk content_chunk[TMD_MAX_CHUNKS];
 } tmd_data;
 
-void tmdLoad(tmd_data *data, uint32_t drive, uint32_t tidh, uint32_t tidl);
+bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive);
 
 #endif
