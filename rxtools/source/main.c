@@ -248,7 +248,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	r = loadStrings();
 	if (fontIsLoaded)
-		r = langLoad(cfgs[CFG_LANG].val.s, LANG_SET);
+		r = langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET);
 
 	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);
@@ -262,12 +262,12 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	pad = GetInput();
 
-	if (~pad & keys[cfgs[CFG_FORCE_UI].val.i].mask) {
-		if (pad & keys[cfgs[CFG_FORCE_EMUNAND].val.i].mask)
+	if (~pad & keys[cfgs[CFG_GUI_FORCE].val.i].mask) {
+		if (pad & keys[cfgs[CFG_EMUNAND_FORCE].val.i].mask)
 			rxMode(1);
-		else if (pad & keys[cfgs[CFG_FORCE_SYSNAND].val.i].mask)
+		else if (pad & keys[cfgs[CFG_SYSNAND_FORCE].val.i].mask)
 			rxMode(0);
-		else if (pad & keys[cfgs[CFG_FORCE_PASTA].val.i].mask)
+		else if (pad & keys[cfgs[CFG_PASTA_FORCE].val.i].mask)
 			PastaMode();
 		else switch (cfgs[CFG_BOOT_DEFAULT].val.i) {
 			case BOOT_EMUNAND:

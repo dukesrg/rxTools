@@ -254,7 +254,7 @@ void switchStrings()
 		preloadStringsU();
 		loadStrings();
 	} else
-		mbstowcs(strings[STR_LANG_NAME], cfgs[CFG_LANG].val.s, STR_MAX_LEN);
+		mbstowcs(strings[STR_LANG_NAME], cfgs[CFG_LANGUAGE].val.s, STR_MAX_LEN);
 }
 
 int loadStrings()
@@ -269,7 +269,7 @@ int loadStrings()
 	int l, r, len;
 	File fd;
 
-	swprintf(path, _MAX_LFN, langPath, langDir, fontIsLoaded ? cfgs[CFG_LANG].val.s : "en");
+	swprintf(path, _MAX_LFN, langPath, langDir, fontIsLoaded ? cfgs[CFG_LANGUAGE].val.s : "en");
 	if (!FileOpen(&fd, path, 0))
 		return 1;
 

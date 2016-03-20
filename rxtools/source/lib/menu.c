@@ -84,17 +84,14 @@ Target target;
 typedef struct { //siblings properties
 	int caption;
 	int enabled;
-	int parami;
 	int params;
-	int parama;
-	int value;
 } Sibling;
 Sibling siblings[1 << MENU_MAX_LEVELS];
 
 int siblingcount; //number of siblings in current menu
 
 const char *bootoptions[BOOT_COUNT] = {
-	"rxTools UI",
+	"rxTools GUI",
 	"rxMode EmuNAND",
 	"rxMode SysNAND",
 	"Pasta mode"
@@ -123,7 +120,7 @@ Options *getLangs(){
 	unsigned int langNum = 0;
 
 	if (!f_opendir(&d, langPath)) {
-		mbstowcs(str, cfgs[CFG_LANG].val.s, _MAX_LFN);
+		mbstowcs(str, cfgs[CFG_LANGUAGE].val.s, _MAX_LFN);
 
 		while (langNum < LANG_NUM_MAX) {
 //			fno.lfname = langs[langNum];
@@ -146,16 +143,6 @@ Options *getLangs(){
 	return &langitems;
 }
 */
-
-static void Shutdown(int arg) {
-	fadeOut();
-	i2cWriteRegister(I2C_DEV_MCU, 0x20, (arg) ? (uint8_t)(1<<0):(uint8_t)(1<<2));
-	while(1);
-}
-
-bool EmuNANDExists(int foo) {
-	return checkEmuNAND();
-}
 
 int getConfig(int idx) {
 	int i;
@@ -191,45 +178,6 @@ int prevBoot(int idx) {
 	return idx;
 }
 
-void ConfigToggle(int idx) {
-	if ((idx = getConfig(idx)) >= 0) {
-		switch (cfgs[idx].type) {
-			case CFG_TYPE_STRING:
-				if (idx == CFG_LANG)
-					langLoad(cfgs[idx].val.s, LANG_NEXT);
-				else if (idx == CFG_THEME)
-					themeLoad(cfgs[idx].val.s, THEME_NEXT);
-				break;
-			case CFG_TYPE_INT:
-				if (idx == CFG_FORCE_UI || idx == CFG_FORCE_EMUNAND || idx == CFG_FORCE_SYSNAND || idx == CFG_FORCE_PASTA)
-					cfgs[idx].val.i = nextKey(cfgs[idx].val.i);
-				else if (idx == CFG_BOOT_DEFAULT)
-					cfgs[idx].val.i = nextBoot(cfgs[idx].val.i);
-				break;
-			case CFG_TYPE_BOOLEAN:
-				cfgs[idx].val.b = !cfgs[idx].val.b;
-				break;
-		}
-		writeCfg();
-		MenuRefresh();
-	}
-}
-
-bool ConfigCheck(int idx) {
-	if ((idx = getConfig(idx)) >= 0) {
-		switch (cfgs[idx].type) {
-			case CFG_TYPE_STRING:
-//				break;
-			case CFG_TYPE_INT:
-//				break;
-			case CFG_TYPE_BOOLEAN:
-				return true;
-				break;
-		}
-	}
-	return false;
-}
-
 static uint32_t cksum(File *fp)
 {
 	uint32_t tbl[256];
@@ -258,51 +206,6 @@ static uint32_t cksum(File *fp)
 	return ~crc;
 }
 
-bool MsetCheck(wchar_t *path) {
-	static uint32_t mset_hash[10] = { 0x96AEC379, 0xED315608, 0x3387F2CD, 0xEDAC05D7, 0xACC1BE62, 0xF0FF9F08, 0x565BCF20, 0xA04654C6, 0x2164C3C0, 0xD40B12F4 }; //JPN, USA, EUR, CHN, KOR, TWN
-	File fp;
-	uint32_t i, crc;
-	bool res = false;
-	if (FileOpen(&fp, path, 0)) {
-		crc = cksum(&fp);
-		for (i = 0; !res && i < sizeof(mset_hash)/sizeof(mset_hash[0]); res = crc == mset_hash[i++]);
-		FileClose(&fp);
-	}
-	return res;
-}
-
-#define FUNC_KEY_MAX_SIZE 32
-struct {
-	char key[FUNC_KEY_MAX_SIZE];
-	void *func;
-} Func[] = { 
-	{"FUNC_RXMODE", &rxMode},
-	{"FUNC_PASTA", &PastaMode},
-	{"FUNC_SHUTDOWN", &Shutdown},
-	{"FUNC_DEC_CTR", &CTRDecryptor},
-	{"FUNC_DEC_TK", &DecryptTitleKeys},
-	{"FUNC_DEC_TKF", &DecryptTitleKeyFile},
-	{"FUNC_GEN_T_PAD", &PadGen},
-	{"FUNC_DEC_PAR", &DumpNandPartitions},
-	{"FUNC_GEN_PAT_PAD", &GenerateNandXorpads},
-	{"FUNC_DMP_N", &NandDumper},
-	{"FUNC_DMP_NT", &DumpNANDSystemTitles},
-	{"FUNC_DMP_NF", &dumpCoolFiles},
-	{"FUNC_DMP_RAM", NULL},
-	{"FUNC_INJ_N", &RebuildNand},
-	{"FUNC_INJ_NF", &restoreCoolFiles},
-	{"FUNC_DG_MSET", &downgradeMSET},
-	{"FUNC_INS_FBI", &installFBI},
-	{"FUNC_INS_HS", &restoreHS},
-	{"FUNC_AFM", &AdvFileManagerMain},
-	{"FUNC_CHK_E", &EmuNANDExists},
-	{"FUNC_CHK_F", &FileExists},
-	{"FUNC_CHK_CFG", &ConfigCheck},
-	{"FUNC_CHK_MSET", &MsetCheck},
-	{"FUNC_CFG_TOGGLE", &ConfigToggle},
-	{"FUNC_OPT_LANG", NULL}
-};
-
 static int getRegion(int drive) {
 	File fp;
 	int region = 0;
@@ -325,56 +228,158 @@ static int getRegion(int drive) {
 	return region;
 }
 
-static bool checkOption(int func, int params) {
-	if (func <= 0)
-		return false;
+static bool getStrVal(wchar_t *s, int i) {
+	return i > 0 && swprintf(s, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) > 0;
+}
+
+static uint32_t getIntVal(int i) {
+	return strtoul(menuJson.js + menuJson.tok[i].start, NULL, menuJson.tok[i].type == JSMN_STRING ? 16 : 10);
+}
+/*
+	{"FUNC_DEC_CTR", &CTRDecryptor},
+	{"FUNC_DEC_TK", &DecryptTitleKeys},
+	{"FUNC_DEC_TKF", &DecryptTitleKeyFile},
+	{"FUNC_GEN_T_PAD", &PadGen},
+	{"FUNC_DEC_PAR", &DumpNandPartitions},
+	{"FUNC_GEN_PAT_PAD", &GenerateNandXorpads},
+	{"FUNC_DMP_N", &NandDumper},
+	{"FUNC_DMP_NT", &DumpNANDSystemTitles},
+	{"FUNC_DMP_NF", &dumpCoolFiles},
+	{"FUNC_INJ_N", &RebuildNand},
+	{"FUNC_INJ_NF", &restoreCoolFiles},
+	{"FUNC_DG_MSET", &downgradeMSET},
+	{"FUNC_INS_FBI", &installFBI},
+	{"FUNC_INS_HS", &restoreHS},
+	{"FUNC_AFM", &AdvFileManagerMain},
+*/
+
+static bool runFunc(int func, int params) {
+	FIL fp;
+	FILINFO fno;
+	UINT size;
+	int i, funcsize;
+	uint32_t hash[4];
+	uint8_t *checkhash = (uint8_t*)&hash[0], filehash[16], *buf = (uint8_t*)0x21000000;
 	wchar_t str[_MAX_LFN + 1];
-	if (!memcmp("FUNC_CHK_E", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
-		return checkEmuNAND();
-	} else if (!memcmp("FUNC_CHK_F", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
-		if (params > 0 && menuJson.tok[params].type == JSMN_STRING) { //path
-			swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[params].end - menuJson.tok[params].start, menuJson.js + menuJson.tok[params].start);
-			return FileExists(str);
+	char *funckey;
+
+	if (func == 0)
+		return true;
+	funckey = menuJson.js + menuJson.tok[func].start + 4;
+	funcsize = menuJson.tok[func].end - menuJson.tok[func].start - 4;
+	if (!memcmp(funckey - 4, "RUN_", 4)) {
+		if (!memcmp(funckey, "RXMODE", funcsize))
+			rxMode(getIntVal(params));
+		else if (!memcmp(funckey, "PASTA", funcsize))
+			PastaMode();
+		else if (!memcmp(funckey, "SHUTDOWN", funcsize)) {
+			fadeOut();
+			i2cWriteRegister(I2C_DEV_MCU, 0x20, (getIntVal(params)) ? (uint8_t)(1<<0):(uint8_t)(1<<2));
+			while(1);
 		}
-	} else if (!memcmp("FUNC_CHK_CFG", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
-		if ((params = getConfig(params)) >= 0) {
-			switch (cfgs[params].type) {
-				case CFG_TYPE_STRING:
-//					break;
-				case CFG_TYPE_INT:
-//					break;
-				case CFG_TYPE_BOOLEAN:
+	} else if (!memcmp(funckey - 4, "CHK_", 4)) {
+		if (!memcmp(funckey, "EMUNAND", funcsize))
+			return checkEmuNAND();
+		else if (!memcmp(funckey, "FILE", funcsize)) {
+			if (params > 0) {
+				switch (menuJson.tok[params].type) {
+					case JSMN_STRING:
+						return getStrVal(str, params) && f_stat(str, NULL) == FR_OK;
+					case JSMN_ARRAY:
+						fno.lfname = 0;
+						if (menuJson.tok[params].size == 0 || !getStrVal(str, params + 1) || f_stat(str, &fno) != FR_OK)
+							return false;
+						if (menuJson.tok[params].size == 1)
+							return true;
+						if (fno.fsize != getIntVal(params + 2))
+							return false;
+						if (menuJson.tok[params].size == 2)
+							return true;
+						if (f_open(&fp, str, FA_READ | FA_OPEN_EXISTING) != FR_OK)
+							return false;
+						if (f_read(&fp, buf, fno.fsize, &size) != FR_OK || size != fno.fsize) {
+							f_close(&fp);
+							return false;
+						}
+						f_close(&fp);
+						char tmp[9];
+						for (i = 0; i < 4; i++) {
+							strncpy(tmp, menuJson.js + menuJson.tok[params + 3].start + 8 * i, 8);
+							hash[i] = __builtin_bswap32(strtoul(tmp, NULL, 16));
+//							sscanf(menuJson.js + menuJson.tok[params + 3].start + 8 * i, "%08lx", &hash[i]); //lib code increases binary too much
+						}
+						mbedtls_md5(buf, size, filehash);
+						return !memcmp(checkhash, filehash, 16);
+					default:
+						break;
+				}
+			}
+		} else if (!memcmp(funckey, "TITLE", funcsize)) {
+			if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size == 6) { //path,nand number,TitleIdHi,TitleIdLo,Version,CRC
+				params++;
+				getStrVal(str, params);
+				wchar_t apppath[_MAX_LFN + 1];
+				if (FileOpen(&fp, str, 0)) {
+					uint32_t p[5];
+					tmd_data tmd;
+					params++;
+					for (i = 0; i < 5; i++)
+						p[i] = getIntVal(params + i);
+					tmd.header.title_id_hi = __builtin_bswap32(p[1]);
+					tmd.header.title_id_lo = __builtin_bswap32(p[2]);
+					if (p[1] != 0 && p[2] != 0 && (// skip titleID check if zero
+						(p[2] >> 12 & 0x0F) != getRegion(p[0]+1) || // region check failed
+						!tmdLoad(apppath, &tmd, p[0]+1) || // tmd/app failed
+						__builtin_bswap16(tmd.header.title_version) == p[4] // version already installed
+					)) {
+						FileClose(&fp);
+						return false; 
+					}
+					if (p[4] != 0 && cksum(&fp) != p[4]) { // skip CRC check if zero
+						FileClose(&fp);
+						return false;
+					}
+					FileClose(&fp);
 					return true;
+				}
 			}
 		}
-	} else if (!memcmp("FUNC_CHK_MSET", menuJson.js + menuJson.tok[func].start, menuJson.tok[func].end - menuJson.tok[func].start)) {
-		if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size == 6) { //path,nand number,TitleIdHi,TitleIdLo,Version,CRC
-			params++;
-			swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[params].end - menuJson.tok[params].start, menuJson.js + menuJson.tok[params].start);
-			File fp;
-			int i;
-			wchar_t apppath[_MAX_LFN + 1];
-			if (FileOpen(&fp, str, 0)) {
-				uint32_t p[5];
-				tmd_data tmd;
-				params++;
-				for (i = 0; i < 5; i++)
-					p[i] = strtoul(menuJson.js + menuJson.tok[params + i].start, NULL, menuJson.tok[params + i].type == JSMN_STRING ? 16 : 10);
-				tmd.header.title_id_hi = __builtin_bswap32(p[1]);
-				tmd.header.title_id_lo = __builtin_bswap32(p[2]);
-				if (p[1] != 0 && p[2] != 0 && (// skip titleID check if zero
-					(p[2] >> 12 & 0x0F) != getRegion(p[0]+1) || // region check failed
-					!tmdLoad(apppath, &tmd, p[0]+1) || // tmd/app failed
-					__builtin_bswap16(tmd.header.title_version) == p[4] // version already installed
-				)) {
-					FileClose(&fp);
-					return false; 
+	} else if (!memcmp(funckey - 4, "VAL_", 4)) {
+		if ((params = getConfig(params)) >= 0) {
+			if (!memcmp(funckey, "CHECK", funcsize)) {
+				switch (cfgs[params].type) {
+					case CFG_TYPE_STRING:
+//						break;
+					case CFG_TYPE_INT:
+//						break;
+					case CFG_TYPE_BOOLEAN:
+					return true;
 				}
-				if (p[4] != 0 && cksum(&fp) != p[4]) { // skip CRC check if zero
-					FileClose(&fp);
-					return false;
+			} else if (!memcmp(funckey, "TOGGLE", funcsize)) {
+				switch (params) {
+					case CFG_BOOT_DEFAULT:
+						cfgs[params].val.i = nextBoot(cfgs[params].val.i);
+						break;
+					case CFG_GUI_FORCE:
+					case CFG_EMUNAND_FORCE:
+					case CFG_SYSNAND_FORCE:
+					case CFG_PASTA_FORCE:
+						cfgs[params].val.i = nextKey(cfgs[params].val.i);
+						break;
+					case CFG_THEME:
+						themeLoad(cfgs[params].val.s, THEME_NEXT);
+						break;
+					case CFG_AGB_BIOS:
+						cfgs[params].val.b = !cfgs[params].val.b;
+						break;
+					case CFG_LANGUAGE:
+						langLoad(cfgs[params].val.s, LANG_NEXT);
+						break;
+					default:
+						return false;
 				}
-				FileClose(&fp);
+				writeCfg();
+				MenuRefresh();
 				return true;
 			}
 		}
@@ -424,55 +429,12 @@ void MenuPrevSelection(){
 	menuPosition = menuNavigate(menuPosition, NAV_PREV);
 }
 
-void (*getFunc(int idx))() {
-	char *key = menuJson.js + menuJson.tok[idx].start;
-	int keylen = menuJson.tok[idx].end - menuJson.tok[idx].start;
-	for(int i = 0; i < sizeof(Func) / sizeof(Func[0]); i++)
-		if (memcmp(Func[i].key, key, keylen) == 0)
-			return Func[i].func;
-	return NULL;
-}
-
-void MenuSelect(){
-	if (siblings[target.index].value != 0) { //target item have a settings key mapped
-		bool(*check)(int);
-		void(*func)(int);
-		if (siblings[target.index].enabled == 0 || ((check = (bool(*)(int))getFunc(siblings[target.index].enabled)) != NULL && check(siblings[target.index].value))) {
-			if(target.func != 0 && (func = (void(*)(int))getFunc(target.func)) != NULL)
-				func(siblings[target.index].value);
-		}
-	} else if (siblings[target.index].parama != 0) {
-
-	} else if (siblings[target.index].parami != 0) { //target item have an integer parameter for callback
-		bool(*check)(int);
-		void(*func)(int);
-		int param = strtol(menuJson.js + menuJson.tok[siblings[target.index].parami].start, NULL, 0);
-		if (siblings[target.index].enabled == 0 || ((check = (bool(*)(int))getFunc(siblings[target.index].enabled)) != NULL && check(param))) {
-			if(target.func != 0 && (func = (void(*)(int))getFunc(target.func)) != NULL)
-				func(param);
-			else
-				menuPosition = menuNavigate(menuPosition, NAV_DOWN);
-		}
-	} else if (siblings[target.index].params != 0) { //target item have a string parameter for callback function
-		wchar_t str[_MAX_LFN + 1];
-		bool(*check)(wchar_t*);
-		void(*func)(wchar_t*);
-		swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[siblings[target.index].params].end - menuJson.tok[siblings[target.index].params].start, menuJson.js + menuJson.tok[siblings[target.index].params].start);
-		if (siblings[target.index].enabled == 0 || ((check = (bool(*)(wchar_t *))getFunc(siblings[target.index].enabled)) != NULL && check(str))) {
-			if (target.func != 0 && (func = (void(*)(wchar_t*))getFunc(target.func)) != NULL)
-				func(str);
-			else
-				menuPosition = menuNavigate(menuPosition, NAV_DOWN);
-		}
-	} else { //target item have no parameter for callback function
-		bool(*check)();
-		void(*func)();
-		if (siblings[target.index].enabled == 0 || ((check = (bool(*)())getFunc(siblings[target.index].enabled)) != NULL && check())) {
-			if (target.func != 0 && (func = (void(*)())getFunc(target.func)) != NULL)
-				func();
-			else
-				menuPosition = menuNavigate(menuPosition, NAV_DOWN);
-		}
+void MenuSelect() {
+	if (runFunc(siblings[target.index].enabled, siblings[target.index].params)) {
+		if (target.func)
+			runFunc(target.func, siblings[target.index].params);
+		else 
+			menuPosition = menuNavigate(menuPosition, NAV_DOWN);
 	}
 	MenuShow();
 }
@@ -591,8 +553,8 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 //					if (apply == APPLY_TARGET)
 //						iselect = s + j;
 					break;
-*/				case 'p': //"parameter"
-					switch(menuJson.tok[s + j + 1].type) {
+*/				case 'p': //"parameters"
+/*					switch(menuJson.tok[s + j + 1].type) {
 						case JSMN_PRIMITIVE:
 							if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
 								siblings[siblingcount].parami = s + j + 1;
@@ -611,9 +573,11 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 					j += menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
 					break;
 				case 'v': //"value"
-					j++;
+*/
 					if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
-						siblings[siblingcount].value = s + j;
+						siblings[siblingcount].params = s + j + 1;
+//						siblings[siblingcount].value = s + j;
+					j += menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
 					break;
 				default:
 					k = menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
@@ -645,9 +609,6 @@ int menuTry(int targetposition, int currentposition) {
 	uint32_t x, y;
 	bool enabled;
 	wchar_t str[_MAX_LFN + 1];
-	bool(*check)();
-	bool(*checki)(int);
-	bool(*checks)(wchar_t*);
 
 	menuParse(0, OBJ_NONE, 0, 0, targetposition, &foundposition);
 	if (foundposition == 0) //fallback in case requested menu not exists
@@ -672,45 +633,39 @@ int menuTry(int targetposition, int currentposition) {
 	else
 		ClearScreen(&bottomTmpScreen, BLACK);
 
-	for (i = 0; i < sizeof(ancestors)/sizeof(ancestors[0]) && ancestors[i] != 0; i++)
-		x += font24.dw + DrawSubString(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start), -1, x, style.captionRect.y, &style.captionColor, &font24);
+	wcscpy(str, L"");
+	for (i = 0; i < sizeof(ancestors)/sizeof(ancestors[0]) && ancestors[i] != 0; i++) {
+		if (i > 0)
+			wcscat(str, lang("|", 1));
+		wcscat(str, lang(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start));
+	}
+	DrawSubString(&bottomTmpScreen, str, -1, x, style.captionRect.y, &style.captionColor, &font24);
 
 	for (i = 0; i < sizeof(siblings)/sizeof(siblings[0]) && siblings[i].caption != 0; i++) {
-		if ((siblings[i].value != 0) && (j = getConfig(siblings[i].value)) >= 0) {
-			switch (cfgs[j].type) {
-				case CFG_TYPE_STRING:
-					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-					break;
-				case CFG_TYPE_INT:
-					if (j == CFG_FORCE_UI || j == CFG_FORCE_EMUNAND || j == CFG_FORCE_SYSNAND || j == CFG_FORCE_PASTA)
-						DrawStringRect(&bottomTmpScreen, lang(keys[cfgs[j].val.i].name, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-					else if (j == CFG_BOOT_DEFAULT)
-						DrawStringRect(&bottomTmpScreen, lang(bootoptions[cfgs[j].val.i], -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-					else {
-						swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
-						DrawStringRect(&bottomTmpScreen, str, style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-					}
-					break;
-				case CFG_TYPE_BOOLEAN:
-					DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-					break;
-			}
+		switch (j = getConfig(siblings[i].params)) {
+			case CFG_BOOT_DEFAULT:
+				DrawStringRect(&bottomTmpScreen, lang(bootoptions[cfgs[j].val.i], -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+				break;
+			case CFG_GUI_FORCE:
+			case CFG_EMUNAND_FORCE:
+			case CFG_SYSNAND_FORCE:
+			case CFG_PASTA_FORCE:
+				DrawStringRect(&bottomTmpScreen, lang(keys[cfgs[j].val.i].name, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+				break;
+			case CFG_AGB_BIOS:
+				DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+				break;
+			case CFG_THEME:
+			case CFG_LANGUAGE:
+				DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+				break;
+			default:
+//				swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
+//				DrawStringRect(&bottomTmpScreen, str, style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
+				break;
 		}
-		enabled = false;
-		if (siblings[i].enabled == 0) {
-			enabled = true;
-		} else if (siblings[i].value != 0) { //item have a settings key mapped
-			enabled = (check = (bool(*)(int))getFunc(siblings[i].enabled)) != NULL && check(siblings[i].value);
-		} else if (siblings[i].parama != 0) {
-			enabled = checkOption(siblings[i].enabled, siblings[i].parama);
-		} else if (siblings[i].parami != 0) { //item have an integer parameter for enabled check callback function
-			enabled = (checki = (bool(*)(int))getFunc(siblings[i].enabled)) != NULL && checki(strtol(menuJson.js + menuJson.tok[siblings[i].parami].start, NULL, 0));
-		} else if (siblings[i].params != 0) { //item have a string parameter for enabled check callback function
-			swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[siblings[i].params].end - menuJson.tok[siblings[i].params].start, menuJson.js + menuJson.tok[siblings[i].params].start);
-			enabled = (checks = (bool(*)(wchar_t*))getFunc(siblings[i].enabled)) != NULL && checks(str);
-		} else { //item have no parameter for enabled check callback function
-			enabled = (check = (bool(*)())getFunc(siblings[i].enabled)) != NULL && check();
-		}
+		enabled = runFunc(siblings[i].enabled, siblings[i].params);
+
 		if (i == target.index) {
 			if (target.description != 0)
 				DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[target.description].start, menuJson.tok[target.description].end - menuJson.tok[target.description].start), style.descriptionRect.x, style.descriptionRect.y, style.descriptionRect.w, style.descriptionRect.h, &style.descriptionColor, &font16);

@@ -152,7 +152,7 @@ static void setAgbBios()
 {
 	File agb_firm;
 	wchar_t path[_MAX_LFN];
-	unsigned char svc = (cfgs[CFG_AGB].val.i ? 0x26 : 0x01);
+	unsigned char svc = (cfgs[CFG_AGB_BIOS].val.i ? 0x26 : 0x01);
 
 	getFirmPath(path, TID_CTR_AGB_FIRM);
 	if (FileOpen(&agb_firm, path, 0))

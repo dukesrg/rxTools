@@ -45,22 +45,20 @@ static char cfgTheme[CFG_STR_MAX_LEN] = "";
 
 Cfg cfgs[] = {
 	[CFG_BOOT_DEFAULT] = { "CFG_BOOT_DEFAULT", CFG_TYPE_INT, { .i = BOOT_UI } },
-	[CFG_FORCE_UI] = { "CFG_FORCE_UI", CFG_TYPE_INT, { .i = KEY_L } },
-	[CFG_FORCE_EMUNAND] = { "CFG_FORCE_EMUNAND", CFG_TYPE_INT, { .i = KEY_Y } },
-	[CFG_FORCE_SYSNAND] = { "CFG_FORCE_SYSNAND", CFG_TYPE_INT, { .i = KEY_X } },
-	[CFG_FORCE_PASTA] = { "CFG_FORCE_PASTA", CFG_TYPE_INT, { .i = KEY_B } },
+	[CFG_GUI_FORCE] = { "CFG_GUI_FORCE", CFG_TYPE_INT, { .i = KEY_L } },
+	[CFG_EMUNAND_FORCE] = { "CFG_EMUNAND_FORCE", CFG_TYPE_INT, { .i = KEY_Y } },
+	[CFG_SYSNAND_FORCE] = { "CFG_SYSNAND_FORCE", CFG_TYPE_INT, { .i = KEY_X } },
+	[CFG_PASTA_FORCE] = { "CFG_PASTA_FORCE", CFG_TYPE_INT, { .i = KEY_B } },
 	[CFG_THEME] = { "CFG_THEME", CFG_TYPE_STRING, { .s = cfgTheme } },
-	[CFG_AGB] = { "CFG_AGB", CFG_TYPE_BOOLEAN, { .i = 0 } },
-	[CFG_LANG] = { "CFG_LANG", CFG_TYPE_STRING, { .s = cfgLang } }
+	[CFG_AGB_BIOS] = { "CFG_AGB_BIOS", CFG_TYPE_BOOLEAN, { .i = 0 } },
+	[CFG_LANGUAGE] = { "CFG_LANGUAGE", CFG_TYPE_STRING, { .s = cfgLang } }
 };
 
 static const wchar_t *jsonPath= L"/rxTools/data/system.json";
 
 static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
-	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
-			strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start && strncmp(json + tok->start, s, tok->end - tok->start) == 0)
 		return 0;
-	}
 	return -1;
 }
 
@@ -102,8 +100,7 @@ int writeCfg()
 
 		switch (cfgs[i].type) {
 			case CFG_TYPE_INT:
-				res = snprintf(jsonCur, left,
-					"%d", cfgs[i].val.i);
+				res = snprintf(jsonCur, left, "%d", cfgs[i].val.i);
 				if (res < 0 || res >= left)
 					return 1;
 
@@ -127,8 +124,7 @@ int writeCfg()
 				break;
 
 			case CFG_TYPE_STRING:
-				res = snprintf(jsonCur, left,
-					"\"%s\"", cfgs[i].val.s);
+				res = snprintf(jsonCur, left, "\"%s\"", cfgs[i].val.s);
 				if (res < 0 || res >= left)
 					return 1;
 
@@ -224,7 +220,6 @@ int readCfg()
 				
 				memcpy(cfgs[j].val.s, buf + t[i].start, len);
 				cfgs[j].val.s[len] = 0;
-//				cfgs[j].val.s[mbstowcs(cfgs[j].val.s, buf + t[i].start, len)] = 0;
 		}
 	}
 
@@ -233,7 +228,7 @@ int readCfg()
 
 static FRESULT saveFirm(uint32_t id, const void *p, DWORD n)
 {
-	wchar_t path[_MAX_LFN];
+	wchar_t path[_MAX_LFN + 1];
 	UINT bw;
 	FRESULT r;
 	FIL f;
@@ -254,13 +249,13 @@ static int processFirmFile(uint32_t lo)
 	static const wchar_t pathFmt[] = L"rxTools/firm/00040138%08" PRIX32 "%ls.bin";
 	const uint32_t hi = 0x00040138;
 	uint8_t key[AES_BLOCK_SIZE];
-	wchar_t path[_MAX_LFN];
+	wchar_t path[_MAX_LFN + 1];
 	void *buff, *firm;
 	UINT size;
 	FRESULT r;
 	FIL f;
 
-	swprintf(path, _MAX_LFN, pathFmt, lo, "");
+	swprintf(path, _MAX_LFN + 1, pathFmt, lo, "");
 	r = f_open(&f, path, FA_READ);
 	if (r != FR_OK)
 		return r;
@@ -272,7 +267,7 @@ static int processFirmFile(uint32_t lo)
 	if (r != FR_OK)
 		return r;
 
-	swprintf(path, _MAX_LFN, pathFmt, lo, L"_cetk");
+	swprintf(path, _MAX_LFN + 1, pathFmt, lo, L"_cetk");
 	if (!getTitleKeyWithCetk(key, path)) {
 		firm = decryptFirmTitle(buff, size, &size, key);
 		if (firm != NULL)
@@ -421,7 +416,7 @@ static int InstallData()
 
 int CheckInstallationData(){
 	File file;
-	wchar_t str[_MAX_LFN];
+	wchar_t str[_MAX_LFN + 1];
 
 	switch (getMpInfo()) {
 		case MPINFO_CTR:
@@ -457,7 +452,7 @@ int CheckInstallationData(){
 }
 
 void InstallConfigData(){
-//	wchar_t path[_MAX_LFN];
+//	wchar_t path[_MAX_LFN + 1];
 
 	if(CheckInstallationData() == 0)
 		return;
@@ -465,25 +460,25 @@ void InstallConfigData(){
 //	trySetLangFromTheme(0);
 	writeCfg();
 
-/*	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg0TOP.bin",
+/*	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/cfg0TOP.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&top1Screen, path);
 	DrawSplash(&top2Screen, path);
-	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg0.bin",
+	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/cfg0.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&bottomScreen, path);
 */
 	/*int res = */InstallData();
-/*	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/cfg1%c.bin",
+/*	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/cfg1%c.bin",
 		cfgs[CFG_THEME].val.i, res == 0 ? 'O' : 'E');
 	DrawSplash(&bottomScreen, path);
-	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin",
+	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/TOP.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&top1Screen, path);
-	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin",
+	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/TOPL.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&top1Screen, path);
-	swprintf(path, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin",
+	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/TOPR.bin",
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&top2Screen, path);
 */
@@ -492,10 +487,10 @@ void InstallConfigData(){
 /*
 void trySetLangFromTheme(int onswitch) {
 	File MyFile;
-	wchar_t str[_MAX_LFN];
+	wchar_t str[_MAX_LFN + 1];
 	unsigned int i;
 
-	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/LANG.txt",
+	swprintf(str, _MAX_LFN + 1, L"/rxTools/Theme/%u/LANG.txt",
 		cfgs[CFG_THEME].val.i);
 	if (!FileOpen(&MyFile, str, 0))
 		return;

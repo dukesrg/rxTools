@@ -1,385 +1,393 @@
 {
 	"menu":{
-		"ITEM1":{
+		"ITEM_1":{
 			"caption":"Boot",
 			"description":"Boot options.",
-			"ITEM1-1":{
+			"ITEM_1-1":{
 				"caption":"rxMode EmuNAND",
 				"description":"Apply patches and reboot the console into rxMode on EmuNAND, if present.",
-				"enabled":"FUNC_CHK_E",
-				"function":"FUNC_RXMODE",
-				"parameter":1
-			},"ITEM1-2":{
+				"enabled":"CHK_EMUNAND",
+				"function":"RUN_RXMODE",
+				"parameters":1
+			},"ITEM_1-2":{
 				"caption":"rxMode SysNAND",
 				"description":"Apply patches and reboot the console into rxMode on SysNAND.",
-				"function":"FUNC_RXMODE",
-				"parameter":0
-			},"ITEM1-3":{
+				"function":"RUN_RXMODE",
+				"parameters":0
+			},"ITEM_1-3":{
           			"caption":"Pasta mode",
 				"description":"Patches signature checks and load in SysNAND with GBA and DSi support.",
-				"function":"FUNC_PASTA"
-			},"ITEM1-4":{
+				"function":"RUN_PASTA"
+			},"ITEM_1-4":{
 				"caption":"Reboot",
 				"description":"Reboot the console.",
-				"function":"FUNC_SHUTDOWN",
-				"parameter":0
-			},"ITEM1-5":{
+				"function":"RUN_SHUTDOWN",
+				"parameters":0
+			},"ITEM_1-5":{
 				"caption":"Shutdown",
 				"description":"Turn off the console.",
-				"function":"FUNC_SHUTDOWN",
-				"parameter":1
+				"function":"RUN_SHUTDOWN",
+				"parameters":1
 			}
-		},"ITEM2":{
+		},"ITEM_2":{
 			"caption":"Decrypt",
 			"description":"Decryption options.",
-			"ITEM2-1":{
+			"ITEM_2-1":{
 				"caption":"CTR Titles",
 				"description":"Decrypt 3DS titles directly on the console.",
 				"function":"FUNC_DEC_CTR"
-			},"ITEM2-2":{
+			},"ITEM_2-2":{
 				"caption":"Title Keys",
 				"description":"Decrypt title keys stored in tickets.db which is needed to decrypt CDN content.",
 				"function":"FUNC_DEC_TK"
-			},"ITEM2-3":{
+			},"ITEM_2-3":{
 				"caption":"encTitleKeys.bin",
 				"description":"Decrypt the private key of a game.",
 				"function":"FUNC_DEC_TKF"
-			},"ITEM2-4":{
+			},"ITEM_2-4":{
 				"caption":"Generate Xorpads",
 				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles.",
 				"function":"FUNC_GEN_T_PAD"
-			},"ITEM2-5":{
+			},"ITEM_2-5":{
 				"caption":"EmuNAND partitions",
 				"description":"Dump and decrypt all EmuNAND partitions (except the TWL partition for now).",
 				"function":"FUNC_DEC_PAR",
-				"parameter":1
-			},"ITEM2-6":{
+				"parameters":1
+			},"ITEM_2-6":{
 				"caption":"SysNAND partitions",
 				"description":"Dump and decrypt all SysNAND partitions (except the TWL partition for now).",
 				"function":"FUNC_DEC_PAR",
-				"parameter":0
-			},"ITEM2-7":{
+				"parameters":0
+			},"ITEM_2-7":{
 				"caption":"Generate fat16 Xorpad",
 				"description":"Generate XORpad needed to decrypt main NAND partition.",
 				"function":"FUN_GEN_PAR_PAD"
 			}
-		},"ITEM3":{
+		},"ITEM_3":{
 			"caption":"Dump",
 			"description":"Dumping options.",
-			"ITEM3-1":{
+			"ITEM_3-1":{
 				"caption":"EmuNAND",
 				"description":"Backup your EmuNAND partition.",
-				"enabled":"FUNC_CHK_E",
+				"enabled":"CHK_EMUNAND",
 				"function":"FUNC_DMP_N",
-				"parameter":1
-			},"ITEM3-2":{
+				"parameters":1
+			},"ITEM_3-2":{
 				"caption":"EmuNAND files",
 				"description":"Dump various important files from EmuNAND.",
-				"enabled":"FUNC_CHK_E",
-				"parameter":1,
-				"ITEM3-2-1":{
+				"enabled":"CHK_EMUNAND",
+				"parameters":1,
+				"ITEM_3-2-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:private/movable.sed"
-				},"ITEM3-2-2":{
+					"parameters":"2:private/movable.sed"
+				},"ITEM_3-2-2":{
 					"caption":"SecureInfo_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:rw/sys/SecureInfo_A"
-				},"ITEM3-2-3":{
+					"parameters":"2:rw/sys/SecureInfo_A"
+				},"ITEM_3-2-3":{
 					"caption":"SecureInfo_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:rw/sys/SecureInfo_B"
-				},"ITEM3-2-4":{
+					"parameters":"2:rw/sys/SecureInfo_B"
+				},"ITEM_3-2-4":{
 					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM3-2-5":{
+					"parameters":"2:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM_3-2-5":{
 					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM3-2-6":{
+					"parameters":"2:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM_3-2-6":{
 					"caption":"rand_seed",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:rw/sys/rand_seed"
-				},"ITEM3-2-7":{
+					"parameters":"2:rw/sys/rand_seed"
+				},"ITEM_3-2-7":{
 					"caption":"ticket.db",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:dbs/ticket.db"
-				},"ITEM3-2-8":{
+					"parameters":"2:dbs/ticket.db"
+				},"ITEM_3-2-8":{
 					"caption":"import.db",
 					"function":"FUNC_DMP_NF",
-					"parameter":"2:dbs/import.db"
+					"parameters":"2:dbs/import.db"
 				}
-			},"ITEM3-3":{
+			},"ITEM_3-3":{
 				"caption":"SysNAND",
 				"description":"Backup your SysNAND partition. It is highly recommended to backup your SysNAND partition.",
 				"function":"FUNC_DMP_N",
-				"parameter":0
-			},"ITEM3-4":{
+				"parameters":0
+			},"ITEM_3-4":{
 				"caption":"System titles",
 				"description":"Dump all 3DS titles from SysNAND.",
 				"function":"FUNC_DMP_NT"
-			},"ITEM3-5":{
+			},"ITEM_3-5":{
 				"caption":"SysNAND files",
 				"description":"Dump various important files from SysNAND.",
-				"ITEM3-5-1":{
+				"ITEM_3-5-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:private/movable.sed"
-				},"ITEM3-5-2":{
+					"parameters":"1:private/movable.sed"
+				},"ITEM_3-5-2":{
 					"caption":"SecureInfo_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/SecureInfo_A"
-				},"ITEM3-5-3":{
+					"parameters":"1:rw/sys/SecureInfo_A"
+				},"ITEM_3-5-3":{
 					"caption":"SecureInfo_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/SecureInfo_B"
-				},"ITEM3-5-4":{
+					"parameters":"1:rw/sys/SecureInfo_B"
+				},"ITEM_3-5-4":{
 					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM3-5-5":{
+					"parameters":"1:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM_3-5-5":{
 					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM3-5-6":{
+					"parameters":"1:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM_3-5-6":{
 					"caption":"rand_seed",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:rw/sys/rand_seed"
-				},"ITEM3-5-7":{
+					"parameters":"1:rw/sys/rand_seed"
+				},"ITEM_3-5-7":{
 					"caption":"ticket.db",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:dbs/ticket.db"
-				},"ITEM3-5-8":{
+					"parameters":"1:dbs/ticket.db"
+				},"ITEM_3-5-8":{
 					"caption":"import.db",
 					"function":"FUNC_DMP_NF",
-					"parameter":"1:dbs/import.db"
+					"parameters":"1:dbs/import.db"
 				}
-			},"ITEM3-6":{
+			},"ITEM_3-6":{
 				"caption":"ARM9 RAM",
 				"description":"Dump ARM9 RAM (for development purposes).",
 				"function":"FUNC_DMP_RAM"
 			}
-		},"ITEM4":{
+		},"ITEM_4":{
 			"caption":"Inject",
 			"description":"Injection options.",
-			"ITEM4-1":{
+			"ITEM_4-1":{
 				"caption":"EmuNAND partitions",
 				"description":"Encrypt and write partitions from files on SD card into EmuNAND (except the TWL partition for now).",
-				"enabled":"FUNC_CHK_E",
+				"enabled":"CHK_EMUNAND",
 				"function":"FUNC_INJ_N",
-				"parameter":0
-			},"ITEM4-2":{
+				"parameters":0
+			},"ITEM_4-2":{
 				"caption":"EmuNAND files",
 				"description":"Inject various important files from SD card into EmuNAND.",
-				"enabled":"FUNC_CHK_E",
-				"parameter":1,
-				"ITEM4-2-1":{
+				"enabled":"CHK_EMUNAND",
+				"parameters":1,
+				"ITEM_4-2-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:private/movable.sed"
-				},"ITEM4-2-2":{
+					"parameters":"2:private/movable.sed"
+				},"ITEM_4-2-2":{
 					"caption":"SecureInfo_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:rw/sys/SecureInfo_A"
-				},"ITEM4-2-3":{
+					"parameters":"2:rw/sys/SecureInfo_A"
+				},"ITEM_4-2-3":{
 					"caption":"SecureInfo_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:rw/sys/SecureInfo_B"
-				},"ITEM4-2-4":{
+					"parameters":"2:rw/sys/SecureInfo_B"
+				},"ITEM_4-2-4":{
 					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM4-2-5":{
+					"parameters":"2:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM_4-2-5":{
 					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM4-2-6":{
+					"parameters":"2:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM_4-2-6":{
 					"caption":"rand_seed",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:rw/sys/rand_seed"
-				},"ITEM4-2-7":{
+					"parameters":"2:rw/sys/rand_seed"
+				},"ITEM_4-2-7":{
 					"caption":"ticket.db",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:dbs/ticket.db"
-				},"ITEM4-2-8":{
+					"parameters":"2:dbs/ticket.db"
+				},"ITEM_4-2-8":{
 					"caption":"import.db",
 					"function":"FUNC_INJ_NF",
-					"parameter":"2:dbs/import.db"
+					"parameters":"2:dbs/import.db"
 				}				
-			},"ITEM4-3":{
+			},"ITEM_4-3":{
 				"caption":"SysNAND files",
 				"description":"Inject various important files from SD card into SysNAND.",
-				"ITEM4-3-1":{
+				"ITEM_4-3-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:private/movable.sed"
-				},"ITEM4-3-2":{
+					"parameters":"1:private/movable.sed"
+				},"ITEM_4-3-2":{
 					"caption":"SecureInfo_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:rw/sys/SecureInfo_A"
-				},"ITEM4-3-3":{
+					"parameters":"1:rw/sys/SecureInfo_A"
+				},"ITEM_4-3-3":{
 					"caption":"SecureInfo_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:rw/sys/SecureInfo_B"
-				},"ITEM4-3-4":{
+					"parameters":"1:rw/sys/SecureInfo_B"
+				},"ITEM_4-3-4":{
 					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM4-3-5":{
+					"parameters":"1:rw/sys/LocalFriendCodeSeed_A"
+				},"ITEM_4-3-5":{
 					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"FUNC_CHK_F",
+					"enabled":"CHK_FILE",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM4-3-6":{
+					"parameters":"1:rw/sys/LocalFriendCodeSeed_B"
+				},"ITEM_4-3-6":{
 					"caption":"rand_seed",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:rw/sys/rand_seed"
-				},"ITEM4-3-7":{
+					"parameters":"1:rw/sys/rand_seed"
+				},"ITEM_4-3-7":{
 					"caption":"ticket.db",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:dbs/ticket.db"
-				},"ITEM4-3-8":{
+					"parameters":"1:dbs/ticket.db"
+				},"ITEM_4-3-8":{
 					"caption":"import.db",
 					"function":"FUNC_INJ_NF",
-					"parameter":"1:/dbs/import.db"
+					"parameters":"1:dbs/import.db"
 				}
 			}
-		},"ITEM5":{
+		},"ITEM_5":{
 			"caption":"Advanced",
 			"description":"Advanced options.",
-			"ITEM5-1":{
+			"ITEM_5-1":{
 				"caption":"Install MSET 4",
 				"description":"Install old MSET 4.x in SysNAND to use with DS profile exploit on firmwares 5.x-9.2. Not compatible with 2DS.",
-				"ITEM5-1-1":{
+				"ITEM_5-1-1":{
 					"caption":"Japan",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
 					"parameters":["0:nus/0004001000020000/0000001A",0,"00040010","00020000",3074,"96AEC379"]
-				},"ITEM5-1-2":{
+				},"ITEM_5-1-2":{
 					"caption":"North America",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
 					"parameters":["0:nus/0004001000021000/0000001F",0,"00040010","00021000",3078,"3387F2CD"]
-				},"ITEM5-1-3":{
+				},"ITEM_5-1-3":{
 					"caption":"Europe/Australia",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
 					"parameters":["0:nus/0004001000022000/00000019",0,"00040010","00022000",3075,"ACC1BE62"]
-				},"ITEM5-1-4":{
+				},"ITEM_5-1-4":{
 					"caption":"China",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameter":["0:nus/0004001000026000/00000006",0,"00040010","00026000",8,"565BCF20"]
-				},"ITEM5-1-5":{
+					"parameters":["0:nus/0004001000026000/00000006",0,"00040010","00026000",8,"565BCF20"]
+				},"ITEM_5-1-5":{
 					"caption":"South Korea",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameter":["0:nus/0004001000027000/00000004",0,"00040010","00027000",1026,"A04654C6"]
-				},"ITEM5-1-6":{
+					"parameters":["0:nus/0004001000027000/00000004",0,"00040010","00027000",1026,"A04654C6"]
+				},"ITEM_5-1-6":{
 					"caption":"Taiwan",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameter":["0:nus/0004001000028000/00000005",0,"00040010","00028000",8,"D40B12F4"]
+					"parameters":["0:nus/0004001000028000/00000005",0,"00040010","00028000",8,"D40B12F4"]
 				}
-			},"ITEM5-2":{
+			},"ITEM_5-2":{
 				"caption":"Install MSET 6",
 				"description":"Install old MSET 6.x in SysNAND to use with DS profile exploit on firmwares 7.x-9.2.",
-				"ITEM5-2-1":{
+				"ITEM_5-2-1":{
 					"caption":"Japan",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameter":["0:nus/0004001000020000/00000022",0,"00040010","00020000",5127,"ED315608"]
-				},"ITEM5-2-2":{
+					"parameters":["0:nus/0004001000020000/00000022",0,"00040010","00020000",5127,"ED315608"]
+				},"ITEM_5-2-2":{
 					"caption":"North America",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameter":["0:nus/0004001000021000/0000002D",0,"00040010","00021000",5128,"EDAC05D7"]
-				},"ITEM5-2-3":{
+					"parameters":["0:nus/0004001000021000/0000002D",0,"00040010","00021000",5128,"EDAC05D7"]
+				},"ITEM_5-2-3":{
 					"caption":"Europe/Australia",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameter":["0:nus/0004001000022000/00000023",0,"00040010","00022000",5127,"F0FF9F08"]
-				},"ITEM5-2-3":{
+					"parameters":["0:nus/0004001000022000/00000023",0,"00040010","00022000",5127,"F0FF9F08"]
+				},"ITEM_5-2-3":{
 					"caption":"South Korea",
-					"enabled":"FUNC_CHK_MSET",
+					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameter":["0:nus/0004001000027000/0000000D",0,"00040010","00027000",2049,"2164C3C0"]
+					"parameters":["0:nus/0004001000027000/0000000D",0,"00040010","00027000",2049,"2164C3C0"]
 				}
-			},"ITEM5-3":{
+			},"ITEM_5-3":{
 				"caption":"Install FBI",
 				"description":"Install FBI (a legal .cia installed) over Health&Safety application in SysNAND.",
 				"function":"FUNC_INS_FBI"
-			},"ITEM5-4":{
+			},"ITEM_5-4":{
 				"caption":"Restore H&S App",
 				"description":"Uninstall FBI .cia installer and restore the original Health&Safety application.",
 				"function":"FUNC_INS_HS"
-			},"ITEM5-5":{
+			},"ITEM_5-5":{
 				"caption":"Advanced File Manager",
 				"description":"Choose a firmare file on SD card and load it.",
 				"function":"FUNC_AFM"
 			}
-		},"ITEM6":{
+		},"ITEM_6":{
 			"caption":"Settings",
 			"description":"Change settings.",
-			"ITEM6-1":{
+			"ITEM_6-1":{
 				"caption":"Default boot",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_BOOT_DEFAULT"
-			},"ITEM6-2":{
-				"caption":"Force rxTools UI",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_FORCE_UI"
-			},"ITEM6-3":{
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_BOOT_DEFAULT"
+			},"ITEM_6-2":{
+				"caption":"Force rxTools GUI",
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_GUI_FORCE"
+			},"ITEM_6-3":{
 				"caption":"Force rxMode EmuNAND",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_FORCE_EMUNAND"
-			},"ITEM6-4":{
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_EMUNAND_FORCE"
+			},"ITEM_6-4":{
 				"caption":"Force rxMode SysNAND",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_FORCE_SYSNAND"
-			},"ITEM6-5":{
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_SYSNAND_FORCE"
+			},"ITEM_6-5":{
 				"caption":"Force Pasta mode",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_FORCE_PASTA"
-			},"ITEM6-6":{
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_PASTA_FORCE"
+			},"ITEM_6-6":{
 				"caption":"Theme",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_THEME"
-			},"ITEM6-7":{
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_THEME"
+			},"ITEM_6-7":{
 				"caption":"Show AGB_FIRM BIOS",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_AGB"
-			},"ITEM6-8":{
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_AGB_BIOS"
+			},"ITEM_6-8":{
 				"caption":"Language",
-				"enabled":"FUNC_CHK_CFG",
-				"function":"FUNC_CFG_TOGGLE",
-				"value":"CFG_LANG",
-				"options":"FUNC_OPT_LANG"
+				"enabled":"VAL_CHECK",
+				"function":"VAL_TOGGLE",
+				"parameters":"CFG_LANGUAGE"
 			}
-		},"ITEM7":{
+		},"ITEM_7":{
+			"caption":"Diagnostics",
+			"description":"Check console setup.",
+			"ITEM_7-1":{
+				"caption":"slot0x25KeyX.bin",
+				"description":"Required for 6.x save game encryption on console firmware version below 7.0",
+				"enabled":"CHK_FILE",
+				"parameters":["0:slot0x25KeyX.bin",16,"817FD1BFFBA60F79CF8CDF19CAF28923"]
+			}
+		},"ITEM_8":{
 			"caption":"Credits",
 			"description":"Show credits."
 		}
