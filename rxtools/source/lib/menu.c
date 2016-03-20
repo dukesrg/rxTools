@@ -36,6 +36,7 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "json.h"
 #include "theme.h"
 #include "tmd.h"
+#include "mbedtls/md5.h"
 
 #define MENU_JSON_SIZE		0x4000
 #define MENU_JSON_TOKENS	0x400

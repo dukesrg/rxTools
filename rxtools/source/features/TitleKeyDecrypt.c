@@ -16,6 +16,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include "TitleKeyDecrypt.h"
 #include "console.h"
@@ -25,7 +26,6 @@
 #include "fs.h"
 #include "CTRDecryptor.h"
 #include "crypto.h"
-#include "stdio.h"
 
 #define BUF1 (uint8_t*)0x21000000
 #define TITLES (uint8_t*)0x22000000

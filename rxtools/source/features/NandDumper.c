@@ -15,9 +15,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <wchar.h>
-#include <tmio/tmio.h>
+#include "tmio/tmio.h"
 #include "NandDumper.h"
 #include "console.h"
 #include "draw.h"
@@ -30,7 +31,6 @@
 #include "mpcore.h"
 #include "ncch.h"
 #include "CTRDecryptor.h"
-#include "stdio.h"
 
 #define NAND_SECTOR_SIZE 0x200
 #define BUF1 (void*)0x21000000

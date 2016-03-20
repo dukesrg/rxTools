@@ -26,7 +26,7 @@
 #include "hid.h"
 #include "lang.h"
 #include "console.h"
-#include "polarssl/aes.h"
+#include "mbedtls/aes.h"
 #include "fs.h"
 #include "ncch.h"
 #include "draw.h"
@@ -140,11 +140,11 @@ uint8_t* decryptFirmTitleNcch(uint8_t* title, size_t *size)
 
 uint8_t *decryptFirmTitle(uint8_t *title, size_t size, size_t *firmSize, uint8_t key[16])
 {
-	aes_context aes_ctxt;
+	mbedtls_aes_context aes_ctxt;
 
 	uint8_t iv[16] = { 0 };
-	aes_setkey_dec(&aes_ctxt, &key[0], 0x80);
-	aes_crypt_cbc(&aes_ctxt, AES_DECRYPT, size, iv, title, title);
+	mbedtls_aes_setkey_dec(&aes_ctxt, &key[0], 0x80);
+	mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, size, iv, title, title);
 	return decryptFirmTitleNcch(title, firmSize);
 }
 

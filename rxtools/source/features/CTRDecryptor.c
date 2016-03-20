@@ -26,7 +26,6 @@
 #include "hid.h"
 #include "ncch.h"
 #include "crypto.h"
-#include "stdio.h"
 #include "lang.h"
 #include "menu.h"
 

@@ -17,7 +17,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-
 #include "fs.h"
 #include "draw.h"
 #include "lang.h"

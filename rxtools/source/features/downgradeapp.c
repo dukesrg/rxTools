@@ -17,6 +17,8 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
 #include "downgradeapp.h"
 #include "screenshot.h"
 #include "fs.h"
@@ -28,9 +30,8 @@
 #include "crypto.h"
 #include "TitleKeyDecrypt.h"
 #include "NandDumper.h"
-#include "polarssl/aes.h"
-#include "polarssl/sha2.h"
-#include "stdio.h"
+#include "mbedtls/aes.h"
+#include "mbedtls/sha256.h"
 
 #define bswap_16(a) ((((a) << 8) & 0xff00) | (((a) >> 8) & 0xff))
 #define bswap_32(a) ((((a) << 24) & 0xff000000) | (((a) << 8) & 0xff0000) | (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
@@ -405,9 +406,9 @@ void downgradeMSET()
 
 									getTitleKey(&Key[0], info.tidHi, info.tidLo, info.drive);
 
-									aes_context aes_ctxt;
-									aes_setkey_dec(&aes_ctxt, Key, 0x80);
-									aes_crypt_cbc(&aes_ctxt, AES_DECRYPT, dgsize, iv, buf, buf);
+									mbedtls_aes_context aes_ctxt;
+									mbedtls_aes_setkey_dec(&aes_ctxt, Key, 0x80);
+									mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, dgsize, iv, buf, buf);
 
 									FileWrite(&dg, buf, dgsize, 0);
 									FileClose(&dg);
@@ -652,11 +653,11 @@ void manageFBI(bool restore)
 							memcpy(TmdCntDataSum, buf + 0xB14, 32);
 
 							/* Verify the Content Info Record hash */
-							sha2(buf + 0x204, 0x900, CntInfoRecSum, 0);
+							mbedtls_sha256(buf + 0x204, 0x900, CntInfoRecSum, 0);
 							if (memcmp(CntInfoRecSum, TmdCntInfoRecSum, 32) == 0)
 							{
 								/* Verify the Content Chunk Record hash */
-								sha2(buf + 0xB04, 0x30, CntChnkRecSum, 0);
+								mbedtls_sha256(buf + 0xB04, 0x30, CntChnkRecSum, 0);
 								if (memcmp(CntChnkRecSum, TmdCntChnkRecSum, 32) == 0)
 								{
 									/* Open the SD content file */
@@ -669,7 +670,7 @@ void manageFBI(bool restore)
 											FileClose(&tmp);
 
 											/* Verify the Content Data hash */
-											sha2(buf + 0x1000, sd_cntsize, CntDataSum, 0);
+											mbedtls_sha256(buf + 0x1000, sd_cntsize, CntDataSum, 0);
 											if (memcmp(CntDataSum, TmdCntDataSum, 32) == 0)
 											{
 												/* Now we are ready to rock 'n roll */

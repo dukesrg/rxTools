@@ -16,13 +16,13 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "screenshot.h"
 #include "console.h"
 #include "draw.h"
 #include "hid.h"
 #include "fs.h"
-#include "stdio.h"
 
 void ScreenShot(){
 	unsigned char bmpHeader[] = {

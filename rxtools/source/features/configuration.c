@@ -31,10 +31,9 @@
 #include "mpcore.h"
 #include "ncch.h"
 #include "crypto.h"
-#include "polarssl/aes.h"
+#include "mbedtls/aes.h"
 #include "firm.h"
 #include "downgradeapp.h"
-#include "stdio.h"
 #include "menu.h"
 #include "jsmn/jsmn.h"
 
