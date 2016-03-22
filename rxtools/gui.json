@@ -270,32 +270,32 @@
 					"caption":"Japan",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000020000/0000001A",0,"00040010","00020000",3074,"96AEC379"]
+					"parameters":"0:nus/0004001000020000/tmd.3074"
 				},"ITEM_5-1-2":{
 					"caption":"North America",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000021000/0000001F",0,"00040010","00021000",3078,"3387F2CD"]
+					"parameters":"0:nus/0004001000021000/tmd.3078"
 				},"ITEM_5-1-3":{
 					"caption":"Europe/Australia",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000022000/00000019",0,"00040010","00022000",3075,"ACC1BE62"]
+					"parameters":"0:nus/0004001000022000/tmd.3075"
 				},"ITEM_5-1-4":{
 					"caption":"China",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000026000/00000006",0,"00040010","00026000",8,"565BCF20"]
+					"parameters":"0:nus/0004001000026000/tmd.8"
 				},"ITEM_5-1-5":{
 					"caption":"South Korea",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000027000/00000004",0,"00040010","00027000",1026,"A04654C6"]
+					"parameters":"0:nus/0004001000027000/tmd.1026"
 				},"ITEM_5-1-6":{
 					"caption":"Taiwan",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000028000/00000005",0,"00040010","00028000",8,"D40B12F4"]
+					"parameters":"0:nus/0004001000028000/tmd.8"
 				}
 			},"ITEM_5-2":{
 				"caption":"Install MSET 6",
@@ -304,22 +304,22 @@
 					"caption":"Japan",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000020000/00000022",0,"00040010","00020000",5127,"ED315608"]
+					"parameters":"0:nus/0004001000020000/tmd.5127"
 				},"ITEM_5-2-2":{
 					"caption":"North America",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000021000/0000002D",0,"00040010","00021000",5128,"EDAC05D7"]
+					"parameters":"0:nus/0004001000021000/tmd.5128"
 				},"ITEM_5-2-3":{
 					"caption":"Europe/Australia",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000022000/00000023",0,"00040010","00022000",5127,"F0FF9F08"]
+					"parameters":"0:nus/0004001000022000/tmd.5127"
 				},"ITEM_5-2-3":{
 					"caption":"South Korea",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":["0:nus/0004001000027000/0000000D",0,"00040010","00027000",2049,"2164C3C0"]
+					"parameters":"0:nus/0004001000027000/tmd.2049"
 				}
 			},"ITEM_5-3":{
 				"caption":"Install FBI",
@@ -343,7 +343,7 @@
 				"function":"VAL_TOGGLE",
 				"parameters":"CFG_BOOT_DEFAULT"
 			},"ITEM_6-2":{
-				"caption":"Force rxTools GUI",
+				"caption":"Force rxTools UI",
 				"enabled":"VAL_CHECK",
 				"function":"VAL_TOGGLE",
 				"parameters":"CFG_GUI_FORCE"

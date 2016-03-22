@@ -17,26 +17,34 @@ typedef enum {
 } tmd_sig_type; //BE order
 
 typedef enum {
-	Encrypted = 0x0100,
-	Disc = 0x0200,
-	CFM = 0x0400,
-	Optional = 0x0040,
-	Shared = 0x0080
+	CONTENT_TYPE_ENCRYPTED = 0x0100,
+	CONTENT_TYPE_DISC = 0x0200,
+	CONTENT_TYPE_CFM = 0x0400,
+	CONTENT_TYPE_OPTIONAL = 0x0040,
+	CONTENT_TYPE_SHARED = 0x0080
 } tmd_content_type; //BE order
 
 typedef enum {
-	Main_Content = 0x0000,
-	Home_Menu_Manual = 0x0100,
-	DLP_Child_Container = 0x0200
+	CONTENT_INDEX_MAIN = 0x0000,
+	CONTENT_INDEX_MANUAL = 0x0100,
+	CONTENT_INDEX_DLP_CHILD = 0x0200,
+	CONTENT_INDEX_ALL = 0xFFFF //Used in code only to indicate any type index filter
 } tmd_contend_index; //BE order
 
+#pragma pack(1)
 typedef struct {
 	uint8_t issuer[0x40];
 	uint8_t version;
 	uint8_t ca_crl_version;
 	uint8_t signer_crl_version;
 	uint8_t reserved_1;
-	uint64_t system_version;
+	union {
+		uint64_t system_version;
+		struct {
+			uint32_t system_version_hi;
+			uint32_t system_version_lo;
+		};
+	};
 	union {
 		uint64_t title_id;
 		struct {
@@ -56,31 +64,40 @@ typedef struct {
 	uint16_t content_count;
 	uint16_t boot_content;
 	uint16_t reserved_4;
-	uint8_t hash[0x20];
+	uint8_t content_info_hash[0x20];
 } tmd_header;
 
 typedef struct {
 	uint16_t content_index_offset;
 	uint16_t content_command_count;
-	uint8_t hash[0x20];
+	uint8_t content_chunk_hash[0x20];
 } tmd_content_info;
 
 typedef struct {
 	uint32_t content_id;
 	uint16_t content_index;
 	uint16_t content_type;
-	uint64_t content_size;
-	uint8_t hash[0x20];
+	union {
+		uint64_t content_size;
+		struct {
+			uint32_t content_size_hi;
+			uint32_t content_size_lo;
+		};
+	};
+	uint8_t content_hash[0x20];
 } tmd_content_chunk;
+#pragma pack()
 
 typedef struct {
 	uint32_t sig_type;
 	uint8_t *sig;
 	tmd_header header;
-	tmd_content_info content_info[TMD_MAX_CHUNKS];
-	tmd_content_chunk content_chunk[TMD_MAX_CHUNKS];
+	tmd_content_info content_info[0x40];
+	tmd_content_chunk content_chunk[TMD_MAX_CHUNKS]; //currently wrong
 } tmd_data;
 
 bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive);
+bool tmdLoadHeader(tmd_data *data, wchar_t *path);
+bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index);
 
 #endif

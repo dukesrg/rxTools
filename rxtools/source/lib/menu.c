@@ -86,7 +86,9 @@ typedef struct { //siblings properties
 	int enabled;
 	int params;
 } Sibling;
-Sibling siblings[1 << MENU_MAX_LEVELS];
+Sibling siblings[1 << MENU_LEVEL_BIT_WIDTH];
+
+int enabledsiblings[1 << MENU_LEVEL_BIT_WIDTH]; //sibling options enabled status cache
 
 int siblingcount; //number of siblings in current menu
 
@@ -178,43 +180,15 @@ int prevBoot(int idx) {
 	return idx;
 }
 
-static uint32_t cksum(File *fp)
-{
-	uint32_t tbl[256];
-	uint8_t *buf = (uint8_t*)0x21000000;
-	size_t size;
-	uint32_t i, j, crc;
-
-	size = FileRead(fp, buf, 0x00400000, 0);
-	for (i = 0; i < 256; i++)
-	{
-		crc = i << 24;
-		for (j = 8; j > 0; j--)
-		{
-			if (crc & 0x80000000)
-				crc = (crc << 1) ^ 0x04c11db7;
-			else
-				crc = (crc << 1);
-			tbl[i] = crc;
-		}
-	}
-	crc = 0;
-	for (i = 0; i < size; i++)
-		crc = (crc << 8) ^ tbl[((crc >> 24) ^ *buf++) & 0xFF];
-	for (; size; size >>= 8)
-		crc = (crc << 8) ^ tbl[((crc >> 24) ^ size) & 0xFF];
-	return ~crc;
-}
-
 static int getRegion(int drive) {
 	File fp;
 	int region = 0;
 	wchar_t str[_MAX_LFN + 1];
 	
 	swprintf(str, _MAX_LFN + 1, L"%d:rw/sys/SecureInfo_A", drive);
-	if (!FileOpen(&fp, str, 0)) {
+	if (!FileOpen(&fp, str, false)) {
 		str[wcslen(str) - 1] = L'B';
-		if (!FileOpen(&fp, str, 0))
+		if (!FileOpen(&fp, str, false))
 			return -1;
 	}
 	FileRead(&fp, &region, 1, 0x100);
@@ -253,15 +227,18 @@ static uint32_t getIntVal(int i) {
 	{"FUNC_AFM", &AdvFileManagerMain},
 */
 
+#define BUF_SIZE 0x10000
+
 static bool runFunc(int func, int params) {
-	FIL fp;
+	File fp;
 	FILINFO fno;
 	UINT size;
 	int i, funcsize;
 	uint32_t hash[4];
-	uint8_t *checkhash = (uint8_t*)&hash[0], filehash[16], *buf = (uint8_t*)0x21000000;
+	uint8_t *checkhash = (uint8_t*)&hash[0], filehash[16], *buf;
 	wchar_t str[_MAX_LFN + 1];
 	char *funckey;
+	mbedtls_md5_context ctx;
 
 	if (func == 0)
 		return true;
@@ -295,31 +272,38 @@ static bool runFunc(int func, int params) {
 							return false;
 						if (menuJson.tok[params].size == 2)
 							return true;
-						if (f_open(&fp, str, FA_READ | FA_OPEN_EXISTING) != FR_OK)
-							return false;
-						if (f_read(&fp, buf, fno.fsize, &size) != FR_OK || size != fno.fsize) {
-							f_close(&fp);
-							return false;
-						}
-						f_close(&fp);
+						if (!FileOpen(&fp, str, false) || (
+							(FileGetSize(&fp)) != fno.fsize &&
+							(FileClose(&fp) || true)
+						)) return false;
+						buf = __builtin_alloca(BUF_SIZE);
+						mbedtls_md5_init(&ctx);
+						mbedtls_md5_starts(&ctx);
+						while ((size = FileRead2(&fp, buf, BUF_SIZE)))
+							mbedtls_md5_update(&ctx, buf, size);
+						FileClose(&fp);
+						mbedtls_md5_finish(&ctx, filehash);
 						char tmp[9];
 						for (i = 0; i < 4; i++) {
 							strncpy(tmp, menuJson.js + menuJson.tok[params + 3].start + 8 * i, 8);
 							hash[i] = __builtin_bswap32(strtoul(tmp, NULL, 16));
 //							sscanf(menuJson.js + menuJson.tok[params + 3].start + 8 * i, "%08lx", &hash[i]); //lib code increases binary too much
 						}
-						mbedtls_md5(buf, size, filehash);
-						return !memcmp(checkhash, filehash, 16);
+						return !memcmp(checkhash, filehash, sizeof(filehash));
 					default:
 						break;
 				}
 			}
 		} else if (!memcmp(funckey, "TITLE", funcsize)) {
+			tmd_data tmd;
+			getStrVal(str, params);
+			return tmdLoadHeader(&tmd, str);
+/*		} else if (!memcmp(funckey, "MSET", funcsize)) {
 			if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size == 6) { //path,nand number,TitleIdHi,TitleIdLo,Version,CRC
 				params++;
 				getStrVal(str, params);
 				wchar_t apppath[_MAX_LFN + 1];
-				if (FileOpen(&fp, str, 0)) {
+				if (FileOpen(&fp, str, false)) {
 					uint32_t p[5];
 					tmd_data tmd;
 					params++;
@@ -343,7 +327,7 @@ static bool runFunc(int func, int params) {
 					return true;
 				}
 			}
-		}
+*/		}
 	} else if (!memcmp(funckey - 4, "VAL_", 4)) {
 		if ((params = getConfig(params)) >= 0) {
 			if (!memcmp(funckey, "CHECK", funcsize)) {
@@ -430,7 +414,7 @@ void MenuPrevSelection(){
 }
 
 void MenuSelect() {
-	if (runFunc(siblings[target.index].enabled, siblings[target.index].params)) {
+	if (enabledsiblings[target.index] > 0) {
 		if (target.func)
 			runFunc(target.func, siblings[target.index].params);
 		else 
@@ -473,7 +457,6 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 			if (menuJson.tok[s+j+1].type == JSMN_OBJECT && menulevel > 0){
 				menuposition += 1 << ((MENU_MAX_LEVELS - menulevel) * MENU_LEVEL_BIT_WIDTH);
 				if (menuposition == (targetposition & mask << MENU_LEVEL_BIT_WIDTH)) //set parent menu style
-//					themeSet(cfgs[CFG_THEME].val.i, menuJson.js + menuJson.tok[s+j].start);
 					themeStyleSet(menuJson.js + menuJson.tok[s+j].start);
 
 //				mask << MENU_LEVEL_BIT_WIDTH;
@@ -541,7 +524,6 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 					break;
 				case 'm': //"menu"
 					if (targetlevel == 1) //top menu level - set 'menu' style
-//						themeSet(cfgs[CFG_THEME].val.i, menuJson.js + menuJson.tok[s+j].start);
 						themeStyleSet(menuJson.js + menuJson.tok[s+j].start);
 					k = menuParse(s+j+1, OBJ_MENU, menulevel, menuposition, targetposition, foundposition);
 					if (k == 0)
@@ -553,30 +535,9 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 //					if (apply == APPLY_TARGET)
 //						iselect = s + j;
 					break;
-*/				case 'p': //"parameters"
-/*					switch(menuJson.tok[s + j + 1].type) {
-						case JSMN_PRIMITIVE:
-							if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
-								siblings[siblingcount].parami = s + j + 1;
-							break;
-						case JSMN_STRING:
-							if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
-								siblings[siblingcount].params = s + j + 1;
-							break;
-						case JSMN_ARRAY:
-							if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
-								siblings[siblingcount].parama = s + j + 1;
-							break;
-						default:
-							break;
-					}
-					j += menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
-					break;
-				case 'v': //"value"
-*/
+*/				case 'p': 
 					if (apply == APPLY_TARGET || apply == APPLY_SIBLING)
 						siblings[siblingcount].params = s + j + 1;
-//						siblings[siblingcount].value = s + j;
 					j += menuParse(s+j+1, type, menulevel, menuposition, targetposition, foundposition);
 					break;
 				default:
@@ -600,6 +561,12 @@ int menuParse(int s, objtype type, int menulevel, int menuposition, int targetpo
 	return 0;
 }
 
+int menuLevel(int pos) {
+	int i;
+	for (i = 0; pos != 0; pos <<= MENU_LEVEL_BIT_WIDTH, i++);
+	return i;
+}
+
 int menuLoad() {
 	return jsonLoad(&menuJson, menuPath);
 }
@@ -613,6 +580,8 @@ int menuTry(int targetposition, int currentposition) {
 	menuParse(0, OBJ_NONE, 0, 0, targetposition, &foundposition);
 	if (foundposition == 0) //fallback in case requested menu not exists
 		menuParse(0, OBJ_NONE, 0, 0, currentposition, &foundposition);
+	else if (menuLevel(currentposition) != menuLevel(foundposition)) //clear options enabled status cache on menu level change
+		memset(enabledsiblings, 0, sizeof(enabledsiblings));
 
 	x = style.captionRect.x;
 	y = style.itemsRect.y;
@@ -664,7 +633,9 @@ int menuTry(int targetposition, int currentposition) {
 //				DrawStringRect(&bottomTmpScreen, str, style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
 				break;
 		}
-		enabled = runFunc(siblings[i].enabled, siblings[i].params);
+		if (!enabledsiblings[i])
+			enabledsiblings[i] = !siblings[i].enabled || runFunc(siblings[i].enabled, siblings[i].params) ? 1 : -1;
+		enabled = enabledsiblings[i] > 0;
 
 		if (i == target.index) {
 			if (target.description != 0)
@@ -676,10 +647,4 @@ int menuTry(int targetposition, int currentposition) {
 	}
 	
 	return foundposition;
-}
-
-int menuLevel(int pos) {
-	int i;
-	for (i = 0; pos != 0; pos <<= MENU_LEVEL_BIT_WIDTH, i++);
-	return i;
 }

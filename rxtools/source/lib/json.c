@@ -22,7 +22,7 @@ int jsonLoad(Json *json, const wchar_t *path) {
 	size_t len;
 	File fd;
 
-	if (FileOpen(&fd, path, 0) && (len = FileGetSize(&fd)) <= json->len) {
+	if (FileOpen(&fd, path, false) && (len = FileGetSize(&fd)) <= json->len) {
 		json->len = len;
 		FileRead(&fd, json->js, json->len, 0);
 		FileClose(&fd);

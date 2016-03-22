@@ -1,6 +1,13 @@
+#include <string.h>
 #include "tmd.h"
 #include "fs.h"
+#include "mbedtls/sha256.h"
 
+#include "draw.h"
+#include "theme.h"
+
+#define BUF_SIZE 0x10000
+#define APP_EXT L".app"
 #define CONTENT_VERSION_UNSET 0xFFFF
 
 const wchar_t *titleDir = L"%d:title/%08lx/%08lx/content";
@@ -9,7 +16,7 @@ bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive) {
 	FIL fil;
 	DIR dir;
 	FILINFO fno;
-	UINT br;
+	size_t br;
 	wchar_t path[_MAX_LFN + 1], lfn[_MAX_LFN + 1], tmdpath[_MAX_LFN + 1];
 	size_t header_offset;
 	fno.lfname = lfn;
@@ -43,12 +50,12 @@ bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive) {
 						f_lseek(&fil, header_offset) == FR_OK &&
 						f_read(&fil, &data_tmp.header, sizeof(data_tmp.header), &br) == FR_OK && br == sizeof(data_tmp.header) &&
 						(__builtin_bswap16(data_tmp.header.title_version) > __builtin_bswap16(data->header.title_version) || data->header.title_version == CONTENT_VERSION_UNSET) &&
-						__builtin_bswap16(data_tmp.header.content_count) > TMD_MAX_CHUNKS &&
+						__builtin_bswap16(data_tmp.header.content_count) < TMD_MAX_CHUNKS &&
 						f_read(&fil, &data_tmp.content_info, sizeof(data_tmp.content_info), &br) == FR_OK && br == sizeof(data_tmp.content_info) &&
 						f_read(&fil, &data_tmp.content_chunk, sizeof(tmd_content_chunk) * __builtin_bswap16(data_tmp.header.content_count), &br) == FR_OK && br == sizeof(tmd_content_chunk) * __builtin_bswap16(data_tmp.header.content_count)
 					) {
 						for (int i = __builtin_bswap16(data_tmp.header.content_count) - 1; i >= 0; i--) {
-							if (data_tmp.content_chunk[i].content_index == Main_Content) {
+							if (data_tmp.content_chunk[i].content_index == CONTENT_INDEX_MAIN) {
 								swprintf(apppath, _MAX_LFN + 1, L"%ls/%08lx.app", path, __builtin_bswap32(data->content_chunk[i].content_id));
 								if (f_stat(apppath, NULL) == FR_OK)
 									*data = data_tmp;
@@ -62,5 +69,94 @@ bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive) {
 		} while (f_findnext(&dir, &fno) == FR_OK && *fno.fname);
 	}
 	f_closedir(&dir);
-	return data->header.title_version == CONTENT_VERSION_UNSET;
+	return data->header.title_version != CONTENT_VERSION_UNSET;
+}
+
+static size_t tmdHeaderOffset(uint32_t sig_type) {
+	switch (sig_type) {
+		case RSA_4096_SHA1: case RSA_4096_SHA256: return 0x240;
+		case RSA_2048_SHA1: case RSA_2048_SHA256: return 0x140;
+		case ECDSA_SHA1: case ECDSA_SHA256: return 0x80;
+		default: return 0;
+	}
+}
+
+static bool checkFileHash(wchar_t *path, uint8_t *checkhash) {
+	FIL fil;
+	uint8_t *buf;
+	uint8_t hash[32];
+	size_t size;
+	mbedtls_sha256_context ctx;
+	
+	if (!FileOpen(&fil, path, false) || ((FileGetSize(&fil)) == 0 && (FileClose(&fil) || true))) return false;
+	buf = __builtin_alloca(BUF_SIZE);
+	mbedtls_sha256_init(&ctx);
+	mbedtls_sha256_starts(&ctx, 0);
+	while ((size = FileRead2(&fil, buf, BUF_SIZE))) mbedtls_sha256_update(&ctx, buf, size);
+	FileClose(&fil);
+	mbedtls_sha256_finish(&ctx, hash);
+	return !memcmp(hash, checkhash, sizeof(hash));
+}
+
+bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { //validates loaded tmd content chunk records
+	FIL fil;
+	size_t offset, size;
+	tmd_content_chunk *content_chunk_tmp;
+	uint_least16_t content_count;
+	wchar_t apppath[_MAX_LFN + 1];
+	
+	if (!FileOpen(&fil, path, false) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return false;
+	offset += sizeof(data->header) + sizeof(data->content_info);
+	content_count = __builtin_bswap16(data->header.content_count);
+	size = content_count * sizeof(tmd_content_chunk);
+	content_chunk_tmp = __builtin_alloca(size);
+	if (!FileSeek(&fil, offset) || FileRead2(&fil, content_chunk_tmp, size) != size) return FileClose(&fil) && false;
+	FileClose(&fil);
+	for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
+		for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
+			if (content_index == CONTENT_INDEX_ALL || content_index == content_chunk_tmp[chunk_index].content_index) {
+				swprintf(apppath, _MAX_LFN + 1, L"%.*ls/%08lx", wcsrchr(path, L'/'), path, __builtin_bswap32(content_chunk_tmp[chunk_index].content_id));
+				size = __builtin_bswap32(content_chunk_tmp[chunk_index].content_size_lo);
+				if (FileSize(apppath) == size ) {
+					//decrypt content;
+				} else if (!wcscat(apppath, APP_EXT) || FileSize(apppath) != size)
+					return false;
+				if (!checkFileHash(apppath, content_chunk_tmp[chunk_index].content_hash)) return false;
+			}
+		}
+	}
+	return true;
+}
+
+bool tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd header
+	File fil;
+	size_t offset, size;
+	tmd_data data_tmp;
+	tmd_content_chunk *content_chunk_tmp;
+	uint_least16_t content_count;
+	uint8_t hash[32];
+	
+	if (!FileOpen(&fil, path, false) || (
+		(FileRead2(&fil, &data_tmp.sig_type, sizeof(data_tmp.sig_type)) != sizeof(data_tmp.sig_type) ||
+		(offset = tmdHeaderOffset(data_tmp.sig_type)) == 0 ||
+		!FileSeek(&fil, offset) ||
+		FileRead2(&fil, &data_tmp.header, sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) != sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) &&
+		(FileClose(&fil) || true)
+	)) return false;
+	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
+	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return FileClose(&fil) && false;
+	content_count = __builtin_bswap16(data_tmp.header.content_count);
+	size = content_count * sizeof(tmd_content_chunk);
+	content_chunk_tmp = __builtin_alloca(size);
+	if (FileRead2(&fil, content_chunk_tmp, size) != size) return FileClose(&fil) && false;
+	FileClose(&fil);
+	for (uint_fast16_t info_index = 0, chunk_index = 0, chunk_count; chunk_index < content_count; info_index++, chunk_index += chunk_count) {
+		if (info_index >= sizeof(data_tmp.content_info)/sizeof(tmd_content_info) ||
+			(chunk_count = __builtin_bswap16(data_tmp.content_info[info_index].content_command_count)) == 0
+		) return false;
+		mbedtls_sha256((uint8_t*)&content_chunk_tmp[chunk_index], chunk_count * sizeof(tmd_content_chunk), hash, 0);
+		if (memcmp(hash, data_tmp.content_info[chunk_index].content_chunk_hash, sizeof(hash))) return false;
+	}
+	*data = data_tmp;
+	return true;
 }

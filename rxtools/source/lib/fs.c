@@ -34,42 +34,50 @@ void FSDeInit(void) {
 }
 
 bool FileOpen(File *Handle, const wchar_t *path, bool truncate) {
-	unsigned flags = FA_READ | FA_WRITE;
-	flags |= truncate ? FA_CREATE_ALWAYS : FA_OPEN_EXISTING; //: FA_OPEN_ALWAYS;
-	bool ret = (f_open(Handle, path, flags) == FR_OK);
-	if (f_tell(Handle)) { f_lseek(Handle, 0); } //Only seek to head if not
-	f_sync(Handle);
-	return ret;
+	return f_open(Handle, path, FA_READ | FA_WRITE | (truncate ? FA_CREATE_ALWAYS : FA_OPEN_EXISTING)) == FR_OK && FileSeek(Handle, 0) && (f_sync(Handle) || true);
+}
+
+bool FileSeek(File *Handle, size_t foffset) {
+	return f_tell(Handle) == foffset || f_lseek(Handle, foffset) == FR_OK;
 }
 
 size_t FileRead(File *Handle, void *buf, size_t size, size_t foffset) {
 	UINT bytes_read = 0;
-	if (f_tell(Handle) != foffset) { f_lseek(Handle, foffset); } //Avoid crazy lseeks
+	if (FileSeek(Handle, foffset))
+		f_read(Handle, buf, size, &bytes_read);
+	return bytes_read;
+}
+
+size_t FileRead2(File *Handle, void *buf, size_t size) {
+	UINT bytes_read = 0;
 	f_read(Handle, buf, size, &bytes_read);
 	return bytes_read;
 }
 
 size_t FileWrite(File *Handle, void *buf, size_t size, size_t foffset) {
 	UINT bytes_written = 0;
-	if (f_tell(Handle) != foffset) { f_lseek(Handle, foffset); } //Avoid crazy lseeks
-	f_write(Handle, buf, size, &bytes_written);
-	f_sync(Handle);
+	if (FileSeek(Handle, foffset) && f_write(Handle, buf, size, &bytes_written) == FR_OK)
+		f_sync(Handle);
 	return bytes_written;
 }
-
 
 size_t FileGetSize(File *Handle) {
 	return f_size(Handle);
 }
 
-void FileClose(File *Handle) {
-	f_close(Handle);
+bool FileClose(File *Handle) {
+	return f_close(Handle) == FR_OK;
 }
 
 bool FileExists(const wchar_t *path) {
 	return f_stat(path, NULL) == FR_OK;
 }
 
+size_t FileSize(const wchar_t *path) {
+	FILINFO fno = {0};
+	f_stat(path, &fno);
+	return fno.fsize;
+}
 ////////////////////////////////////////////////////////////////Advanced FileSystem Operations
 /** Copy Source File (source) to Target (target).
   * @param  target Target file, will be created if not exists.
