@@ -8,12 +8,12 @@
 				"description":"Apply patches and reboot the console into rxMode on EmuNAND, if present.",
 				"enabled":"CHK_EMUNAND",
 				"function":"RUN_RXMODE",
-				"parameters":1
+				"parameters":2
 			},"ITEM_1-2":{
 				"caption":"rxMode SysNAND",
 				"description":"Apply patches and reboot the console into rxMode on SysNAND.",
 				"function":"RUN_RXMODE",
-				"parameters":0
+				"parameters":1
 			},"ITEM_1-3":{
           			"caption":"Pasta mode",
 				"description":"Patches signature checks and load in SysNAND with GBA and DSi support.",
@@ -52,12 +52,12 @@
 				"caption":"EmuNAND partitions",
 				"description":"Dump and decrypt all EmuNAND partitions (except the TWL partition for now).",
 				"function":"FUNC_DEC_PAR",
-				"parameters":1
+				"parameters":2
 			},"ITEM_2-6":{
 				"caption":"SysNAND partitions",
 				"description":"Dump and decrypt all SysNAND partitions (except the TWL partition for now).",
 				"function":"FUNC_DEC_PAR",
-				"parameters":0
+				"parameters":1
 			},"ITEM_2-7":{
 				"caption":"Generate fat16 Xorpad",
 				"description":"Generate XORpad needed to decrypt main NAND partition.",
@@ -71,12 +71,12 @@
 				"description":"Backup your EmuNAND partition.",
 				"enabled":"CHK_EMUNAND",
 				"function":"FUNC_DMP_N",
-				"parameters":1
+				"parameters":2
 			},"ITEM_3-2":{
 				"caption":"EmuNAND files",
 				"description":"Dump various important files from EmuNAND.",
 				"enabled":"CHK_EMUNAND",
-				"parameters":1,
+				"parameters":2,
 				"ITEM_3-2-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_DMP_NF",
@@ -118,7 +118,7 @@
 				"caption":"SysNAND",
 				"description":"Backup your SysNAND partition. It is highly recommended to backup your SysNAND partition.",
 				"function":"FUNC_DMP_N",
-				"parameters":0
+				"parameters":1
 			},"ITEM_3-4":{
 				"caption":"System titles",
 				"description":"Dump all 3DS titles from SysNAND.",
@@ -176,12 +176,12 @@
 				"description":"Encrypt and write partitions from files on SD card into EmuNAND (except the TWL partition for now).",
 				"enabled":"CHK_EMUNAND",
 				"function":"FUNC_INJ_N",
-				"parameters":0
+				"parameters":2
 			},"ITEM_4-2":{
 				"caption":"EmuNAND files",
 				"description":"Inject various important files from SD card into EmuNAND.",
 				"enabled":"CHK_EMUNAND",
-				"parameters":1,
+				"parameters":2,
 				"ITEM_4-2-1":{
 					"caption":"movable.sed",
 					"function":"FUNC_INJ_NF",
@@ -339,53 +339,137 @@
 			"description":"Change settings.",
 			"ITEM_6-1":{
 				"caption":"Default boot",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_BOOT_DEFAULT"
 			},"ITEM_6-2":{
 				"caption":"Force rxTools UI",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_GUI_FORCE"
 			},"ITEM_6-3":{
 				"caption":"Force rxMode EmuNAND",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_EMUNAND_FORCE"
 			},"ITEM_6-4":{
 				"caption":"Force rxMode SysNAND",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_SYSNAND_FORCE"
 			},"ITEM_6-5":{
 				"caption":"Force Pasta mode",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_PASTA_FORCE"
 			},"ITEM_6-6":{
 				"caption":"Theme",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_THEME"
 			},"ITEM_6-7":{
 				"caption":"Show AGB_FIRM BIOS",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_AGB_BIOS"
 			},"ITEM_6-8":{
 				"caption":"Language",
-				"enabled":"VAL_CHECK",
-				"function":"VAL_TOGGLE",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_LANGUAGE"
 			}
 		},"ITEM_7":{
 			"caption":"Diagnostics",
 			"description":"Check console setup.",
 			"ITEM_7-1":{
-				"caption":"slot0x25KeyX.bin",
-				"description":"Required for 6.x save game encryption on console firmware version below 7.0",
-				"enabled":"CHK_FILE",
-				"parameters":["0:slot0x25KeyX.bin",16,"817FD1BFFBA60F79CF8CDF19CAF28923"]
+				"caption":"rxTools",
+				"description":"Check rxTools build properties.",
+				"ITEM_7-1-1":{
+					"caption":"Build version",
+					"resolve":"VAL_RXTOOLS_BUILD"
+				}
+			},"ITEM_7-2":{
+				"caption":"Keys",
+				"description":"Check various key files presence validity.",
+				"ITEM_7-2-1":{
+					"caption":"slot0x25KeyX.bin",
+					"description":"Required for 6.x save game encryption on console firmware version below 7.0",
+					"enabled":"CHK_FILE",
+					"parameters":["0:slot0x25KeyX.bin",16,"817FD1BFFBA60F79CF8CDF19CAF28923"]
+				}
+			},"ITEM_7-3":{
+				"caption":"EmuNAND",
+				"description":"Check EmuNAND firmware and system titles versions.",
+				"enabled":"CHK_EMUNAND",
+				"ITEM_7-3-1":{
+					"caption":"Region",
+					"resolve":"VAL_REGION",
+					"parameters":2
+				},"ITEM_7-3-2":{
+					"caption":"NATIVE_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040138/00000002/content"
+				},"ITEM_7-3-3":{
+					"caption":"TWL_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040138/00000102/content"
+				},"ITEM_7-3-4":{
+					"caption":"AGB_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040138/00000202/content"
+				},"ITEM_7-3-5":{
+					"caption":"MSET version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040010/00020000/content"
+				},"ITEM_7-3-6":{
+					"caption":"H&S version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040138/00020300/content"
+				},"ITEM_7-3-7":{
+					"caption":"FBI version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040000/00193000/content"
+				}
+			},"ITEM_7-4":{
+				"caption":"SysNAND",
+				"description":"Check SysNAND firmware and system titles versions.",
+				"ITEM_7-4-1":{
+					"caption":"Region",
+					"resolve":"VAL_REGION",
+					"parameters":1
+				},"ITEM_7-4-2":{
+					"caption":"NATIVE_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"1:title/00040138/00000002/content"
+				},"ITEM_7-4-3":{
+					"caption":"TWL_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"1:title/00040138/00000102/content"
+				},"ITEM_7-4-4":{
+					"caption":"AGB_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"1:title/00040138/00000202/content"
+				},"ITEM_7-4-5":{
+					"caption":"MSET version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"1:title/00040010/00020000/content"
+				},"ITEM_7-4-6":{
+					"caption":"H&S version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"1:title/00040138/00020300/content"
+				},"ITEM_7-4-7":{
+					"caption":"FBI version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"1:title/00040000/00193000/content"
+				}
 			}
 		},"ITEM_8":{
 			"caption":"Credits",

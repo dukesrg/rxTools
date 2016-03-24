@@ -108,11 +108,17 @@
 			},"ITEM_6-6":{
 			}
 		},"ITEM_7":{
-			"items":{
-				"color":"ff007f00",
-				"selected":["ff00ff00","00000000"]
-			},
 			"ITEM_7-1":{
+				"bottomimg":"bottom.bin"
+			},"ITEM_7-2":{
+				"items":{
+					"color":"ff007f00",
+					"selected":["ff00ff00","00000000"]
+				}
+			},"ITEM_7-3":{
+				"bottomimg":"bottom.bin"
+			},"ITEM_7-4":{
+				"bottomimg":"bottom.bin"
 			}
 		},"ITEM_8":{
 		}

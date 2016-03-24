@@ -129,6 +129,19 @@
 			},"ITEM_6-5":{
 			}
 		},"ITEM_7":{
+			"ITEM_7-1":{
+				"bottomimg":"bottom.bin"
+			},"ITEM_7-2":{
+				"items":{
+					"color":"ff007f00",
+					"selected":["ff00ff00","ff008dc5"]
+				}
+			},"ITEM_7-3":{
+				"bottomimg":"bottom.bin"
+			},"ITEM_7-4":{
+				"bottomimg":"bottom.bin"
+			}
+		},"ITEM_8":{
 			"bottomimg":"menu6.bin"
 		}
 	}

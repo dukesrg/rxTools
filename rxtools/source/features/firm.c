@@ -162,7 +162,7 @@ static void setAgbBios()
 	}
 }
 
-int rxMode(int emu)
+int rxMode(int_fast8_t drive)
 {
 	wchar_t path[64];
 	const char *shstrtab;
@@ -176,7 +176,7 @@ int rxMode(int emu)
 	FIL fd;
 	UINT br, fsz;
 
-	if (emu) {
+	if (drive > 1) {
 		sector = checkEmuNAND();
 		if (sector == 0) {
 			ConsoleInit();
@@ -271,14 +271,14 @@ patchFail:
 	goto fail;
 }
 
-void rxModeWithSplash(int emu)
+void rxModeWithSplash(int_fast8_t drive)
 {
 //	wchar_t s[_MAX_LFN];
 
 //	swprintf(s, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
 //		cfgs[CFG_THEME].val.i);
 //	DrawSplash(&bottomScreen, s);
-	rxMode(emu);
+	rxMode(drive);
 }
 
 //Just patches signatures check, loads in sysnand

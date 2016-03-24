@@ -385,25 +385,26 @@ wchar_t *lang(const char *key, int keylen)
 {
 	int i, len = 0;
 	char str[STR_MAX_LEN] = "";
-	if (keylen < 0)
-		keylen = strlen(key);
-	for (i = 1; i < langJson.count; i+=2) {
-		len = langJson.tok[i].end - langJson.tok[i].start;
-		if (langJson.tok[i].type == JSMN_STRING && keylen == len && memcmp(key, langJson.js + langJson.tok[i].start, len) == 0) {
-			len = langJson.tok[i+1].end - langJson.tok[i+1].start;
-			if (len > STR_MAX_LEN - 1)
-				len = STR_MAX_LEN - 1;
-			strncpy(str, langJson.js + langJson.tok[i+1].start, len);
-			break;
+	if (key != NULL) {
+		if (keylen < 0)
+			keylen = strlen(key);
+		for (i = 1; i < langJson.count; i+=2) {
+			len = langJson.tok[i].end - langJson.tok[i].start;
+			if (langJson.tok[i].type == JSMN_STRING && keylen == len && memcmp(key, langJson.js + langJson.tok[i].start, len) == 0) {
+				len = langJson.tok[i+1].end - langJson.tok[i+1].start;
+				if (len > STR_MAX_LEN - 1)
+					len = STR_MAX_LEN - 1;
+				strncpy(str, langJson.js + langJson.tok[i+1].start, len);
+				break;
+			}
 		}
+		if (!*str) {
+			if ((len = keylen) > STR_MAX_LEN - 1)
+				len = STR_MAX_LEN - 1;
+			strncpy(str, key, len);
+		}
+		str[len] = 0;
 	}
-	if (!*str) {
-		if ((len = keylen) > STR_MAX_LEN - 1)
-			len = STR_MAX_LEN - 1;
-		strncpy(str, key, len);
-	}
-	str[len] = 0;
-
 	if (itrans >= STR_TRANS_CNT)
 		itrans = 0;
 	mbstowcs(wstr[itrans], str, len + 1);
