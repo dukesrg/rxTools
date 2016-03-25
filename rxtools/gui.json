@@ -428,15 +428,11 @@
 				},"ITEM_7-3-5":{
 					"caption":"MSET version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040010/00020000/content"
+					"parameters":"2:title/00040010/00022000/content"
 				},"ITEM_7-3-6":{
 					"caption":"H&S version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040138/00020300/content"
-				},"ITEM_7-3-7":{
-					"caption":"FBI version",
-					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040000/00193000/content"
+					"parameters":"2:title/00040010/00022300/content"
 				}
 			},"ITEM_7-4":{
 				"caption":"SysNAND",
@@ -460,15 +456,11 @@
 				},"ITEM_7-4-5":{
 					"caption":"MSET version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040010/00020000/content"
+					"parameters":"1:title/00040010/00022000/content"
 				},"ITEM_7-4-6":{
 					"caption":"H&S version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040138/00020300/content"
-				},"ITEM_7-4-7":{
-					"caption":"FBI version",
-					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040000/00193000/content"
+					"parameters":"1:title/00040010/00022300/content"
 				}
 			}
 		},"ITEM_8":{

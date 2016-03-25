@@ -12,6 +12,31 @@
 
 const wchar_t *titleDir = L"%d:title/%08lx/%08lx/content";
 
+uint32_t tmdLoadRecent(tmd_data *data, wchar_t *path) { //returns tmd file name contentid
+	DIR dir;
+	FILINFO fno;
+	fno.lfname = NULL;
+	wchar_t *filename;
+	tmd_data data_tmp;
+	uint32_t contentid = 0xFFFFFFFF;
+
+	if (f_findfirst(&dir, &fno, path, L"*.tmd") == FR_OK) {
+		filename = path + wcslen(wcscat(path, L"/"));
+		do {
+			wcscat(filename, fno.fname);
+			if (tmdLoadHeader(&data_tmp, path) &&
+				(contentid == 0xFFFFFFFF ||
+				__builtin_bswap16(data_tmp.header.title_version) > __builtin_bswap16(data->header.title_version))
+			) {
+				*data = data_tmp;
+				contentid = wcstoul(filename, NULL, 16);
+			}
+		} while (f_findnext(&dir, &fno) == FR_OK && *fno.fname);
+	}
+	f_closedir(&dir);
+	return contentid;
+}
+
 bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive) {
 	FIL fil;
 	DIR dir;
@@ -107,8 +132,7 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { /
 	
 	if (!FileOpen(&fil, path, false) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return false;
 	offset += sizeof(data->header) + sizeof(data->content_info);
-	content_count = __builtin_bswap16(data->header.content_count);
-	size = content_count * sizeof(tmd_content_chunk);
+	size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
 	content_chunk_tmp = __builtin_alloca(size);
 	if (!FileSeek(&fil, offset) || FileRead2(&fil, content_chunk_tmp, size) != size) return FileClose(&fil) && false;
 	FileClose(&fil);
@@ -128,6 +152,30 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { /
 	return true;
 }
 
+uint32_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint16_t content_index) { //calculates loaded tmd content chunk size of content_index type
+	FIL fil;
+	size_t offset, size;
+	tmd_content_chunk *content_chunk_tmp;
+	uint_least16_t content_count;
+	uint32_t content_size = 0;
+	
+	if (!FileOpen(&fil, path, false) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return false;
+	offset += sizeof(data->header) + sizeof(data->content_info);
+	content_count = __builtin_bswap16(data->header.content_count);
+	size = content_count * sizeof(tmd_content_chunk);
+	content_chunk_tmp = __builtin_alloca(size);
+	if (FileSeek(&fil, offset) && FileRead2(&fil, content_chunk_tmp, size) == size) {
+		for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
+			for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
+				if (content_index == CONTENT_INDEX_ALL || content_index == content_chunk_tmp[chunk_index].content_index)
+					content_size += __builtin_bswap32(content_chunk_tmp[chunk_index].content_size_lo);
+			}
+		}
+	}
+	FileClose(&fil);
+	return content_size;
+}
+
 bool tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd header
 	File fil;
 	size_t offset, size;
@@ -145,8 +193,7 @@ bool tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd head
 	)) return false;
 	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
 	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return FileClose(&fil) && false;
-	content_count = __builtin_bswap16(data_tmp.header.content_count);
-	size = content_count * sizeof(tmd_content_chunk);
+	size = (content_count = __builtin_bswap16(data_tmp.header.content_count)) * sizeof(tmd_content_chunk);
 	content_chunk_tmp = __builtin_alloca(size);
 	if (FileRead2(&fil, content_chunk_tmp, size) != size) return FileClose(&fil) && false;
 	FileClose(&fil);
@@ -160,3 +207,54 @@ bool tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd head
 	*data = data_tmp;
 	return true;
 }
+
+size_t tmdPreloadHeader(tmd_data *data, wchar_t *path) { //loads tmd header, validatas content info hash and returns content chunks size on success
+	File fil;
+	size_t offset;
+	tmd_data data_tmp;
+	uint8_t hash[32];
+	
+	if (!FileOpen(&fil, path, false) || (
+		(FileRead2(&fil, &data_tmp.sig_type, sizeof(data_tmp.sig_type)) != sizeof(data_tmp.sig_type) ||
+		(offset = tmdHeaderOffset(data_tmp.sig_type)) == 0 ||
+		!FileSeek(&fil, offset) ||
+		FileRead2(&fil, &data_tmp.header, sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) != sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) &&
+		(FileClose(&fil) || true)
+	)) return 0;
+	FileClose(&fil);
+	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
+	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return 0;
+	*data = data_tmp;
+	return __builtin_bswap16(data->header.content_count) * sizeof(tmd_content_chunk);
+}
+
+size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { //loads tmd chunk records and returns total chunks size of content index type on success
+	FIL fil;
+	size_t offset, size = 0;
+	uint_least16_t content_count;
+	
+	if (FileOpen(&fil, path, false) && (offset = tmdHeaderOffset(data->sig_type)) > 0) {
+		size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
+		if (!FileSeek(&fil, offset + sizeof(data->header) + sizeof(data->content_info)) || FileRead2(&fil, data->content_chunk, size) != size) {
+			for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
+				for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
+					if (content_index == CONTENT_INDEX_ALL || content_index == data->content_chunk[chunk_index].content_index)
+						size += __builtin_bswap32(data->content_chunk[chunk_index].content_size_lo);
+				}
+			}
+		} else size = 0;
+		FileClose(&fil);
+	}
+	return size;
+}
+/*ex:
+	tmd_data data;
+	size_t size;
+	wchar_t *path;
+	if ((size = tmdPreloadHeader(&data, path)) > 0 &&
+		(data->content_chunk = __builtin_alloca(size)) &&
+		tmdPreloadChunk(&data, path, CONTENT_INDEX_MAIN)
+	) {
+	...
+	}
+*/	

@@ -99,5 +99,7 @@ typedef struct {
 bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive);
 bool tmdLoadHeader(tmd_data *data, wchar_t *path);
 bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index);
+uint32_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint16_t content_index);
+uint32_t tmdLoadRecent(tmd_data *data, wchar_t *path);
 
 #endif

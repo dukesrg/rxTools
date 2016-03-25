@@ -41,12 +41,12 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #define MENU_JSON_SIZE		0x8000
 #define MENU_JSON_TOKENS	0x800
 
-static char jsm[MENU_JSON_SIZE];
-static jsmntok_t tokm[MENU_JSON_TOKENS];
-static Json menuJson = {jsm, MENU_JSON_SIZE, tokm, MENU_JSON_TOKENS};
-static const wchar_t *menuPath = L"" SYS_PATH "/gui.json";
+char jsm[MENU_JSON_SIZE];
+jsmntok_t tokm[MENU_JSON_TOKENS];
+Json menuJson = {jsm, MENU_JSON_SIZE, tokm, MENU_JSON_TOKENS};
+const wchar_t *menuPath = L"" SYS_PATH "/gui.json";
 
-static int menuPosition = 0;
+int menuPosition = 0;
 
 #define MENU_MAX_LEVELS 4
 #define MENU_LEVEL_BIT_WIDTH 8 * sizeof(menuPosition) / MENU_MAX_LEVELS
@@ -72,14 +72,14 @@ typedef enum {
 	NAV_NEXT
 } menunav;
 
-static int ancestors[MENU_MAX_LEVELS - 1]; //item ancestors to fraw menu path
+int ancestors[MENU_MAX_LEVELS - 1]; //item ancestors to fraw menu path
 
 typedef struct { //target item properties
 	int index;
 	int func;
 	int description;
 } Target;
-static Target target;
+Target target;
 
 typedef struct { //siblings properties
 	int caption;
@@ -87,13 +87,13 @@ typedef struct { //siblings properties
 	int resolve;
 	int params;
 } Sibling;
-static Sibling siblings[1 << MENU_LEVEL_BIT_WIDTH];
+Sibling siblings[1 << MENU_LEVEL_BIT_WIDTH];
 
-static int enabledsiblings[1 << MENU_LEVEL_BIT_WIDTH]; //sibling options enabled status cache
+int enabledsiblings[1 << MENU_LEVEL_BIT_WIDTH]; //sibling options enabled status cache
 
-static int siblingcount; //number of siblings in current menu
+int siblingcount; //number of siblings in current menu
 
-static const char *const bootoptions[BOOT_COUNT] = {
+const char *const bootoptions[BOOT_COUNT] = {
 	"rxTools GUI",
 	"rxMode SysNAND",
 	"rxMode EmuNAND",
@@ -225,6 +225,7 @@ static uint32_t getIntVal(int i) {
 
 static const char *const runResolve(int key, int params) {
 	if (key == 0) return NULL;
+	wchar_t str[_MAX_LFN + 1];
 	char *keyname = menuJson.js + menuJson.tok[key].start + 4;
 	int keysize = menuJson.tok[key].end - menuJson.tok[key].start - 4;
 	if (!memcmp(keyname - 4, "VAL_", 4)) {
@@ -248,7 +249,12 @@ static const char *const runResolve(int key, int params) {
 		}
 		else if (!memcmp(keyname, "REGION", keysize)) return getRegion(getIntVal(params))->name;
 		else if (!memcmp(keyname, "TITLE_VERSION", keysize)) {
-			
+			tmd_data data;
+			if (getStrVal(str, params) && tmdLoadRecent(&data, str) != 0xFFFFFFFF) {
+				static char tmpstr[6];
+				sprintf(tmpstr, "%u", __builtin_bswap16(data.header.title_version));
+				return tmpstr;
+			}
 		}
 	}
 	return NULL;
