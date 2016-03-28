@@ -79,7 +79,7 @@ unsigned int checkEmuNAND() {
 	uint8_t *check = (uint8_t *)0x26000000;
 	for(int i = getMpInfo() == MPINFO_KTR; i < sizeof(addr)/sizeof(addr[0]); i += 2) {
 		tmio_readsectors(TMIO_DEV_SDMC, addr[i] >> 9, 1, check);
-		if (*(uint32_t*)(check + 0x100) == *(uint32_t*)&"NCSD")
+		if (*(uint32_t*)(check + 0x100) == 'DSCN') //NCSD
 			return addr[i];
 	}
 	return 0;

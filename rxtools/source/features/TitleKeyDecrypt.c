@@ -326,6 +326,45 @@ int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive) {
 	return 1;
 }
 
+int getTitleKey2(uint8_t *TitleKey, uint8_t *tid, uint_fast8_t drive) {
+	File tick;
+	uint32_t tick_size = 0x200;     //Chunk size
+
+	wchar_t path[_MAX_LFN] = {0};
+	int r;
+
+	swprintf(path, _MAX_LFN, L"%d:dbs/ticket.db", drive);
+
+	if (FileOpen(&tick, path, 0)) {
+		uint8_t *buf = TITLES;
+		int pos = 0;
+		for (;;) {
+			int rb = FileRead(&tick, buf, tick_size, pos);
+			if (rb == 0) { break; } /* error or eof */
+			pos += rb;
+			if (buf[0] == 'T' && buf[1] == 'I' && buf[2] == 'C' && buf[3] == 'K') {
+				tick_size = 0xD0000;
+				continue;
+			}
+			for (int j = 0; j < tick_size; j++) {
+				if (!strcmp((char *)buf + j, "Root-CA00000003-XS0000000c")) {
+					uint8_t *titleid = buf + j + 0x9C;
+					uint32_t kindex = *(buf + j + 0xB1);
+					uint8_t Key[16]; memcpy(Key, buf + j + 0x7F, 16);
+					if (!memcmp(titleid, tid, 8)) {
+						if (!(r = DecryptTitleKey(titleid, Key, kindex)))
+							memcpy(TitleKey, Key, 16);
+						FileClose(&tick);
+						return r;
+					}
+				}
+			}
+		}
+		FileClose(&tick);
+	}
+	return 1;
+}
+
 static FRESULT seekRead(FIL *fp, DWORD ofs, void *buff, UINT btr)
 {
 	FRESULT r;

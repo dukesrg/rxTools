@@ -49,5 +49,6 @@ void DecryptTitleKeys();
 void DecryptTitleKeyFile(void);
 int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive);
 int getTitleKeyWithCetk(uint8_t dst[16], const wchar_t *path);
+int getTitleKey2(uint8_t *TitleKey, uint8_t *tid, uint_fast8_t drive);
 
 #endif

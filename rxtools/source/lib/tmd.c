@@ -1,13 +1,15 @@
 #include <string.h>
 #include "tmd.h"
 #include "fs.h"
+#include "TitleKeyDecrypt.h"
+#include "mbedtls/aes.h"
 #include "mbedtls/sha256.h"
 
 #include "draw.h"
 #include "theme.h"
 
 #define BUF_SIZE 0x10000
-#define APP_EXT L".app"
+#define APP_EXT ".app"
 #define CONTENT_VERSION_UNSET 0xFFFF
 
 const wchar_t *titleDir = L"%d:title/%08lx/%08lx/content";
@@ -37,6 +39,31 @@ uint32_t tmdLoadRecent(tmd_data *data, wchar_t *path) { //returns tmd file name 
 	return contentid;
 }
 
+uint32_t tmdPreloadRecent(tmd_data *data, wchar_t *path) { //returns tmd file name contentid
+	DIR dir;
+	FILINFO fno;
+	fno.lfname = NULL;
+	wchar_t *filename;
+	tmd_data data_tmp;
+	uint32_t contentid = 0xFFFFFFFF;
+
+	if (f_findfirst(&dir, &fno, path, L"*.tmd") == FR_OK) {
+		filename = path + wcslen(wcscat(path, L"/"));
+		do {
+			wcscat(filename, fno.fname);
+			if (tmdPreloadHeader(&data_tmp, path) &&
+				(contentid == 0xFFFFFFFF ||
+				__builtin_bswap16(data_tmp.header.title_version) > __builtin_bswap16(data->header.title_version))
+			) {
+				*data = data_tmp;
+				contentid = wcstoul(filename, NULL, 16);
+			}
+		} while (f_findnext(&dir, &fno) == FR_OK && *fno.fname);
+	}
+	f_closedir(&dir);
+	return contentid;
+}
+/*
 bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive) {
 	FIL fil;
 	DIR dir;
@@ -96,7 +123,7 @@ bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive) {
 	f_closedir(&dir);
 	return data->header.title_version != CONTENT_VERSION_UNSET;
 }
-
+*/
 static size_t tmdHeaderOffset(uint32_t sig_type) {
 	switch (sig_type) {
 		case RSA_4096_SHA1: case RSA_4096_SHA256: return 0x240;
@@ -129,7 +156,13 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { /
 	tmd_content_chunk *content_chunk_tmp;
 	uint_least16_t content_count;
 	wchar_t apppath[_MAX_LFN + 1];
-	
+	mbedtls_sha256_context ctx;
+	uint8_t hash[32];
+	uint8_t iv[0x10] = {0};
+	uint8_t Key[0x10] = {0};
+	mbedtls_aes_context aes_ctxt;
+	uint8_t *buf = __builtin_alloca(BUF_SIZE);
+
 	if (!FileOpen(&fil, path, false) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return false;
 	offset += sizeof(data->header) + sizeof(data->content_info);
 	size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
@@ -139,13 +172,29 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { /
 	for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
 		for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
 			if (content_index == CONTENT_INDEX_ALL || content_index == content_chunk_tmp[chunk_index].content_index) {
-				swprintf(apppath, _MAX_LFN + 1, L"%.*ls/%08lx", wcsrchr(path, L'/'), path, __builtin_bswap32(content_chunk_tmp[chunk_index].content_id));
+				mbedtls_sha256_init(&ctx);
+				mbedtls_sha256_starts(&ctx, 0);
+				swprintf(apppath, _MAX_LFN + 1, L"%.*ls/%08lx%s", wcsrchr(path, L'/') - path, path, __builtin_bswap32(content_chunk_tmp[chunk_index].content_id), APP_EXT);
 				size = __builtin_bswap32(content_chunk_tmp[chunk_index].content_size_lo);
-				if (FileSize(apppath) == size ) {
-					//decrypt content;
-				} else if (!wcscat(apppath, APP_EXT) || FileSize(apppath) != size)
+				if (FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))) {
+					while ((size = FileRead2(&fil, buf, BUF_SIZE))) mbedtls_sha256_update(&ctx, buf, size);
+				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
+					FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))
+				) {
+//					getTitleKey2(Key, (uint8_t*)&data->header.title_id, wcstoul(path, NULL, 10));
+					memset( iv, 0, sizeof(iv));
+					getTitleKey(&Key[0], __builtin_bswap32(data->header.title_id_hi), __builtin_bswap32(data->header.title_id_lo), wcstoul(path, NULL, 10));
+					mbedtls_aes_setkey_dec(&aes_ctxt, Key, 0x80);
+					while ((size = FileRead2(&fil, buf, BUF_SIZE))) {
+						mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, size, iv, buf, buf);
+						mbedtls_sha256_update(&ctx, buf, size);
+					}
+				} else
 					return false;
-				if (!checkFileHash(apppath, content_chunk_tmp[chunk_index].content_hash)) return false;
+				FileClose(&fil);				
+				mbedtls_sha256_finish(&ctx, hash);
+				if (memcmp(hash, content_chunk_tmp[chunk_index].content_hash, sizeof(hash)))
+					return false;
 			}
 		}
 	}

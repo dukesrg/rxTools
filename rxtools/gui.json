@@ -270,32 +270,32 @@
 					"caption":"Japan",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000020000/tmd.3074"
+					"parameters":["0:nus/0004001000020000/tmd.3074",1]
 				},"ITEM_5-1-2":{
 					"caption":"North America",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000021000/tmd.3078"
+					"parameters":["0:nus/0004001000021000/tmd.3078",1]
 				},"ITEM_5-1-3":{
 					"caption":"Europe/Australia",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000022000/tmd.3075"
+					"parameters":["0:nus/0004001000022000/tmd.3075",1]
 				},"ITEM_5-1-4":{
 					"caption":"China",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000026000/tmd.8"
+					"parameters":["0:nus/0004001000026000/tmd.8",1]
 				},"ITEM_5-1-5":{
 					"caption":"South Korea",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000027000/tmd.1026"
+					"parameters":["0:nus/0004001000027000/tmd.1026",1]
 				},"ITEM_5-1-6":{
 					"caption":"Taiwan",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000028000/tmd.8"
+					"parameters":["0:nus/0004001000028000/tmd.8",1]
 				}
 			},"ITEM_5-2":{
 				"caption":"Install MSET 6",
@@ -304,22 +304,22 @@
 					"caption":"Japan",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000020000/tmd.5127"
+					"parameters":["0:nus/0004001000020000/tmd.5127",1]
 				},"ITEM_5-2-2":{
 					"caption":"North America",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000021000/tmd.5128"
+					"parameters":["0:nus/0004001000021000/tmd.5128",1]
 				},"ITEM_5-2-3":{
 					"caption":"Europe/Australia",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000022000/tmd.5127"
+					"parameters":["0:nus/0004001000022000/tmd.5127",1]
 				},"ITEM_5-2-3":{
 					"caption":"South Korea",
 					"enabled":"CHK_TITLE",
 					"function":"FUNC_DG_MSET",
-					"parameters":"0:nus/0004001000027000/tmd.2049"
+					"parameters":["0:nus/0004001000027000/tmd.2049",1]
 				}
 			},"ITEM_5-3":{
 				"caption":"Install FBI",
@@ -404,6 +404,21 @@
 					"description":"Required for 6.x save game encryption on console firmware version below 7.0",
 					"enabled":"CHK_FILE",
 					"parameters":["0:slot0x25KeyX.bin",16,"817FD1BFFBA60F79CF8CDF19CAF28923"]
+				},"ITEM_7-2-2":{
+					"caption":"key_0x16.bin",
+					"description":"Required for New 3DS firmware 9.5",
+					"enabled":"CHK_FILE",
+					"parameters":["0:key_0x16.bin",16,"BCDD9BF8A054092925A23893F845FFEC"]
+				},"ITEM_7-2-3":{
+					"caption":"key_0x16.bin",
+					"description":"Required for New 3DS firmware 9.6",
+					"enabled":"CHK_FILE",
+					"parameters":["0:key_0x16.bin",16,"60746412AEB3B9626FCC074321E21366"]
+				},"ITEM_7-2-4":{
+					"caption":"key_0x1B.bin",
+					"description":"Required for New 3DS firmware 9.6",
+					"enabled":"CHK_FILE",
+					"parameters":["0:key_0x1B.bin",16,"79CD40405D0F5417AE73A064318CBF0D"]
 				}
 			},"ITEM_7-3":{
 				"caption":"EmuNAND",
