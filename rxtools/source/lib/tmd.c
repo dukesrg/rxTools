@@ -132,7 +132,7 @@ static size_t tmdHeaderOffset(uint32_t sig_type) {
 		default: return 0;
 	}
 }
-
+/*
 static bool checkFileHash(wchar_t *path, uint8_t *checkhash) {
 	FIL fil;
 	uint8_t *buf;
@@ -149,8 +149,8 @@ static bool checkFileHash(wchar_t *path, uint8_t *checkhash) {
 	mbedtls_sha256_finish(&ctx, hash);
 	return !memcmp(hash, checkhash, sizeof(hash));
 }
-
-bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index) { //validates loaded tmd content chunk records
+*/
+bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index, uint_fast8_t drive) { //validates loaded tmd content chunk records
 	FIL fil;
 	size_t size;
 	wchar_t apppath[_MAX_LFN + 1];
@@ -180,9 +180,8 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))
 				) {
-//					getTitleKey2(Key, (uint8_t*)&data->header.title_id, wcstoul(path, NULL, 10));
 					memset(iv, 0, sizeof(iv));
-					getTitleKey(&Key[0], __builtin_bswap32(data->header.title_id_hi), __builtin_bswap32(data->header.title_id_lo), wcstoul(path, NULL, 10));
+					getTitleKey2(Key, data->header.title_id, drive);
 					mbedtls_aes_setkey_dec(&aes_ctxt, Key, 0x80);
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) {
 						mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, size, iv, buf, buf);
@@ -190,7 +189,7 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index
 					}
 				} else
 					return false;
-				FileClose(&fil);				
+				FileClose(&fil);
 				mbedtls_sha256_finish(&ctx, hash);
 				if (memcmp(hash, data->content_chunk[chunk_index].content_hash, sizeof(hash)))
 					return false;

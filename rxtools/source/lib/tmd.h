@@ -31,7 +31,6 @@ typedef enum {
 	CONTENT_INDEX_ALL = 0xFFFF //Used in code only to indicate any type index filter
 } tmd_contend_index; //BE order
 
-#pragma pack(1)
 typedef struct {
 	uint8_t issuer[0x40];
 	uint8_t version;
@@ -65,13 +64,13 @@ typedef struct {
 	uint16_t boot_content;
 	uint16_t reserved_4;
 	uint8_t content_info_hash[0x20];
-} tmd_header;
+} __attribute__((packed)) tmd_header;
 
 typedef struct {
 	uint16_t content_index_offset;
 	uint16_t content_command_count;
 	uint8_t content_chunk_hash[0x20];
-} tmd_content_info;
+} __attribute__((packed)) tmd_content_info;
 
 typedef struct {
 	uint32_t content_id;
@@ -85,8 +84,7 @@ typedef struct {
 		};
 	};
 	uint8_t content_hash[0x20];
-} tmd_content_chunk;
-#pragma pack()
+} __attribute__((packed)) tmd_content_chunk;
 
 typedef struct {
 	uint32_t sig_type;
@@ -98,7 +96,7 @@ typedef struct {
 
 //bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive);
 bool tmdLoadHeader(tmd_data *data, wchar_t *path);
-bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
+bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index, uint_fast8_t drive);
 size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
 uint32_t tmdLoadRecent(tmd_data *data, wchar_t *path);
 size_t tmdPreloadHeader(tmd_data *data, wchar_t *path);

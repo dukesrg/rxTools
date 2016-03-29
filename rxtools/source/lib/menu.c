@@ -363,12 +363,14 @@ static bool runFunc(int func, int params) {
 			}
 		} else if (!memcmp(funckey, "TITLE", funcsize)) {
 			if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size == 2) {
-				tmd_data tmd_src, tmd_dst;
+				tmd_data tmd;
+				uint_fast8_t drive;
 				params++;
 				getStrVal(str, params);
-				if (tmdPreloadHeader(&tmd_src, str) &&
-					(__builtin_bswap32(tmd_src.header.title_id_lo) & 0x0000F000) == getRegion(getIntVal(params + 1))->title_id_lo &&
-					tmdValidateChunk(&tmd_src, str, CONTENT_INDEX_MAIN)
+				drive = getIntVal(params + 1);
+				if (tmdPreloadHeader(&tmd, str) &&
+					(__builtin_bswap32(tmd.header.title_id_lo) & 0x0000F000) == getRegion(drive)->title_id_lo &&
+					tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive)
 				) return true;
 			}
 		} else if (!memcmp(funckey, "CFG", funcsize)) {
