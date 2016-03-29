@@ -93,14 +93,15 @@ typedef struct {
 	uint8_t *sig;
 	tmd_header header;
 	tmd_content_info content_info[0x40];
-	tmd_content_chunk content_chunk[TMD_MAX_CHUNKS]; //currently wrong
+	tmd_content_chunk *content_chunk;
 } tmd_data;
 
 //bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive);
 bool tmdLoadHeader(tmd_data *data, wchar_t *path);
-bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index);
-uint32_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint16_t content_index);
+bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
+size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
 uint32_t tmdLoadRecent(tmd_data *data, wchar_t *path);
 size_t tmdPreloadHeader(tmd_data *data, wchar_t *path);
+size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
 
 #endif

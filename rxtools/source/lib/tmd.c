@@ -150,11 +150,9 @@ static bool checkFileHash(wchar_t *path, uint8_t *checkhash) {
 	return !memcmp(hash, checkhash, sizeof(hash));
 }
 
-bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { //validates loaded tmd content chunk records
+bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index) { //validates loaded tmd content chunk records
 	FIL fil;
-	size_t offset, size;
-	tmd_content_chunk *content_chunk_tmp;
-	uint_least16_t content_count;
+	size_t size;
 	wchar_t apppath[_MAX_LFN + 1];
 	mbedtls_sha256_context ctx;
 	uint8_t hash[32];
@@ -162,27 +160,28 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { /
 	uint8_t Key[0x10] = {0};
 	mbedtls_aes_context aes_ctxt;
 	uint8_t *buf = __builtin_alloca(BUF_SIZE);
+	uint_fast16_t content_count;
 
-	if (!FileOpen(&fil, path, false) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return false;
-	offset += sizeof(data->header) + sizeof(data->content_info);
-	size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
-	content_chunk_tmp = __builtin_alloca(size);
-	if (!FileSeek(&fil, offset) || FileRead2(&fil, content_chunk_tmp, size) != size) return FileClose(&fil) && false;
-	FileClose(&fil);
+	content_count = __builtin_bswap16(data->header.content_count);
+	if (!data->content_chunk &&
+		(data->content_chunk = __builtin_alloca(content_count * sizeof(tmd_content_chunk))) &&
+		!tmdPreloadChunk(data, path, content_index)
+	) return false;
+
 	for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
 		for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
-			if (content_index == CONTENT_INDEX_ALL || content_index == content_chunk_tmp[chunk_index].content_index) {
+			if (content_index == CONTENT_INDEX_ALL || content_index == data->content_chunk[chunk_index].content_index) {
 				mbedtls_sha256_init(&ctx);
 				mbedtls_sha256_starts(&ctx, 0);
-				swprintf(apppath, _MAX_LFN + 1, L"%.*ls/%08lx%s", wcsrchr(path, L'/') - path, path, __builtin_bswap32(content_chunk_tmp[chunk_index].content_id), APP_EXT);
-				size = __builtin_bswap32(content_chunk_tmp[chunk_index].content_size_lo);
+				swprintf(apppath, _MAX_LFN + 1, L"%.*ls/%08lx%s", wcsrchr(path, L'/') - path, path, __builtin_bswap32(data->content_chunk[chunk_index].content_id), APP_EXT);
+				size = __builtin_bswap32(data->content_chunk[chunk_index].content_size_lo);
 				if (FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))) {
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) mbedtls_sha256_update(&ctx, buf, size);
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))
 				) {
 //					getTitleKey2(Key, (uint8_t*)&data->header.title_id, wcstoul(path, NULL, 10));
-					memset( iv, 0, sizeof(iv));
+					memset(iv, 0, sizeof(iv));
 					getTitleKey(&Key[0], __builtin_bswap32(data->header.title_id_hi), __builtin_bswap32(data->header.title_id_lo), wcstoul(path, NULL, 10));
 					mbedtls_aes_setkey_dec(&aes_ctxt, Key, 0x80);
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) {
@@ -193,7 +192,7 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { /
 					return false;
 				FileClose(&fil);				
 				mbedtls_sha256_finish(&ctx, hash);
-				if (memcmp(hash, content_chunk_tmp[chunk_index].content_hash, sizeof(hash)))
+				if (memcmp(hash, data->content_chunk[chunk_index].content_hash, sizeof(hash)))
 					return false;
 			}
 		}
@@ -201,11 +200,11 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { /
 	return true;
 }
 
-uint32_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint16_t content_index) { //calculates loaded tmd content chunk size of content_index type
+size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_index) { //calculates loaded tmd content chunk size of content_index type
 	FIL fil;
 	size_t offset, size;
 	tmd_content_chunk *content_chunk_tmp;
-	uint_least16_t content_count;
+	uint_fast16_t content_count;
 	uint32_t content_size = 0;
 	
 	if (!FileOpen(&fil, path, false) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return false;
@@ -230,7 +229,7 @@ bool tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd head
 	size_t offset, size;
 	tmd_data data_tmp;
 	tmd_content_chunk *content_chunk_tmp;
-	uint_least16_t content_count;
+	uint_fast16_t content_count;
 	uint8_t hash[32];
 	
 	if (!FileOpen(&fil, path, false) || (
@@ -274,19 +273,30 @@ size_t tmdPreloadHeader(tmd_data *data, wchar_t *path) { //loads tmd header, val
 	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
 	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return 0;
 	*data = data_tmp;
+	data->content_chunk = NULL;
 	return __builtin_bswap16(data->header.content_count) * sizeof(tmd_content_chunk);
 }
 
-size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { //loads tmd chunk records and returns total chunks size of content index type on success
+size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index) { //loads tmd chunk records and returns total chunks size of content index type on success
 	FIL fil;
 	size_t offset, size = 0;
-	uint_least16_t content_count;
+	uint_fast16_t content_count, chunk_count;
+	uint8_t hash[32];
 	
-	if (FileOpen(&fil, path, false) && (offset = tmdHeaderOffset(data->sig_type)) > 0) {
+	if (FileOpen(&fil, path, false) && (offset = tmdHeaderOffset(data->sig_type))) {
 		size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
-		if (!FileSeek(&fil, offset + sizeof(data->header) + sizeof(data->content_info)) || FileRead2(&fil, data->content_chunk, size) != size) {
+		if (!data->content_chunk)
+			data->content_chunk = __builtin_alloca(size);
+		if (FileSeek(&fil, offset + sizeof(data->header) + sizeof(data->content_info)) && FileRead2(&fil, data->content_chunk, size) == size) {
+			size = 0;
 			for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
-				for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
+				chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count);
+				mbedtls_sha256((uint8_t*)&data->content_chunk[chunk_index], chunk_count * sizeof(tmd_content_chunk), hash, 0);
+				if (memcmp(hash, data->content_info[chunk_index].content_chunk_hash, sizeof(hash))) {
+					size = 0;
+					break;
+				}
+				for (; chunk_count > 0; chunk_index++, chunk_count--) {
 					if (content_index == CONTENT_INDEX_ALL || content_index == data->content_chunk[chunk_index].content_index)
 						size += __builtin_bswap32(data->content_chunk[chunk_index].content_size_lo);
 				}
@@ -296,14 +306,3 @@ size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint16_t content_index) { 
 	}
 	return size;
 }
-/*ex:
-	tmd_data data;
-	size_t size;
-	wchar_t *path;
-	if ((size = tmdPreloadHeader(&data, path)) > 0 &&
-		(data->content_chunk = __builtin_alloca(size)) &&
-		tmdPreloadChunk(&data, path, CONTENT_INDEX_MAIN)
-	) {
-	...
-	}
-*/	
