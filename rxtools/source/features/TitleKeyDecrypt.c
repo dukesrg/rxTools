@@ -88,6 +88,37 @@ int DecryptTitleKey(uint8_t *titleid, uint8_t *key, uint32_t index) {
 	return 0;
 }
 
+int DecryptTitleKey2(uint64_t titleid, uint8_t *key, uint_fast8_t index) {
+#define blockSize 16
+	static struct {
+		uint8_t key[blockSize];
+		uint32_t pad;
+	} *keyYList = NULL;
+	uint8_t ctr[blockSize] = {0};
+	uint8_t keyY[blockSize];
+	uintptr_t p;
+
+	memcpy(ctr, &titleid, 8);
+	set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, ctr);
+
+	if (keyYList == NULL) {
+		p = 0x08080000;
+		while (((uint8_t *)p)[0] != 0xD0 || ((uint8_t *)p)[1] != 0x7B) {
+			p++;
+			if (p >= 0x080A0000)
+				return 1;
+		}
+
+		keyYList = (void *)p;
+	}
+
+	memcpy(keyY, keyYList[index].key, sizeof(keyY));
+	setup_aeskey(0x3D, AES_BIG_INPUT | AES_NORMAL_INPUT, keyY);
+	use_aeskey(0x3D);
+	aes_decrypt(key, key, ctr, 1, AES_CBC_DECRYPT_MODE);
+	return 0;
+}
+
 void DecryptTitleKeys() {
 	ConsoleInit();
 	ConsoleSetTitle(strings[STR_DECRYPT], strings[STR_TITLE_KEYS]);
@@ -337,7 +368,6 @@ int getTitleKey2(uint8_t *TitleKey, uint64_t tid, uint_fast8_t drive) {
 
 	if (FileOpen(&tick, path, 0)) {
 		uint8_t *buf = TITLES;
-		int pos = 0;
 		while (FileRead2(&tick, buf, tick_size)) {
 			if (*(uint32_t*)buf == 'KCIT' ) {
 				tick_size = 0xD0000;
@@ -345,12 +375,12 @@ int getTitleKey2(uint8_t *TitleKey, uint64_t tid, uint_fast8_t drive) {
 			}
 			for (int j = 0; j < tick_size; j++) {
 				if (!strcmp((char *)buf + j, "Root-CA00000003-XS0000000c")) {
-					uint8_t *titleid = buf + j + 0x9C;
-					uint32_t kindex = *(buf + j + 0xB1);
+					uint64_t titleid = *(uint64_t*)(buf + j + 0x9C);
+					uint_fast8_t kindex = *(buf + j + 0xB1);
 					uint8_t Key[16];
 					memcpy(Key, buf + j + 0x7F, 16);
-					if (!memcmp(titleid, &tid, 8)) {
-						if (!(r = DecryptTitleKey(titleid, Key, kindex)))
+					if (titleid == tid) {
+						if (!(r = DecryptTitleKey2(titleid, Key, kindex)))
 							memcpy(TitleKey, Key, 16);
 						FileClose(&tick);
 						return r;

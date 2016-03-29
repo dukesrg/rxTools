@@ -43,7 +43,7 @@ typedef struct {
 	uint8_t unused6[66];
 	uint8_t limits[64];
 	uint8_t contentIndex[172];
-} TicketHdr;
+} __attribute__((packed)) TicketHdr;
 
 void DecryptTitleKeys();
 void DecryptTitleKeyFile(void);
