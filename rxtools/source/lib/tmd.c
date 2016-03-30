@@ -6,6 +6,7 @@
 #include "mbedtls/sha256.h"
 
 #include "draw.h"
+#include "progress.h"
 #include "theme.h"
 
 #define BUF_SIZE 0x10000
@@ -180,13 +181,16 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))
 				) {
+					progressInit(&bottomScreen, &(Rect){10,210,300,20}, RED, GREY, WHITE, &(TextColors){BLACK, TRANSPARENT}, &font16, fil.fsize);
 					memset(iv, 0, sizeof(iv));
 					getTitleKey2(Key, data->header.title_id, drive);
+					progressCallback(fil.fsize / 2);
 					mbedtls_aes_setkey_dec(&aes_ctxt, Key, 0x80);
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) {
 						mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, size, iv, buf, buf);
 						mbedtls_sha256_update(&ctx, buf, size);
-					}
+					progressCallback((fil.fsize + fil.fptr) / 2);
+					}                    
 				} else
 					return false;
 				FileClose(&fil);

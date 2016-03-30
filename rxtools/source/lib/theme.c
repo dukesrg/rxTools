@@ -293,7 +293,7 @@ void setColor(uint32_t *color, int index) {
 		*color = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 16);
 }
 
-void setInt(uint32_t *val, int index) {
+void setInt(uint_fast16_t *val, int index) {
 	if (index > 0)
 		*val = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 0);
 }
@@ -305,20 +305,20 @@ void themeStyleSet(char *key) {
 	setImg(style.top1img, idx[TOP1]);
 	setImg(style.top2img, idx[TOP2]);
 	setImg(style.bottomimg, idx[BOTTOM]);
-	setColor(&style.captionColor.fg, idx[CAPTIONFG]);
-	setColor(&style.captionColor.bg, idx[CAPTIONBG]);
-	setColor(&style.itemsColor.fg, idx[ITEMSCOLORFG]);
-	setColor(&style.itemsColor.bg, idx[ITEMSCOLORBG]);
-	setColor(&style.itemsSelected.fg, idx[ITEMSSELECTEDFG]);
-	setColor(&style.itemsSelected.bg, idx[ITEMSSELECTEDBG]);
-	setColor(&style.itemsDisabled.fg, idx[ITEMSDISABLEDFG]);
-	setColor(&style.itemsDisabled.bg, idx[ITEMSDISABLEDBG]);
-	setColor(&style.itemsUnselected.fg, idx[ITEMSUNSELECTEDFG]);
-	setColor(&style.itemsUnselected.bg, idx[ITEMSUNSELECTEDBG]);
-	setColor(&style.descriptionColor.fg, idx[DESCRIPTIONFG]);
-	setColor(&style.descriptionColor.bg, idx[DESCRIPTIONBG]);
-	setColor(&style.valueColor.fg, idx[VALUEFG]);
-	setColor(&style.valueColor.bg, idx[VALUEBG]);
+	setColor(&style.captionColor.fg.color, idx[CAPTIONFG]);
+	setColor(&style.captionColor.bg.color, idx[CAPTIONBG]);
+	setColor(&style.itemsColor.fg.color, idx[ITEMSCOLORFG]);
+	setColor(&style.itemsColor.bg.color, idx[ITEMSCOLORBG]);
+	setColor(&style.itemsSelected.fg.color, idx[ITEMSSELECTEDFG]);
+	setColor(&style.itemsSelected.bg.color, idx[ITEMSSELECTEDBG]);
+	setColor(&style.itemsDisabled.fg.color, idx[ITEMSDISABLEDFG]);
+	setColor(&style.itemsDisabled.bg.color, idx[ITEMSDISABLEDBG]);
+	setColor(&style.itemsUnselected.fg.color, idx[ITEMSUNSELECTEDFG]);
+	setColor(&style.itemsUnselected.bg.color, idx[ITEMSUNSELECTEDBG]);
+	setColor(&style.descriptionColor.fg.color, idx[DESCRIPTIONFG]);
+	setColor(&style.descriptionColor.bg.color, idx[DESCRIPTIONBG]);
+	setColor(&style.valueColor.fg.color, idx[VALUEFG]);
+	setColor(&style.valueColor.bg.color, idx[VALUEBG]);
 	setInt(&style.captionRect.x, idx[CAPTIONX]);
 	setInt(&style.captionRect.y, idx[CAPTIONY]);
 	setInt(&style.captionRect.w, idx[CAPTIONW]);

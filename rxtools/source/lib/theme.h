@@ -32,16 +32,16 @@ typedef struct {
 	wchar_t top2img[_MAX_LFN + 1];
 	wchar_t bottomimg[_MAX_LFN + 1];
 	TextColors captionColor;
-	TextRect captionRect;
+	Rect captionRect;
 	TextColors itemsColor;
 	TextColors itemsSelected;
 	TextColors itemsDisabled;
 	TextColors itemsUnselected;
-	TextRect itemsRect;
+	Rect itemsRect;
 	TextColors descriptionColor;
-	TextRect descriptionRect;
+	Rect descriptionRect;
 	TextColors valueColor;
-	TextRect valueRect;
+	Rect valueRect;
 } themeStyle;
 
 extern themeStyle style;

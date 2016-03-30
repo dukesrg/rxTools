@@ -30,10 +30,10 @@
 wchar_t console[CONSOLE_MAX_LINES][CONSOLE_MAX_LINE_LENGTH + 1];
 wchar_t consoletitle[CONSOLE_MAX_TITLE_LENGTH+1] = L"";
 
-int BackgroundColor = WHITE;
-int TextColor = BLACK;
-int BorderColor = BLUE;
-int SpecialColor = RED;
+Color BackgroundColor = WHITE;
+Color TextColor = BLACK;
+Color BorderColor = BLUE;
+Color SpecialColor = RED;
 int Spacing = 2;
 unsigned int ConsoleX = CONSOLE_X, ConsoleY = CONSOLE_Y, ConsoleW = CONSOLE_WIDTH, ConsoleH = CONSOLE_HEIGHT;
 unsigned int BorderWidth = 1;
@@ -111,15 +111,15 @@ void ConsoleShow(){
 	//}
 	int titlespace = 2 * font16.h - 2 * BorderWidth;
 	TextColors c = {TextColor, ConsoleGetBackgroundColor()};
-	DrawStringRect(&bottomTmpScreen, consoletitle, ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0, &c, &font24);
+	DrawStringRect(&bottomScreen, consoletitle, &(Rect){ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0}, &c, &font24);
 
 	for (int i = 0; i < CONSOLE_MAX_LINES; i++)
-		DrawString(&bottomTmpScreen, console[i],
+		DrawString(&bottomScreen, console[i],
 			ConsoleX + font16.sw * Spacing,
 			i * font16.h + ConsoleY + 15 + font16.h * (Spacing - 1) + titley,
 			TextColor, ConsoleGetBackgroundColor());
 
-	memcpy(bottomScreen.addr, bottomTmpScreen.addr, bottomScreen.size);
+	DisplayScreen(&bottomScreen);
 }
 
 void ConsoleFlush()
@@ -189,35 +189,35 @@ void vprint(const wchar_t *format, va_list va)
 	ConsoleAddText(str);
 }
 
-void ConsoleSetBackgroundColor(int color){
+void ConsoleSetBackgroundColor(Color color){
 	BackgroundColor = color;
 }
 
-int ConsoleGetBackgroundColor(){
+Color ConsoleGetBackgroundColor(){
 	return BackgroundColor;
 }
 
-void ConsoleSetBorderColor(int color){
+void ConsoleSetBorderColor(Color color){
 	BorderColor = color;
 }
 
-int ConsoleGetBorderColor(){
+Color ConsoleGetBorderColor(){
 	return BorderColor;
 }
 
-void ConsoleSetTextColor(int color){
+void ConsoleSetTextColor(Color color){
 	TextColor = color;
 }
 
-int ConsoleGetTextColor(){
+Color ConsoleGetTextColor(){
 	return TextColor;
 }
 
-void ConsoleSetSpecialColor(int color){
+void ConsoleSetSpecialColor(Color color){
 	SpecialColor = color;
 }
 
-int ConsoleGetSpecialColor(){
+Color ConsoleGetSpecialColor(){
 	return SpecialColor;
 }
 

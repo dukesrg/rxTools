@@ -22,8 +22,8 @@
 		},"value":{
 			"x":186,
 			"color":"ff008dc5"
-		},"topimg":["top.bin","top.bin"],
-		"bottomimg":"bot_descr.bin",
+		},"topimg":["top.bgr","top.bgr"],
+		"bottomimg":"bot_descr.bgr",
 		"ITEM_1":{
 			"ITEM_1-1":{
 			},"ITEM_1-2":{
@@ -43,7 +43,7 @@
 		},"ITEM_3":{
 			"ITEM_3-1":{
 			},"ITEM_3-2":{
-				"bottomimg":"bottom.bin",
+				"bottomimg":"bottom.bgr",
 				"ITEM_3-2-1":{
 				},"ITEM_3-2-2":{
 				},"ITEM_3-2-3":{
@@ -56,7 +56,7 @@
 			},"ITEM_3-3":{
 			},"ITEM_3-4":{
 			},"ITEM_3-5":{
-				"bottomimg":"bottom.bin",
+				"bottomimg":"bottom.bgr",
 				"ITEM_3-5-1":{
 				},"ITEM_3-5-2":{
 				},"ITEM_3-5-3":{
@@ -71,7 +71,7 @@
 		},"ITEM_4":{
 			"ITEM_4-1":{
 			},"ITEM_4-2":{
-				"bottomimg":"bottom.bin",
+				"bottomimg":"bottom.bgr",
 				"ITEM_4-2-1":{
 				},"ITEM_4-2-2":{
 				},"ITEM_4-2-3":{
@@ -82,7 +82,7 @@
 				},"ITEM_4-2-8":{
 				}
 			},"ITEM_4-3":{
-				"bottomimg":"bottom.bin",
+				"bottomimg":"bottom.bgr",
 				"ITEM_4-3-1":{
 				},"ITEM_4-3-2":{
 				},"ITEM_4-3-3":{
@@ -100,7 +100,7 @@
 			},"ITEM_5-4":{
 			}
 		},"ITEM_6":{
-			"bottomimg":"bottom.bin",
+			"bottomimg":"bottom.bgr",
 			"ITEM_6-1":{
 			},"ITEM_6-2":{
 			},"ITEM_6-3":{
@@ -109,16 +109,16 @@
 			}
 		},"ITEM_7":{
 			"ITEM_7-1":{
-				"bottomimg":"bottom.bin"
+				"bottomimg":"bottom.bgr"
 			},"ITEM_7-2":{
 				"items":{
 					"color":"ff007f00",
 					"selected":["ff00ff00","ff008dc5"]
 				}
 			},"ITEM_7-3":{
-				"bottomimg":"bottom.bin"
+				"bottomimg":"bottom.bgr"
 			},"ITEM_7-4":{
-				"bottomimg":"bottom.bin"
+				"bottomimg":"bottom.bgr"
 			}
 		},"ITEM_8":{
 		}

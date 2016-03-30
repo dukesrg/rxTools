@@ -445,8 +445,11 @@ void MenuInit(){
 }
 
 void MenuShow(){
-	memcpy(bottomScreen.addr, bottomTmpScreen.addr, bottomScreen.size);
-	memcpy(top1Screen.addr, top1TmpScreen.addr, top1Screen.size);
+	DisplayScreen(&bottomScreen);
+	DisplayScreen(&top1Screen);
+//	DisplayScreen(&top2Screen);
+//	memcpy(bottomScreen.addr, bottomTmpScreen.addr, bottomScreen.size);
+//	memcpy(top1Screen.addr, top1TmpScreen.addr, top1Screen.size);
 //	memcpy(top2Screen.addr, top2TmpScreen.addr, top2Screen.size);
 }
 
@@ -637,20 +640,20 @@ int menuTry(int targetposition, int currentposition) {
 	y = style.itemsRect.y;
 
 	if (wcslen(style.top1img) > 0) {
-		DrawSplash(&top1TmpScreen, style.top1img);
+		DrawSplash(&top1Screen, style.top1img);
 //		if (wcslen(style.top2img) > 0)
-//			DrawSplash(&top2TmpScreen, style.top2img);
+//			DrawSplash(&top2Screen, style.top2img);
 //		else
-//			memcpy(top2TmpScreen.addr, top1TmpScreen.addr, top1Screen.size);
+//			memcpy(top2Screen.buf2, top1Screen.buh2, top1Screen.size);
 	} else {
-		ClearScreen(&top1TmpScreen, BLACK);
-//		ClearScreen(&top2TmpScreen, BLACK);
+		ClearScreen(&top1Screen, BLACK);
+//		ClearScreen(&top2Screen, BLACK);
 	}
 
 	if (wcslen(style.bottomimg) > 0)
-		DrawSplash(&bottomTmpScreen, style.bottomimg);
+		DrawSplash(&bottomScreen, style.bottomimg);
 	else
-		ClearScreen(&bottomTmpScreen, BLACK);
+		ClearScreen(&bottomScreen, BLACK);
 
 	wcscpy(str, L"");
 	for (i = 0; i < sizeof(ancestors)/sizeof(ancestors[0]) && ancestors[i] != 0; i++) {
@@ -658,44 +661,21 @@ int menuTry(int targetposition, int currentposition) {
 			wcscat(str, lang("|", 1));
 		wcscat(str, lang(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start));
 	}
-	DrawSubString(&bottomTmpScreen, str, -1, x, style.captionRect.y, &style.captionColor, &font24);
+	DrawSubString(&bottomScreen, str, -1, x, style.captionRect.y, &style.captionColor, &font24);
 
 	for (i = 0; i < sizeof(siblings)/sizeof(siblings[0]) && siblings[i].caption != 0; i++) {
 		if (siblings[i].resolve)
-			DrawStringRect(&bottomTmpScreen, lang(runResolve(siblings[i].resolve, siblings[i].params), -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-/*		
-		switch (j = getConfig(siblings[i].params)) {
-			case CFG_BOOT_DEFAULT:
-				DrawStringRect(&bottomTmpScreen, lang(bootoptions[cfgs[j].val.i], -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-				break;
-			case CFG_GUI_FORCE:
-			case CFG_EMUNAND_FORCE:
-			case CFG_SYSNAND_FORCE:
-			case CFG_PASTA_FORCE:
-				DrawStringRect(&bottomTmpScreen, lang(keys[cfgs[j].val.i].name, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-				break;
-			case CFG_AGB_BIOS:
-				DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.b ? "Enabled" : "Disabled", -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-				break;
-			case CFG_THEME:
-			case CFG_LANGUAGE:
-				DrawStringRect(&bottomTmpScreen, lang(cfgs[j].val.s, -1), style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-				break;
-			default:
-//				swprintf(str, sizeof(str)/sizeof(str[0]), L"%d", cfgs[j].val.i);
-//				DrawStringRect(&bottomTmpScreen, str, style.valueRect.x, y, style.valueRect.w, style.valueRect.h, &style.valueColor, &font16);
-				break;
-		}
-*/		if (!enabledsiblings[i])
+			DrawStringRect(&bottomScreen, lang(runResolve(siblings[i].resolve, siblings[i].params), -1), &(Rect){style.valueRect.x, y, style.valueRect.w, style.valueRect.h}, &style.valueColor, &font16);
+		if (!enabledsiblings[i])
 			enabledsiblings[i] = !siblings[i].enabled || runFunc(siblings[i].enabled, siblings[i].params) ? 1 : -1;
 		enabled = enabledsiblings[i] > 0;
 
 		if (i == target.index) {
 			if (target.description != 0)
-				DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[target.description].start, menuJson.tok[target.description].end - menuJson.tok[target.description].start), style.descriptionRect.x, style.descriptionRect.y, style.descriptionRect.w, style.descriptionRect.h, &style.descriptionColor, &font16);
-			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h, enabled ? &style.itemsSelected : &style.itemsUnselected, &font16);
+				DrawStringRect(&bottomScreen, lang(menuJson.js + menuJson.tok[target.description].start, menuJson.tok[target.description].end - menuJson.tok[target.description].start), &style.descriptionRect, &style.descriptionColor, &font16);
+			y += DrawStringRect(&bottomScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? &style.itemsSelected : &style.itemsUnselected, &font16);
 		} else {
-			y += DrawStringRect(&bottomTmpScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h, enabled ? &style.itemsColor : &style.itemsDisabled, &font16);
+			y += DrawStringRect(&bottomScreen, lang(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? &style.itemsColor : &style.itemsDisabled, &font16);
 		}
 	}
 	

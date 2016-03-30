@@ -142,7 +142,6 @@ static _Noreturn void mainLoop()
 			MenuPrevSelection();
 
 		if (pad & keys[KEY_A].mask) {
-			OpenAnimation();
 			MenuSelect();
 		}
 
@@ -300,7 +299,6 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		WaitForButton(keys[KEY_A].mask);
 	}
 
-	OpenAnimation();
 	MenuInit();
 	MenuShow();
 	mainLoop();
