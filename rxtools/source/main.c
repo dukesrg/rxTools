@@ -34,13 +34,18 @@
 #include "lang.h"
 #include "theme.h"
 #include "mpcore.h"
+#include "strings.h"
 
-#define FONT_NAME "font.bin"
+static const wchar_t *const keyX16path = L"0:key_0x16.bin";
+static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
+static const wchar_t *const keyX25path = L"0:slot0x25KeyX.bin";
+static const wchar_t *const rxRootPath = L"0:rxTools";
+static const wchar_t *const fontPath = L"%ls/sys/font.bin";
+static const wchar_t *const langPath = L"%ls/lang/%s.json";
 
 static int warned = 0;
 
-static void setConsole()
-{
+static void setConsole() {
 	ConsoleSetXY(15, 20);
 	ConsoleSetWH(BOT_SCREEN_WIDTH - 30, SCREEN_HEIGHT - 80);
 	ConsoleSetBorderColor(BLUE);
@@ -51,86 +56,26 @@ static void setConsole()
 	ConsoleSetBorderWidth(3);
 }
 
-static void install()
-{
+static void install() {
 	f_mkdir(L"rxTools");
 	f_mkdir(L"rxTools/nand");
 	InstallConfigData();
 }
 
-static void drawTop()
-{
-/*	wchar_t str[_MAX_LFN];
-
-	if (cfgs[CFG_3D].val.i) {
-		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPL.bin", cfgs[CFG_THEME].val.i);
-		DrawSplash(&top1Screen, str);
-		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOPR.bin", cfgs[CFG_THEME].val.i);
-		DrawSplash(&top2Screen, str);
-	} else {
-		Screen tmpScreen = top1Screen;
-		tmpScreen.addr = (uint8_t*)0x27000000;
-		swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/TOP.bin", cfgs[CFG_THEME].val.i);
-		DrawSplash(&tmpScreen, str);
-		memcpy(top1Screen.addr, tmpScreen.addr, top1Screen.size);
-		memcpy(top2Screen.addr, tmpScreen.addr, top2Screen.size);
-	}
-*/
-}
-
-static FRESULT initKeyX()
-{
-	uint8_t buff[AES_BLOCK_SIZE];
-	UINT br;
-	FRESULT r;
+bool initKeyX(uint_fast8_t slot, const wchar_t *path) {
+	uint8_t buf[AES_BLOCK_SIZE];
 	FIL f;
 
-	r = f_open(&f, L"slot0x25KeyX.bin", FA_READ);
-	if (r != FR_OK)
-		return r;
-
-	r = f_read(&f, buff, sizeof(buff), &br);
-	if (br < sizeof(buff))
-		return r == FR_OK ? EOF : r;
-
-	f_close(&f);
-	setup_aeskeyX(0x25, buff);
-	return 0;
+	if (!FileOpen(&f, path, false) ||
+		(FileRead2(&f, buf, AES_BLOCK_SIZE) != AES_BLOCK_SIZE &&
+		(FileClose(&f) || true)
+	)) return false;
+	FileClose(&f);
+	setup_aeskeyX(slot, buf);
+	return true;
 }
 
-static FRESULT initN3DSKeys()
-{
-    uint8_t buff[AES_BLOCK_SIZE];
-	UINT br;
-	FRESULT r;
-	FIL f;
-
-	r = f_open(&f, _T("key_0x16.bin"), FA_READ);
-	if (r != FR_OK)
-		return r;
-
-	r = f_read(&f, buff, sizeof(buff), &br);
-	if (br < sizeof(buff))
-		return r == FR_OK ? EOF : r;
-
-	f_close(&f);
-	setup_aeskeyX(0x16, buff);
-
-	r = f_open(&f, _T("key_0x1B.bin"), FA_READ);
-	if (r != FR_OK)
-		return r;
-
-	r = f_read(&f, buff, sizeof(buff), &br);
-	if (br < sizeof(buff))
-		return r == FR_OK ? EOF : r;
-
-	f_close(&f);
-	setup_aeskeyX(0x1B, buff);
-	return 0;
-}
-
-static _Noreturn void mainLoop()
-{
+static _Noreturn void mainLoop() {
 	uint32_t pad;
 
 	while (true) {
@@ -172,9 +117,8 @@ static void warn(const wchar_t *format, ...)
 
 __attribute__((section(".text.start"), noreturn)) void _start()
 {
-	static const wchar_t *fontPath= L"" SYS_PATH "/" FONT_NAME;
+	wchar_t path[_MAX_LFN + 1];
 	void *fontBuf;
-	UINT btr, br;
 	int r;
 	FIL f;
 	uint32_t pad;
@@ -190,72 +134,54 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	top2Screen.addr = (uint8_t*)*(uint32_t*)top2Screen.addr;
 
 	if (!FSInit()) {
-		DrawString(&bottomScreen, strings[STR_FAILED],
-			BOT_SCREEN_WIDTH / 2, SCREEN_HEIGHT - font16.h, RED, BLACK);
-		while (1);
+		DrawInfo(NULL, lang(S_REBOOT, -1), lang(SF_FAILED_TO, -1), lang(S_MOUNT, -1), lang(S_FILE_SYSTEM, -1));
+		Shutdown(true);		
 	}
-
-	/*
-	set_loglevel(ll_info);
-	log(ll_info, "Initializing rxTools...");
-	*/
 
 	setConsole();
 
-	fontIsLoaded = 0;
-	r = f_open(&f, fontPath, FA_READ);
-	if (r == FR_OK) {
-		btr = f_size(&f);
-		fontBuf = __builtin_alloca(btr);
-		r = f_read(&f, fontBuf, btr, &br);
-		if (r == FR_OK)
-			fontIsLoaded = 1;
-
-		f_close(&f);
-		font16.addr = fontBuf;
-		font24.sw = 12;
-		font24.h = 24;
-		font24.dw = 24;
-		font24.addr = font16.addr + font16.dw * font16.h * 0x10000 / (8 * sizeof(font24.addr[0]));
-	}
-
-	if (fontIsLoaded)
-		preloadStringsU();
-	else
-		warn(L"Failed to load " FONT_NAME ": %d\n", r);
-
-    if (getMpInfo() == MPINFO_KTR)
-    {
-        r = initN3DSKeys();
-        if (r != FR_OK) {
-            warn(L"Failed to load keys for N3DS\n"
-            "  Code: %d\n"
-            "  RxMode will not boot. Please\n"
-            "  include key_0x16.bin and\n"
-            "  key_0x1B.bin at the root of your\n"
-            "  SD card.\n", r);
-            InputWait();
-            goto postinstall;
-        }
-    }
-
-	install();
-	postinstall:
 	readCfg();
 
-//	wchar_t path[_MAX_LFN];
-
+	swprintf(path, _MAX_LFN + 1, fontPath, rxRootPath);
+	if (!FileOpen(&f, path, false) ||
+		((fontBuf = __builtin_alloca(f.fsize)) &&
+		FileRead2(&f, fontBuf, f.fsize) != f.fsize &&
+		(FileClose(&f) || true)
+	)) {
+ 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
+		fontIsLoaded = 0;
+	} else {
+		FileClose(&f);
+		font16.addr = fontBuf;
+		font24 = (FontMetrics){12, 24, 24, font16.dwstart, font16.addr + font16.dw * font16.h * 0x10000 / (8 * sizeof(font24.addr[0]))};
+		fontIsLoaded = 1;
+		preloadStringsU();
+	}
+	
 	r = loadStrings();
+/*	
+	swprintf(path, _MAX_LFN + 1, langPath, rxRootPath, cfgs[CFG_LANGUAGE].val.s);
+	if (!FileOpen(&f, path, false) ||
+		((fontBuf = __builtin_alloca(f.fsize)) &&
+		FileRead2(&f, fontBuf, f.fsize) != f.fsize &&
+		(FileClose(&f) || true)
+	)) {
+ 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
+*/		
 	if (fontIsLoaded)
 		r = langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET);
 
 	if (r < 0)
 		warn(L"Failed to load strings: %d\n", r);
+//DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX16)
 
 	if ((r = menuLoad()) <= 0)
 		warn(L"Failed to load gui: %d\n", r);
 
-	drawTop();
+	if (getMpInfo() != MPINFO_KTR || (
+		(initKeyX(0x16, keyX16path) || (DrawInfo(lang(S_NO_KTR_KEYS, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX16path) && false)) &&
+		(initKeyX(0x1B, keyX1Bpath) || (DrawInfo(lang(S_NO_KTR_KEYS, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX1Bpath) && false))
+	)) install();
 
 	r = themeLoad(cfgs[CFG_THEME].val.s, THEME_SET);
 
@@ -278,26 +204,12 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		}
 	}
 	if (r < 0) { //Fallback to Emu- or SysNAND if UI should be loaded but theme is not available
-		warn(L"Failed to load theme: %d\n", r);
+ 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
 		rxMode(checkEmuNAND() ? 1 : 0);
 	}
 
-	if (sysver < 7) {
-		r = initKeyX();
-		if (r != FR_OK)
-			warn(L"Failed to load key X for slot 0x25\n"
-				"  Code: %d\n"
-				"  If your firmware version is less\n"
-				"  than 7.X, some titles decryption\n"
-				"  will fail, and some EmuNANDs\n"
-				"  will not boot.\n", r);
-	}
-
-	if (warned) {
-		warn(strings[STR_PRESS_BUTTON_ACTION],
-			strings[STR_BUTTON_A], strings[STR_CONTINUE]);
-		WaitForButton(keys[KEY_A].mask);
-	}
+	if (sysver < 7 && !initKeyX(0x25, keyX25path))
+		DrawInfo(lang(S_NO_KEYX25, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX25path);
 
 	MenuInit();
 	MenuShow();

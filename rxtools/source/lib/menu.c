@@ -25,7 +25,6 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "hid.h"
 #include "fs.h"
 #include "firm.h"
-#include "i2c.h"
 #include "CTRDecryptor.h"
 #include "NandDumper.h"
 #include "TitleKeyDecrypt.h"
@@ -37,6 +36,7 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "theme.h"
 #include "tmd.h"
 #include "mbedtls/md5.h"
+#include "strings.h"
 
 #define MENU_JSON_SIZE		0x8000
 #define MENU_JSON_TOKENS	0x800
@@ -183,22 +183,22 @@ int prevBoot(int idx) {
 
 typedef struct {
 	uint32_t title_id_lo;
-	const char *name;
+	const char *const *const name;
 } system_region;
 
 #define DRIVE_COUNT 3
 #define REGION_COUNT (sizeof(regions)/sizeof(regions)[0])
 
 static const system_region *const getRegion(uint_fast8_t drive) {
-	static system_region const regions[] = {
-		{0x00000000, "Japan"},
-		{0x00001000, "North America"},
-		{0x00002000, "Europe"},
-		{0x00002000, "Australia"},
-		{0x00006000, "China"},
-		{0x00007000, "South Korea"},
-		{0x00008000, "Taiwan"},
-		{0xFFFFFFFF, "Unknown"}
+	static system_region regions[] = {
+		{0x00000000, &S_JAPAN},
+		{0x00001000, &S_NORTH_AMERICA},
+		{0x00002000, &S_EUROPE},
+		{0x00002000, &S_AUSTRALIA},
+		{0x00006000, &S_CHINA},
+		{0x00007000, &S_SOUTH_KOREA},
+		{0x00008000, &S_TAIWAN},
+		{0xFFFFFFFF, &S_UNKNOWN}
 	};
 	File fp;
 	uint_fast8_t regionid = REGION_COUNT - 1;
@@ -239,7 +239,7 @@ static const char *const runResolve(int key, int params) {
 				case CFG_PASTA_FORCE:
 					return keys[cfgs[params].val.i].name;
 				case CFG_AGB_BIOS:
-					return cfgs[params].val.b ? "Enabled" : "Disabled";
+					return cfgs[params].val.b ? S_ENABLED : S_DISABLED;
 				case CFG_THEME:
 				case CFG_LANGUAGE:
 					return cfgs[params].val.s;
@@ -247,7 +247,7 @@ static const char *const runResolve(int key, int params) {
 		} else if (!memcmp(keyname, "RXTOOLS_BUILD", keysize)) {
 			
 		}
-		else if (!memcmp(keyname, "REGION", keysize)) return getRegion(getIntVal(params))->name;
+		else if (!memcmp(keyname, "REGION", keysize)) return *(getRegion(getIntVal(params))->name);
 		else if (!memcmp(keyname, "TITLE_VERSION", keysize)) {
 			tmd_data data;
 			if (getStrVal(str, params) && tmdLoadRecent(&data, str) != 0xFFFFFFFF) {
@@ -298,11 +298,8 @@ static bool runFunc(int func, int params) {
 	if (!memcmp(funckey - 4, "RUN_", 4)) {
 		if (!memcmp(funckey, "RXMODE", funcsize)) rxMode(getIntVal(params));
 		else if (!memcmp(funckey, "PASTA", funcsize)) PastaMode();
-		else if (!memcmp(funckey, "SHUTDOWN", funcsize)) {
-			fadeOut();
-			i2cWriteRegister(I2C_DEV_MCU, 0x20, (getIntVal(params)) ? (uint8_t)(1<<0):(uint8_t)(1<<2));
-			while(1);
-		} else if (!memcmp(funckey, "CFG_NEXT", funcsize)) {
+		else if (!memcmp(funckey, "SHUTDOWN", funcsize)) Shutdown(getIntVal(params));
+		else if (!memcmp(funckey, "CFG_NEXT", funcsize)) {
 			if ((params = getConfig(params)) >= 0) {
 				switch (params) {
 					case CFG_BOOT_DEFAULT:
@@ -658,7 +655,7 @@ int menuTry(int targetposition, int currentposition) {
 	wcscpy(str, L"");
 	for (i = 0; i < sizeof(ancestors)/sizeof(ancestors[0]) && ancestors[i] != 0; i++) {
 		if (i > 0)
-			wcscat(str, lang("|", 1));
+			wcscat(str, lang(S_PARENT_SEPARATOR, -1));
 		wcscat(str, lang(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start));
 	}
 	DrawSubString(&bottomScreen, str, -1, x, style.captionRect.y, &style.captionColor, &font24);

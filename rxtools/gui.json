@@ -22,12 +22,12 @@
 				"caption":"Reboot",
 				"description":"Reboot the console.",
 				"function":"RUN_SHUTDOWN",
-				"parameters":0
+				"parameters":1
 			},"ITEM_1-5":{
 				"caption":"Shutdown",
 				"description":"Turn off the console.",
 				"function":"RUN_SHUTDOWN",
-				"parameters":1
+				"parameters":0
 			}
 		},"ITEM_2":{
 			"caption":"Decrypt",

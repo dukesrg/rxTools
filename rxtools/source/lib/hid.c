@@ -57,17 +57,19 @@ const Key keys[KEY_COUNT] = {
 	{"KEY_CPAD_DOWN", "[P-DOWN]", 0}
 };
 
+void Shutdown(bool reboot) {
+	fadeOut();
+	i2cWriteRegister(I2C_DEV_MCU, 0x20, 1 << (2 * reboot));
+	while (1);
+}
+
 static void bgWork()
 {
 	TryScreenShot();
 
 	// Check whether HOME or POWER button has been pressed
-	if (*(volatile uint8_t *)0x10147021 == 13) {
-		fadeOut();
-		// Return to HOME menu
-		i2cWriteRegister(I2C_DEV_MCU, 0x20, 1 << 2);
-		while (1);
-	}
+	if (*(volatile uint8_t *)0x10147021 == 13)
+		Shutdown(true); // Return to HOME menu
 }
 
 uint32_t InputWait() {

@@ -8,7 +8,7 @@ Launch specific function ("func" object)
 |---|---|---|
 |RUN_RXMODE|Boot into rxMode|drive (1 - SysNAND, 2 - EmuNAND)|
 |RUN_PASTA|Boot into Pasta mode||
-|RUN_SHUTDOWN|Shutdown console|0 - reboot, 1 - turn off|
+|RUN_SHUTDOWN|Shutdown console|0 - turn off, 1 - reboot|
 |RUN_CFG_NEXT|Toggle configuration option to the next value|configuration key|
 
 ###Status check functions

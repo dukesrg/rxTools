@@ -20,9 +20,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <wchar.h>
-#include "fs.h"
 #include "draw.h"
+#include "fs.h"
+#include "hid.h"
 #include "lang.h"
+#include "strings.h"
 
 Screen top1Screen = {400, 240, sizeof(Pixel), 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC0, (uint8_t*)0x27000000};
 Screen top2Screen = {400, 240, sizeof(Pixel), 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC8, (uint8_t*)0x27000000+400*240*3};
@@ -124,7 +126,7 @@ static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uin
 	return char_width;
 }
 
-uint32_t DrawSubString(Screen *screen, const wchar_t *str, size_t count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font) {
+uint_fast16_t DrawSubString(Screen *screen, const wchar_t *str, size_t count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font) {
 	size_t len = wcslen(str);
 	if (count < 0 || count > len)
 		count = len;
@@ -133,16 +135,16 @@ uint32_t DrawSubString(Screen *screen, const wchar_t *str, size_t count, uint32_
 	return x - len;
 }
 
-uint32_t GetSubStringWidth(const wchar_t *str, size_t count, FontMetrics *font) {
+uint_fast16_t GetSubStringWidth(const wchar_t *str, size_t count, FontMetrics *font) {
 	size_t len = wcslen(str);
+	uint_fast16_t dx = 0;
 	if (count < 0 || count > len)
 		count = len;
-	len = 0;		
-	for (uint32_t i = 0; i < count; len += str[i++] < font->dwstart ? font->sw : font->dw);
-	return len;
+	for (uint32_t i = 0; i < count; dx += str[i++] < font->dwstart ? font->sw : font->dw);
+	return dx;
 }
 
-uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rect *rect, TextColors *color, FontMetrics *font) {
+uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rect *rect, TextColors *color, FontMetrics *font) {
 	uint_fast16_t dy = 0;
 	size_t len = wcslen(str);
 	if (count < 0 || count > len)
@@ -154,7 +156,7 @@ uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rec
 	if (rect->h == 0 || rect->y + rect->h > screen->h)
 		rect->h = screen->h - rect->y;
 	uint32_t i, j, k, sw;
-	for (i = 0; i < count && (dy += font->h) <= rect->h; ) {
+	for (i = 0; i < count && (dy + font->h) <= rect->h; ) {
 		sw = 0;
 		k = 0;
 		j = wcsspn(str + i, L" "); //include leading spaces
@@ -170,20 +172,41 @@ uint32_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rec
 			j = k;                                                                                                	
 		 //add trailing spaces, if any, to draw non-transparent background color and remove trailing word part or added spaces that won't fit
 		for (j += wcsspn(str + i + j, L" "); GetSubStringWidth(str + i, j, font) > rect->w; j--);
-		DrawSubString(screen, str + i, j, rect->x, rect->y, color, font);
+		DrawSubString(screen, str + i, j, rect->x, rect->y + dy, color, font);
 		i += j + wcsspn(str + i + j, L" "); //skip the rest of spaces to the next line start
-		rect->y += font->h;
+		dy += font->h;
 	}
 	return dy;
 }
 
-uint32_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, FontMetrics *font) {
+uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, FontMetrics *font) {
 	return DrawSubStringRect(screen, str, -1, rect, color, font);
 }
 
-uint32_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, Color color, Color bgcolor) {
+uint_fast16_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, Color color, Color bgcolor) {
 	TextColors c = {color, bgcolor};
 	return DrawSubString(screen, str, -1, x, y - font16.h, &c, &font16);
+}
+
+uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t *format, ...){
+	wchar_t str[_MAX_LFN + 1];
+	Rect rect = {0};
+	va_list va;
+	va_start(va, format);
+	vswprintf(str, _MAX_LFN + 1, format, va);
+	va_end(va);
+	rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24);
+	if (info)
+		rect.y += DrawStringRect(&bottomScreen, info, &rect, &(TextColors){RED, BLACK}, &font16);
+	if (action) {
+		swprintf(str, _MAX_LFN + 1, lang(SF_PRESS_BUTTON_ACTION, -1), lang(S_ANY_KEY, -1), action);
+		rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24);
+	}
+	DisplayScreen(&bottomScreen);
+	if (action)
+		InputWait();
+
+	return rect.y;
 }
 
 void DrawSplash(Screen *screen, wchar_t *splash_file) {
@@ -191,11 +214,9 @@ void DrawSplash(Screen *screen, wchar_t *splash_file) {
 	if (!FileOpen(&Splash, splash_file, false) ||
 		(FileRead2(&Splash, (void*)(screen->buf2), Splash.fsize) != Splash.fsize &&
 		(FileClose(&Splash) || true)
-	)) {
-		wchar_t tmp[_MAX_LFN + 1];
-		swprintf(tmp, _MAX_LFN + 1, strings[STR_ERROR_OPENING], splash_file);
-		DrawString(&bottomScreen, tmp, font24.dw, SCREEN_HEIGHT - font24.h, RED, BLACK);
-	} else
+	))
+		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), splash_file);
+	else
 		FileClose(&Splash);
 }
 
