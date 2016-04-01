@@ -46,6 +46,7 @@ typedef struct {
 
 extern themeStyle style;
 
+bool themeInit(Json *json, const wchar_t *path, const wchar_t *pattern);
 int themeLoad(char *name, themeSeek seek);
 void themeStyleSet(char *key);
 

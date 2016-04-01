@@ -15,21 +15,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
 #include "theme.h"
 
-const wchar_t *themeDir = L"/rxTools/theme";
-const wchar_t *themeFile = L"theme.json";
-const wchar_t *themePath = L"%ls/%ls/%ls";
-wchar_t themeName[_MAX_LFN + 1] = L"";
-
-#define THEME_JSON_SIZE		0x2000
-#define THEME_JSON_TOKENS	0x200
-
-char jst[THEME_JSON_SIZE];
-jsmntok_t tokt[THEME_JSON_TOKENS];
-Json themeJson = {jst, THEME_JSON_SIZE, tokt, THEME_JSON_TOKENS};
+static Json themeJson, *themeJsonInit;
+static const wchar_t *themeDir, *themePattern;
 
 themeStyle style, styleDefault = {
 	L"",
@@ -94,7 +86,7 @@ enum {
 	IDX_COUNT
 };
 
-int colorParse(int s, char *key, int *idx, int coloridx);
+static int colorParse(int s, char *key, int *idx, int coloridx);
 
 int themeParse(int s, objtype type, char *key, int *idx) {
 	if (s == themeJson.count || key == NULL)
@@ -269,7 +261,7 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 	return 0;
 }
 
-int colorParse(int s, char *key, int *idx, int coloridx) {
+static int colorParse(int s, char *key, int *idx, int coloridx) {
 	if (themeJson.tok[s].type == JSMN_STRING)
 		idx[coloridx] = s;
 	else if (themeJson.tok[s].type == JSMN_ARRAY && themeJson.tok[s].size > 0) {
@@ -280,20 +272,20 @@ int colorParse(int s, char *key, int *idx, int coloridx) {
 	return themeParse(s, OBJ_NONE, key, idx);
 }
 
-void setImg(wchar_t *path, int index) {
+static void setImg(wchar_t *path, int index) {
 	if (index > 0) {
 		wchar_t fn[_MAX_LFN + 1];
 		fn[mbstowcs(fn, themeJson.js + themeJson.tok[index].start, themeJson.tok[index].end - themeJson.tok[index].start)] = 0;
-		swprintf(path, _MAX_LFN, themePath, themeDir, themeName, fn);
+		swprintf(path, _MAX_LFN + 1, L"%ls/%ls", themeDir, fn);
 	}
 }
 
-void setColor(uint32_t *color, int index) {
+static void setColor(uint32_t *color, int index) {
 	if (index > 0)
 		*color = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 16);
 }
 
-void setInt(uint_fast16_t *val, int index) {
+static void setInt(uint_fast16_t *val, int index) {
 	if (index > 0)
 		*val = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 0);
 }
@@ -337,53 +329,49 @@ void themeStyleSet(char *key) {
 	setInt(&style.valueRect.h, idx[VALUEH]);
 }
 
+bool themeInit(Json *json, const wchar_t *path, const wchar_t *pattern) {
+	return json && json->js && json->tok && (themeJsonInit = json)->tok && (themeDir = path) && (themePattern = pattern);
+}
+
 int themeLoad(char *name, themeSeek seek) {
 	DIR dir;
 	FILINFO fno;
-	wchar_t *fn;
+	wchar_t *fn, *pathfn;
 	wchar_t path[_MAX_LFN + 1];
-	wchar_t pathfn[_MAX_LFN + 1];
 	wchar_t targetfn[_MAX_LFN + 1];
 	wchar_t prevfn[_MAX_LFN + 1] = L"";
 	wchar_t lfn[_MAX_LFN + 1];
 	fno.lfname = lfn;
 	fno.lfsize = _MAX_LFN + 1;
 
-	targetfn[mbstowcs(targetfn, name, _MAX_LFN + 1)] = 0;
-
-	if (f_findfirst(&dir, &fno, themeDir, L"*") == FR_OK) {
-		wcscpy(pathfn, *fno.lfname ? fno.lfname : fno.fname);
+	if (f_findfirst(&dir, &fno, themeDir, themePattern) == FR_OK) {
+		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", themeDir, name, wcsrchr(themePattern, L'.'));
+		wcscpy(targetfn, pathfn = path + wcslen(themeDir) + 1);
+		wcscpy(pathfn, fn = *fno.lfname ? fno.lfname : fno.fname);
 		do {
-			fn = *fno.lfname ? fno.lfname : fno.fname;
-			if (swprintf(path, _MAX_LFN + 1, themePath, themeDir, fn, themeFile) > 0 && f_stat(path, NULL) == FR_OK) {
-				if (wcscmp(fn, targetfn) == 0) {
-					if (seek == THEME_SET)
-						wcscpy(pathfn, targetfn);
-					else if (seek == THEME_NEXT) {
-						while (f_findnext(&dir, &fno) == FR_OK && *fno.fname) {
-							fn = *fno.lfname ? fno.lfname : fno.fname;
-							if (swprintf(path, _MAX_LFN + 1, themePath, themeDir, fn, themeFile) > 0 && f_stat(path, NULL) == FR_OK) {
-								wcscpy(pathfn, fn);
-								break;
-							}
-						}
-					} else if (seek == THEME_PREV && !*prevfn)
-						continue;
-					break;
-				} else if (seek == THEME_PREV)
-					wcscpy(prevfn, fn);
+			if (wcscmp((fn = *fno.lfname ? fno.lfname : fno.fname), targetfn) == 0) {
+				if (seek == THEME_SET)
+					wcscpy(pathfn, targetfn);
+				else if (seek == THEME_NEXT && f_findnext(&dir, &fno) == FR_OK && fno.fname[0] != 0)
+					wcscpy(pathfn, *fno.lfname ? fno.lfname : fno.fname);
+				else if (seek == THEME_PREV && !*prevfn)
+					continue;
+				break;
 			}
-		} while (f_findnext(&dir, &fno) == FR_OK && *fno.fname);
+			if (seek == THEME_PREV)
+				wcscpy(prevfn, fn);
+		} while (f_findnext(&dir, &fno) == FR_OK && fno.fname[0]);
 		if (seek == THEME_PREV && *prevfn)
 			wcscpy(pathfn, prevfn);
-		swprintf(path, _MAX_LFN + 1, themePath, themeDir, pathfn, themeFile);
-		themeJson = (Json){jst, THEME_JSON_SIZE, tokt, THEME_JSON_TOKENS};
-		if (jsonLoad(&themeJson, path) > 0) {
-			wcscpy(themeName, pathfn);
-			name[wcstombs(name, pathfn, 31)] = 0;
+
+		themeJson = *themeJsonInit;
+		if (jsonLoad(&themeJson, path)) {
+			wcstombs(name, pathfn, 31);
+			*strrchr(name, '.') = 0;
 		}
 	} else
-		themeJson.count = 0;
+		themeJson.count = 0; //no money - no honey
+
 	f_closedir(&dir);
 	return themeJson.count;
 }

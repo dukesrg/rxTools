@@ -21,16 +21,6 @@
 #include <stdint.h>
 #include <wchar.h>
 
-//Screen Macros
-#define BYTES_PER_PIXEL	3  //Our color buffer accepts 24-bits color.
-#define BOT_SCREEN_WIDTH	320
-#define TOP_SCREEN_WIDTH	400
-#define SCREEN_HEIGHT    	240
-#define SCREEN_SIZE	(BYTES_PER_PIXEL*BOT_SCREEN_WIDTH*SCREEN_HEIGHT)
-#define TOP_SCREEN	(uint8_t*)(*(uint32_t*)0x080FFFC0)
-#define TOP_SCREEN2	(uint8_t*)(*(uint32_t*)0x080FFFC8)
-#define BOT_SCREEN	(uint8_t*)(*(uint32_t*)0x080FFFD0)
-
 //Colors Macros
 #define ARGB(a, r, g, b)	(Color){(uint32_t)(a<<24|r<<16|g<<8|b)} //console asks for B,G,R in bytes
 //#define ARGB(a, r, g, b)	(Color){(uint32_t)(a<<24|r<<16|g<<8|b)}
@@ -46,16 +36,6 @@
 #define BLUE		RGB(0, 0, 255)
 #define YELLOW		RGB(255, 255, 0)
 #define GREY		RGB(0x77, 0x77, 0x77) //GW Gray shade
-
-//Unicode special characters
-#define CHAR_BUTTON_A	"\u2496"
-#define CHAR_BUTTON_B	"\u2497"
-#define CHAR_BUTTON_L	"\u24C1"
-#define CHAR_BUTTON_R	"\u24C7"
-#define CHAR_BUTTON_X	"\u24CD"
-#define CHAR_BUTTON_Y	"\u24CE"
-#define CHAR_SELECTED	"\u2714"
-#define CHAR_UNSELECTED	"\u2718"
 
 typedef struct{
 	uint_fast16_t w;

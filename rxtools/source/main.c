@@ -39,15 +39,18 @@
 static const wchar_t *const keyX16path = L"0:key_0x16.bin";
 static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
 static const wchar_t *const keyX25path = L"0:slot0x25KeyX.bin";
-static const wchar_t *const rxRootPath = L"0:rxTools";
-static const wchar_t *const fontPath = L"%ls/sys/font.bin";
-static const wchar_t *const langPath = L"%ls/lang/%s.json";
+static const wchar_t *const rxRootPath = L"0:rxTools/%ls";
+static const wchar_t *const fontPath = L"sys/font.bin";
+static const wchar_t *const menuPath = L"sys/gui.json";
 
-static int warned = 0;
+static const wchar_t *const jsonPattern = L"*.json";
+
+#define JSON_SIZE	0x2000
+#define JSON_TOKENS	(JSON_SIZE >> 3) //should be enough
 
 static void setConsole() {
 	ConsoleSetXY(15, 20);
-	ConsoleSetWH(BOT_SCREEN_WIDTH - 30, SCREEN_HEIGHT - 80);
+	ConsoleSetWH(bottomScreen.w - 30, bottomScreen.h - 80);
 	ConsoleSetBorderColor(BLUE);
 	ConsoleSetTextColor(RGB(0, 141, 197));
 	ConsoleSetBackgroundColor(TRANSPARENT);
@@ -98,26 +101,13 @@ static _Noreturn void mainLoop() {
 	}
 }
 
-static void warn(const wchar_t *format, ...)
-{
-	va_list va;
-
-	if (!warned) {
-		ConsoleInit();
-		ConsoleSetTitle(strings[STR_WARNING]);
-		warned = 1;
-	}
-
-	va_start(va, format);
-	vprint(format, va);
-	va_end(va);
-
-	ConsoleShow();
-}
-
 __attribute__((section(".text.start"), noreturn)) void _start()
 {
+
+	wchar_t langDir[_MAX_LFN + 1];
+	wchar_t themeDir[_MAX_LFN + 1];
 	wchar_t path[_MAX_LFN + 1];
+	size_t size;
 	void *fontBuf;
 	int r;
 	FIL f;
@@ -142,48 +132,48 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	readCfg();
 
-	swprintf(path, _MAX_LFN + 1, fontPath, rxRootPath);
+	swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath);
 	if (!FileOpen(&f, path, false) ||
 		((fontBuf = __builtin_alloca(f.fsize)) &&
 		FileRead2(&f, fontBuf, f.fsize) != f.fsize &&
 		(FileClose(&f) || true)
 	)) {
- 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
 		fontIsLoaded = 0;
+ 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
 	} else {
+		fontIsLoaded = 1;
 		FileClose(&f);
 		font16.addr = fontBuf;
 		font24 = (FontMetrics){12, 24, 24, font16.dwstart, font16.addr + font16.dw * font16.h * 0x10000 / (8 * sizeof(font24.addr[0]))};
-		fontIsLoaded = 1;
+
+		if (!(swprintf(langDir, _MAX_LFN + 1, rxRootPath, L"lang") > 0 &&
+			(size = FileMaxSize(langDir, jsonPattern)) &&
+			langInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, langDir, jsonPattern) &&
+			langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET) &&
+			swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, cfgs[CFG_LANGUAGE].val.s, wcsrchr(jsonPattern, L'.'))
+		)) DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
+	 		
 		preloadStringsU();
 	}
 	
 	r = loadStrings();
-/*	
-	swprintf(path, _MAX_LFN + 1, langPath, rxRootPath, cfgs[CFG_LANGUAGE].val.s);
-	if (!FileOpen(&f, path, false) ||
-		((fontBuf = __builtin_alloca(f.fsize)) &&
-		FileRead2(&f, fontBuf, f.fsize) != f.fsize &&
-		(FileClose(&f) || true)
-	)) {
- 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
-*/		
-	if (fontIsLoaded)
-		r = langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET);
 
-	if (r < 0)
-		warn(L"Failed to load strings: %d\n", r);
-//DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX16)
-
-	if ((r = menuLoad()) <= 0)
-		warn(L"Failed to load gui: %d\n", r);
+	swprintf(path, _MAX_LFN + 1, rxRootPath, menuPath);
+	if (!(size = FileSize(path)) ||
+		!menuLoad(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, path)
+	) DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
 
 	if (getMpInfo() != MPINFO_KTR || (
 		(initKeyX(0x16, keyX16path) || (DrawInfo(lang(S_NO_KTR_KEYS, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX16path) && false)) &&
 		(initKeyX(0x1B, keyX1Bpath) || (DrawInfo(lang(S_NO_KTR_KEYS, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX1Bpath) && false))
 	)) install();
 
-	r = themeLoad(cfgs[CFG_THEME].val.s, THEME_SET);
+	if (!(swprintf(themeDir, _MAX_LFN + 1, rxRootPath, L"theme") > 0 &&
+		(size = FileMaxSize(themeDir, jsonPattern)) &&
+		themeInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, themeDir, jsonPattern) &&
+		themeLoad(cfgs[CFG_THEME].val.s, THEME_SET) &&
+		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", themeDir, cfgs[CFG_THEME].val.s, wcsrchr(jsonPattern, L'.')) > 0
+	)) DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
 
 	pad = GetInput();
 

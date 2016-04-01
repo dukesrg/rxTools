@@ -24,144 +24,6 @@
 
 int fontIsLoaded = 0;
 wchar_t strings[STR_NUM][STR_MAX_LEN] = {};
-const wchar_t *langDir = L"/rxTools/lang";
-const wchar_t *langPath = L"%ls/%s.json";
-
-static const char *keys[STR_NUM] = {
-	[STR_LANG_NAME] = "LANG_NAME",
-	[STR_BACKING_UP] = "BACKING_UP",
-	[STR_DELETING] = "DELETING",
-	[STR_DOWNGRADE] = "DOWNGRADE",
-	[STR_DOWNGRADING] = "DOWNGRADING",
-	[STR_DOWNGRADING_NOT_NEEDED] = "DOWNGRADING_NOT_NEEDED",
-	[STR_DUMP] = "DUMP",
-	[STR_DUMPING] = "DUMPING",
-	[STR_INJECT] = "INJECT",
-	[STR_INJECTING] = "INJECTING",
-	[STR_DECRYPT] = "DECRYPT",
-	[STR_DECRYPTING] = "DECRYPTING",
-	[STR_DECRYPTED] = "DECRYPTED",
-	[STR_GENERATE] = "GENERATE",
-	[STR_GENERATING] = "GENERATING",
-	[STR_PROCESSING] = "PROCESSING",
-	[STR_OPENING] = "OPENING",
-	[STR_RESTORE] = "RESTORE",
-	[STR_RESTORING] = "RESTORING",
-	[STR_LOAD] = "LOAD",
-	[STR_DIRECTORY] = "DIRECTORY",
-	[STR_MISSING] = "MISSING",
-	[STR_ERROR_OPENING] = "ERROR_OPENING",
-	[STR_ERROR_CREATING] = "ERROR_CREATING",
-	[STR_ERROR_READING] = "ERROR_READING",
-	[STR_ERROR_WRITING] = "ERROR_WRITING",
-	[STR_ERROR_COPYING] = "ERROR_COPYING",
-	[STR_ERROR_LAUNCHING] = "ERROR_LAUNCHING",
-	[STR_WRONG] = "WRONG",
-	[STR_GOT] = "GOT",
-	[STR_EXPECTED] = "EXPECTED",
-	[STR_VERSION] = "VERSION",
-	[STR_VERSION_OF] = "VERSION_OF",
-	[STR_ENTRIES_COUNT] = "ENTRIES_COUNT",
-	[STR_SIZE] = "SIZE",
-	[STR_CONTENT] = "CONTENT",
-	[STR_CRYPTO_TYPE] = "CRYPTO_TYPE",
-	[STR_CHOOSE] = "CHOOSE",
-	[STR_NAND] = "NAND",
-	[STR_SYSNAND] = "SYSNAND",
-	[STR_EMUNAND] = "EMUNAND",
-	[STR_NAND_PARTITIONS] = "NAND_PARTITIONS",
-	[STR_NAND_XORPAD] = "NAND_XORPAD",
-	[STR_XORPAD] = "XORPAD",
-	[STR_EXHEADER] = "EXHEADER",
-	[STR_EXEFS] = "EXEFS",
-	[STR_ROMFS] = "ROMFS",
-	[STR_TITLE_KEYS] = "TITLE_KEYS",
-	[STR_TITLE_KEYS_FILE] = "TITLE_KEYS_FILE",
-	[STR_FILES] = "FILES",
-	[STR_PAD] = "PAD",
-	[STR_DOWNGRADE_PACK] = "DOWNGRADE_PACK",
-	[STR_FBI] = "FBI",
-	[STR_HEALTH_AND_SAFETY] = "HEALTH_AND_SAFETY",
-	[STR_TMD_VERSION] = "TMD_VERSION",
-	[STR_TMD_SIZE] = "TMD_SIZE",
-	[STR_HASH] = "HASH",
-	[STR_FIRMWARE_FILE] = "FIRMWARE_FILE",
-	[STR_CHECK_TMD_ONLY] = "CHECK_TMD_ONLY",
-	[STR_INJECT_FBI] = "INJECT_FBI",
-	[STR_SOURCE_ACTION] = "SOURCE_ACTION",
-	[STR_SYSTEM_TITLES] = "SYSTEM_TITLES",
-	[STR_SYSTEM_TITLES_WARNING] = "SYSTEM_TITLES_WARNING",
-	[STR_SYSTEM_TITLES_DECRYPT] = "SYSTEM_TITLES_DECRYPT",
-	[STR_KEYS_MISMATCH] = "KEYS_MISMATCH",
-	[STR_NO_EMUNAND] = "NO_EMUNAND",
-	[STR_TWLN] = "TWLN",
-	[STR_TWLP] = "TWLP",
-	[STR_AGB_SAVE] = "AGB_SAVE",
-	[STR_FIRM0] = "FIRM0",
-	[STR_FIRM1] = "FIRM1",
-	[STR_CTRNAND] = "CTRNAND",
-	[STR_CTR] = "CTR",
-	[STR_TMD] = "TMD",
-	[STR_KEY7] = "KEY7",
-	[STR_SECURE] = "SECURE",
-	[STR_NONE] = "NONE",
-	[STR_JAPAN] = "JAPAN",
-	[STR_USA] = "USA",
-	[STR_EUROPE] = "EUROPE",
-	[STR_CHINA] = "CHINA",
-	[STR_KOREA] = "KOREA",
-	[STR_TAIWAN] = "TAIWAN",
-	[STR_BLANK_BUTTON_ACTION] = "BLANK_BUTTON_ACTION",
-	[STR_PRESS_BUTTON_ACTION] = "PRESS_BUTTON_ACTION",
-	[STR_HOLD_BUTTON_ACTION] = "HOLD_BUTTON_ACTION",
-	[STR_BUTTON_A] = "BUTTON_A",
-	[STR_BUTTON_B] = "BUTTON_B",
-	[STR_BUTTON_X] = "BUTTON_X",
-	[STR_BUTTON_Y] = "BUTTON_Y",
-	[STR_BUTTON_L] = "BUTTON_L",
-	[STR_BUTTON_R] = "BUTTON_R",
-	[STR_BUTTON_ZL] = "BUTTON_ZL",
-	[STR_BUTTON_ZR] = "BUTTON_ZR",
-	[STR_BUTTON_SELECT] = "BUTTON_SELECT",
-	[STR_BUTTON_HOME] = "BUTTON_HOME",
-	[STR_BUTTON_START] = "BUTTON_START",
-	[STR_CANCEL] = "CANCEL",
-	[STR_CONTINUE] = "CONTINUE",
-	[STR_KEEP] = "KEEP",
-	[STR_DELETE] = "DELETE",
-	[STR_OPEN_MENU] = "OPEN_MENU",
-	[STR_FAILED] = "FAILED",
-	[STR_COMPLETED] = "COMPLETED",
-	[STR_SETTINGS] = "SETTINGS",
-	[STR_FORCE_UI_BOOT] = "FORCE_UI_BOOT",
-	[STR_SELECTED_THEME] = "SELECTED_THEME",
-	[STR_SHOW_AGB] = "SHOW_AGB",
-	[STR_ENABLE_3D_UI] = "ENABLE_3D_UI",
-	[STR_QUICK_BOOT] = "QUICK_BOOT",
-	[STR_ABSYSN] = "ABSYSN",
-	[STR_MENU_LANGUAGE] = "MENU_LANGUAGE",
-	[STR_REBOOT] = "REBOOT",
-	[STR_SHUTDOWN] = "SHUTDOWN",
-	[STR_AUTOBOOT] = "AUTOBOOT",
-	[STR_INITIALIZING] = "INITIALIZING",
-	[STR_LOADING] = "LOADING",
-	[STR_WARNING] = "WARNING",
-	[STR_CURSOR] = "CURSOR",
-	[STR_NO_CURSOR] = "NO_CURSOR",
-	[STR_ENABLED] = "ENABLED",
-	[STR_DISABLED] = "DISABLED",
-	[STR_PROGRESS] = "PROGRESS",
-	[STR_PROGRESS_OK] = "PROGRESS_OK",
-	[STR_PROGRESS_FAIL] = "PROGRESS_FAIL",
-	[STR_REGION_] = "REGION_",
-	[STR_REGION] = "REGION",
-	[STR_MSET] = "MSET",
-	[STR_MSET4] = "MSET4",
-	[STR_MSET6] "MSET6",
-	[STR_YES] = "YES",
-	[STR_NO] = "NO",
-	[STR_RANDOM] = "RANDOM_THEME"
-};
 
 void preloadStringsA()
 {
@@ -259,7 +121,7 @@ void switchStrings()
 
 int loadStrings()
 {
-	const size_t tokenNum = 1 + STR_NUM * 2;
+/*	const size_t tokenNum = 1 + STR_NUM * 2;
 	jsmntok_t t[tokenNum];
 	char buf[8192];
 	wchar_t path[_MAX_LFN];
@@ -314,6 +176,7 @@ int loadStrings()
 			}
 		}
 	}
+*/
 
 	return 0;
 }
@@ -322,22 +185,20 @@ int loadStrings()
 wchar_t wstr[STR_TRANS_CNT][STR_MAX_LEN];
 int itrans = 0;
 
-#define LANG_CODE_LENGTH	5
 #define LANG_CODE_NONE		""
 #define LANG_CODE_DEFAULT	"en"
 
-#define LANG_JSON_SIZE		0x2000
-#define LANG_JSON_TOKENS	0x200
+static Json langJson, *langJsonInit;
+static const wchar_t *langDir, *langPattern;
 
-char jsl[LANG_JSON_SIZE];
-jsmntok_t tokl[LANG_JSON_TOKENS];
-Json langJson;
+bool langInit(Json *json, const wchar_t *path, const wchar_t *pattern) {
+	return json && json->js && json->tok && (langJsonInit = json)->tok && (langDir = path) && (langPattern = pattern);
+}
 
 int langLoad(char *code, langSeek seek) {
 	DIR dir;
 	FILINFO fno;
 	wchar_t *fn, *pathfn;
-	wchar_t pattern[_MAX_LFN + 1];
 	wchar_t path[_MAX_LFN + 1];
 	wchar_t targetfn[_MAX_LFN + 1];
 	wchar_t prevfn[_MAX_LFN + 1] = L"";
@@ -345,11 +206,9 @@ int langLoad(char *code, langSeek seek) {
 	fno.lfname = lfn;
 	fno.lfsize = _MAX_LFN + 1;
 
-	swprintf(pattern, _MAX_LFN + 1, langPath, prevfn, "*");
-	fn = wcsrchr(pattern, L'/') + 1;
-	if (f_findfirst(&dir, &fno, langDir, fn) == FR_OK) {
-		swprintf(path, _MAX_LFN + 1, langPath, langDir, code);
-		wcscpy(targetfn, pathfn = wcsrchr(path, L'/') + 1);
+	if (f_findfirst(&dir, &fno, langDir, langPattern) == FR_OK) {
+		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, code, wcsrchr(langPattern, L'.'));
+		wcscpy(targetfn, pathfn = path + wcslen(langDir) + 1);
 		wcscpy(pathfn, fn = *fno.lfname ? fno.lfname : fno.fname);
 		do {
 			if (wcscmp((fn = *fno.lfname ? fno.lfname : fno.fname), targetfn) == 0) {
@@ -367,12 +226,12 @@ int langLoad(char *code, langSeek seek) {
 		if (seek == LANG_PREV && *prevfn)
 			wcscpy(pathfn, prevfn);
 			
-		langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
-		if (jsonLoad(&langJson, path) > 0)
+		langJson = *langJsonInit;
+		if (jsonLoad(&langJson, path))
 			code[wcstombs(code, pathfn, wcscspn(pathfn, L"."))] = 0;
 		else {
-			swprintf(path, _MAX_LFN + 1, langPath, langDir, LANG_CODE_DEFAULT);
-			langJson = (Json){jsl, LANG_JSON_SIZE, tokl, LANG_JSON_TOKENS};
+			swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, LANG_CODE_DEFAULT, wcsrchr(langPattern, L'.'));
+			langJson = *langJsonInit;
 			strcpy(code, jsonLoad(&langJson, path) > 0 ? LANG_CODE_DEFAULT : LANG_CODE_NONE);
 		}
 	} else

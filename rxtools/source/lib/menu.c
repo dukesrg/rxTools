@@ -38,15 +38,8 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "mbedtls/md5.h"
 #include "strings.h"
 
-#define MENU_JSON_SIZE		0x8000
-#define MENU_JSON_TOKENS	0x800
-
-char jsm[MENU_JSON_SIZE];
-jsmntok_t tokm[MENU_JSON_TOKENS];
-Json menuJson = {jsm, MENU_JSON_SIZE, tokm, MENU_JSON_TOKENS};
-const wchar_t *menuPath = L"" SYS_PATH "/gui.json";
-
-int menuPosition = 0;
+static Json menuJson;
+static int menuPosition = 0;
 
 #define MENU_MAX_LEVELS 4
 #define MENU_LEVEL_BIT_WIDTH 8 * sizeof(menuPosition) / MENU_MAX_LEVELS
@@ -193,8 +186,8 @@ static const system_region *const getRegion(uint_fast8_t drive) {
 	static system_region regions[] = {
 		{0x00000000, &S_JAPAN},
 		{0x00001000, &S_NORTH_AMERICA},
-		{0x00002000, &S_EUROPE},
-		{0x00002000, &S_AUSTRALIA},
+		{0x00002000, &S_EUROPE_AUSTRALIA},
+		{0x00002000, &S_EUROPE_AUSTRALIA},
 		{0x00006000, &S_CHINA},
 		{0x00007000, &S_SOUTH_KOREA},
 		{0x00008000, &S_TAIWAN},
@@ -617,8 +610,9 @@ int menuLevel(int pos) {
 	return i;
 }
 
-int menuLoad() {
-	return jsonLoad(&menuJson, menuPath);
+int menuLoad(Json *json, wchar_t *path) {
+	menuJson = *json;
+	return jsonLoad(&menuJson, path);
 }
 
 int menuTry(int targetposition, int currentposition) {

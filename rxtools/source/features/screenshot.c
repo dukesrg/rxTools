@@ -41,7 +41,7 @@ void ScreenShot(){
 	static int bot_count = 0;
 	unsigned int written = 0;
 	char* bmp_cache; char* bmp_ptr;
-	uint8_t (*screen_ptr) [SCREEN_HEIGHT][BYTES_PER_PIXEL];
+	uint8_t (*screen_ptr) [bottomScreen.h][bottomScreen.bpp];
 
 	f_mkdir (L"Screenshot");
 
@@ -52,17 +52,17 @@ void ScreenShot(){
 	}while(1);
 
 	if(f_open(&myFile, tmp, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK){
-		unsigned int bmp_size = TOP_SCREEN_WIDTH*SCREEN_HEIGHT*3;
+		unsigned int bmp_size = top1Screen.size;
 		bmp_cache = (char*)malloc(bmp_size + 0x36);
 		bmp_ptr = bmp_cache + 0x36;
 		*(unsigned int*)(bmpHeader+0x02) = bmp_size + 0x36;
-		*(unsigned int*)(bmpHeader+0x12) = TOP_SCREEN_WIDTH;
-		*(unsigned int*)(bmpHeader+0x16) = SCREEN_HEIGHT;
+		*(unsigned int*)(bmpHeader+0x12) = top1Screen.w;
+		*(unsigned int*)(bmpHeader+0x16) = top1Screen.h;
 		*(unsigned int*)(bmpHeader+0x22) = bmp_size;
 		memcpy(bmp_cache, bmpHeader, 0x36);
-		screen_ptr = (void*)TOP_SCREEN;
-		for(int y = 0; y < SCREEN_HEIGHT; y++){
-			for(int x = 0; x < TOP_SCREEN_WIDTH; x++){
+		screen_ptr = top1Screen.addr;
+		for(int y = 0; y < top1Screen.h; y++){
+			for(int x = 0; x < top1Screen.w; x++){
 				memcpy(bmp_ptr, screen_ptr[x][y], 3);
 				bmp_ptr += 3;
 			}
@@ -79,17 +79,17 @@ void ScreenShot(){
 	}while(1);
 
 	if(f_open(&myFile, tmp, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK){
-		unsigned int bmp_size = BOT_SCREEN_WIDTH*SCREEN_HEIGHT*3;
+		unsigned int bmp_size = bottomScreen.size;
 		bmp_cache = (char*)malloc(bmp_size + 0x36);
 		bmp_ptr = bmp_cache + 0x36;
 		*(unsigned int*)(bmpHeader+0x02) = bmp_size + 0x36;
-		*(unsigned int*)(bmpHeader+0x12) = BOT_SCREEN_WIDTH;
-		*(unsigned int*)(bmpHeader+0x16) = SCREEN_HEIGHT;
+		*(unsigned int*)(bmpHeader+0x12) = bottomScreen.w;
+		*(unsigned int*)(bmpHeader+0x16) = bottomScreen.h;
 		*(unsigned int*)(bmpHeader+0x22) = bmp_size;
 		memcpy(bmp_cache, bmpHeader, 0x36);
-		screen_ptr = (void*)BOT_SCREEN;
-		for(int y = 0; y < SCREEN_HEIGHT; y++){
-			for(int x = 0; x < BOT_SCREEN_WIDTH; x++){
+		screen_ptr = bottomScreen.addr;
+		for(int y = 0; y < bottomScreen.h; y++){
+			for(int x = 0; x < bottomScreen.w; x++){
 				memcpy(bmp_ptr, screen_ptr[x][y], 3);
 				bmp_ptr += 3;
 			}

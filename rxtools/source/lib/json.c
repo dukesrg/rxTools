@@ -15,20 +15,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include "fs.h"
 #include "json.h"
 
 int jsonLoad(Json *json, const wchar_t *path) {
 	jsmn_parser p;
-	size_t len;
-	File fd;
+	File f;
 
-	if (FileOpen(&fd, path, false) && (len = FileGetSize(&fd)) <= json->len) {
-		json->len = len;
-		FileRead(&fd, json->js, json->len, 0);
-		FileClose(&fd);
-		jsmn_init(&p);
-		json->count = jsmn_parse(&p, json->js, json->len, json->tok, json->count);
-	} else
-		json->count = 0;
-	return json->count;
+	if (!FileOpen(&f, path, false) || f.fsize > json->len || (
+		FileRead2(&f, json->js, f.fsize) != f.fsize &&
+		(FileClose(&f) || true)
+	)) return json->count = 0;
+	FileClose(&f);
+	jsmn_init(&p);
+	return json->count = jsmn_parse(&p, json->js, json->len = f.fsize, json->tok, json->count);
 }

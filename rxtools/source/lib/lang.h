@@ -175,6 +175,7 @@ typedef enum {
 	LANG_PREV
 } langSeek;
 
+bool langInit(Json *json, const wchar_t *path, const wchar_t *pattern);
 int langLoad(char *code, langSeek seek);
 wchar_t *lang(const char *key, int keylen);
 

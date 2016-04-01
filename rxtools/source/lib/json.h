@@ -18,9 +18,8 @@
 #ifndef JSON_H
 #define JSON_H
 
-#include <stdlib.h>
+#include <stdbool.h>
 #include "jsmn/jsmn.h"
-#include "fs.h"
 
 typedef struct {
 	char *js;

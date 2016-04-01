@@ -23,13 +23,13 @@
 #include "draw.h"
 
 #define CONSOLE_SIZE			(0x4000)
-#define CONSOLE_WIDTH			(BOT_SCREEN_WIDTH - 16 * 2)
-#define CONSOLE_HEIGHT			(SCREEN_HEIGHT - 16 * 3)
+#define CONSOLE_WIDTH			(320 - 16 * 2)
+#define CONSOLE_HEIGHT			(240 - 16 * 3)
 #define CONSOLE_MAX_LINES		(int)(CONSOLE_HEIGHT / 16 - 4)
 #define CONSOLE_MAX_LINE_LENGTH		(int)(CONSOLE_WIDTH / 8 - 4)
-#define CONSOLE_MAX_TITLE_LENGTH	(int)(BOT_SCREEN_WIDTH / 8)
-#define CONSOLE_X			((BOT_SCREEN_WIDTH - CONSOLE_WIDTH) / 2)
-#define CONSOLE_Y			((SCREEN_HEIGHT - CONSOLE_HEIGHT) / 2)
+#define CONSOLE_MAX_TITLE_LENGTH	(int)(320 / 8)
+#define CONSOLE_X			((320 - CONSOLE_WIDTH) / 2)
+#define CONSOLE_Y			((240 - CONSOLE_HEIGHT) / 2)
 
 void ConsoleInit();
 void ConsoleShow();

@@ -36,6 +36,7 @@ bool FileExists(const wchar_t *path);
 bool FileSeek(File *Handle, size_t foffset);
 size_t FileRead2(File *Handle, void *buf, size_t size);
 size_t FileSize(const wchar_t *path);
+size_t FileMaxSize(const wchar_t *path, const wchar_t *pattern);
 ////////////////////////////////////////////////////////////////Advanced FileSystem Operations
 uint32_t FSFileCopy(wchar_t *target, wchar_t *source);
 

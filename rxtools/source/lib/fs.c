@@ -119,3 +119,22 @@ closeExit:
 	f_close(&dst);
 	return (step << 8) | retfatfs;
 }
+
+size_t FileMaxSize(const wchar_t *path, const wchar_t *pattern) {
+	size_t maxSize = 0;
+	DIR dir;
+	wchar_t lfn[_MAX_LFN + 1];
+	FILINFO fno;
+	fno.lfname = lfn;
+	fno.lfsize = _MAX_LFN + 1;
+
+	if (f_findfirst(&dir, &fno, path, pattern) == FR_OK) {
+		do {
+			if (fno.fsize > maxSize)
+				maxSize = fno.fsize;
+		} while (f_findnext(&dir, &fno) == FR_OK && fno.fname[0]);
+	}
+	f_closedir(&dir);
+
+	return maxSize;
+}
