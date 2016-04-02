@@ -15,6 +15,12 @@ STR("South Korea", S_SOUTH_KOREA)
 STR("Taiwan", S_TAIWAN)
 STR("Unknown", S_UNKNOWN)
 
+//STR("Booting %ls...", SF_BOOTING)
+STR("rxTools GUI", S_RXTOOLS_GUI)
+STR("rxMode SysNAND", S_RXTOOLS_SYSNAND)
+STR("rxMode EmuNAND", S_RXTOOLS_EMUNAND)
+STR("Pasta mode", S_PASTA_MODE)
+
 //STR("Error reading %ls!", SF_ERROR_READING)
 STR("Failed to %ls %ls!", SF_FAILED_TO)
 STR("mount", S_MOUNT) //don't need a translation

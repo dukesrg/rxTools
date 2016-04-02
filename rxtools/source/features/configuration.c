@@ -36,6 +36,8 @@
 #include "downgradeapp.h"
 #include "menu.h"
 #include "jsmn/jsmn.h"
+#include "progress.h"
+#include "strings.h"
 
 #define DATA_PATH	L"rxtools/data"
 #define KEYFILENAME	"slot0x25KeyX.bin"
@@ -255,7 +257,7 @@ static int processFirmFile(uint32_t lo)
 	FRESULT r;
 	FIL f;
 
-	swprintf(path, _MAX_LFN + 1, pathFmt, lo, "");
+	swprintf(path, _MAX_LFN + 1, pathFmt, lo, L"");
 	r = f_open(&f, path, FA_READ);
 	if (r != FR_OK)
 		return r;
@@ -332,84 +334,34 @@ static int processFirm(uint32_t lo)
 	return 0;
 }
 
-typedef struct {
-	wchar_t str[16];
-	wchar_t *cur;
-	unsigned int x;
-} Bar;
-
-static void initBar(Bar *b, size_t n)
-{
-	const wchar_t *src;
-	wchar_t *dst;
-
-	b->cur = b->str;
-	b->x = (bottomScreen.w - n * font16.dw) / 2;
-
-	dst = b->str;
-	while (n > 0) {
-		for (src = strings[STR_PROGRESS]; *src != 0; src++) {
-			*dst = *src;
-			dst++;
-		}
-
-		n--;
-	}
-
-	*dst = 0;
-	DrawString(&bottomScreen, b->str, b->x, 50,
-		ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-}
-
-static void incBar(Bar *b)
-{
-	const wchar_t *p;
-
-	for (p = strings[STR_PROGRESS_OK]; *p != 0; p++) {
-		*b->cur = *p;
-		b->cur++;
-	}
-
-	DrawString(&bottomScreen, b->str, b->x, 50,
-		ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-}
-
-static int InstallData()
-{
-	static wchar_t *date = DATA_PATH "/data.bin";
-	Bar b;
+static int InstallData() {
 	int r;
+	int p = 0;
 
-	initBar(&b, getMpInfo() == MPINFO_CTR ? 5 : 3);
+	statusInit(getMpInfo() == MPINFO_CTR ? 3 : 1, L"Decrypting firmware");
 
 	f_mkdir(DATA_PATH);
-	incBar(&b);
 
 	r = processFirm(getMpInfo() == MPINFO_CTR ?
 		TID_CTR_NATIVE_FIRM : TID_KTR_NATIVE_FIRM);
 	if (r)
 		return r;
 
-	incBar(&b);
+	progressCallback(++p);
 
 	if (getMpInfo() == MPINFO_CTR) {
 		r = processFirm(TID_CTR_AGB_FIRM);
 		if (r)
 			return r;
 
-		incBar(&b);
+		progressCallback(++p);
 
 		r = processFirm(TID_CTR_TWL_FIRM);
 		if (r != FR_OK)
 			return r;
 
-		incBar(&b);
+		progressCallback(++p);
 	}
-
-	if (f_stat(date, NULL) == FR_OK)
-		f_unlink(date);
-
-	incBar(&b);
 
 	return 0;
 }
@@ -445,9 +397,6 @@ int CheckInstallationData(){
 			return 0;
 	}
 
-	if (f_stat(L"rxTools/data/data.bin", 0) == FR_OK)
-		return -4;
-
 	return 0;
 }
 
@@ -468,7 +417,8 @@ void InstallConfigData(){
 		cfgs[CFG_THEME].val.i);
 	DrawSplash(&bottomScreen, path);
 */
-	/*int res = */InstallData();
+	/*int res = */
+	InstallData();
 /*	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/cfg1%c.bin",
 		cfgs[CFG_THEME].val.i, res == 0 ? 'O' : 'E');
 	DrawSplash(&bottomScreen, path);
@@ -484,28 +434,3 @@ void InstallConfigData(){
 */
 	InputWait();
 }
-/*
-void trySetLangFromTheme(int onswitch) {
-	File MyFile;
-	wchar_t str[_MAX_LFN + 1];
-	unsigned int i;
-
-	swprintf(str, _MAX_LFN + 1, L"/rxTools/Theme/%u/LANG.txt",
-		cfgs[CFG_THEME].val.i);
-	if (!FileOpen(&MyFile, str, 0))
-		return;
-	if (FileGetSize(&MyFile) > 0)
-	{
-		FileRead(&MyFile, cfgs[CFG_LANG].val.s, CFG_STR_MAX_LEN, 0);
-
-		for (i = 0; i + 1 < CFG_STR_MAX_LEN
-			&& cfgs[CFG_LANG].val.s[i] != '\r'
-			&& cfgs[CFG_LANG].val.s[i] != '\n'; i++);
-		cfgs[CFG_LANG].val.s[i] = 0;
-
-		if(onswitch)
-			switchStrings();
-	}
-	FileClose(&MyFile);
-}
-*/

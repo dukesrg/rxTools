@@ -22,8 +22,9 @@
 #include "lang.h"
 #include "fs.h"
 
-int fontIsLoaded = 0;
+//wchar_t strings[STR_NUM][STR_MAX_LEN] = {};
 wchar_t strings[STR_NUM][STR_MAX_LEN] = {};
+
 
 void preloadStringsA()
 {
@@ -90,7 +91,7 @@ void preloadStringsA()
 	wcscpy(strings[STR_MSET6], L"MSET 6.x");
 	wcscpy(strings[STR_FBI], L"FBI");
 }
-
+/*
 void preloadStringsU()
 {
 //Strings with special characters available only with unicode font
@@ -111,17 +112,15 @@ void preloadStringsU()
 
 void switchStrings()
 {
-	if (fontIsLoaded) {
 		preloadStringsA();
 		preloadStringsU();
 		loadStrings();
-	} else
 		mbstowcs(strings[STR_LANG_NAME], cfgs[CFG_LANGUAGE].val.s, STR_MAX_LEN);
 }
 
 int loadStrings()
 {
-/*	const size_t tokenNum = 1 + STR_NUM * 2;
+	const size_t tokenNum = 1 + STR_NUM * 2;
 	jsmntok_t t[tokenNum];
 	char buf[8192];
 	wchar_t path[_MAX_LFN];
@@ -176,14 +175,13 @@ int loadStrings()
 			}
 		}
 	}
-*/
-
 	return 0;
 }
+*/
 
 #define STR_TRANS_CNT 8
-wchar_t wstr[STR_TRANS_CNT][STR_MAX_LEN];
-int itrans = 0;
+static wchar_t wstr[STR_TRANS_CNT][STR_MAX_LEN];
+static int itrans = 0;
 
 #define LANG_CODE_NONE		""
 #define LANG_CODE_DEFAULT	"en"
@@ -240,8 +238,11 @@ int langLoad(char *code, langSeek seek) {
 	return langJson.count;
 }
 
-wchar_t *lang(const char *key, int keylen)
-{
+wchar_t *lang(const char *key) {
+	return langn(key, -1);
+}
+
+wchar_t *langn(const char *key, int keylen) {
 	int i, len = 0;
 	char str[STR_MAX_LEN] = "";
 	if (key != NULL) {

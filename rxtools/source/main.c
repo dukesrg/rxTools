@@ -59,12 +59,6 @@ static void setConsole() {
 	ConsoleSetBorderWidth(3);
 }
 
-static void install() {
-	f_mkdir(L"rxTools");
-	f_mkdir(L"rxTools/nand");
-	InstallConfigData();
-}
-
 bool initKeyX(uint_fast8_t slot, const wchar_t *path) {
 	uint8_t buf[AES_BLOCK_SIZE];
 	FIL f;
@@ -109,9 +103,9 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	wchar_t path[_MAX_LFN + 1];
 	size_t size;
 	void *fontBuf;
-	int r;
 	FIL f;
 	uint32_t pad;
+	bool themeFailed = false;
 
 	// Enable TMIO IRQ
 	*(volatile uint32_t *)0x10001000 = 0x00010000;
@@ -124,7 +118,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	top2Screen.addr = (uint8_t*)*(uint32_t*)top2Screen.addr;
 
 	if (!FSInit()) {
-		DrawInfo(NULL, lang(S_REBOOT, -1), lang(SF_FAILED_TO, -1), lang(S_MOUNT, -1), lang(S_FILE_SYSTEM, -1));
+		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang(S_MOUNT), lang(S_FILE_SYSTEM));
 		Shutdown(true);		
 	}
 
@@ -138,10 +132,8 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		FileRead2(&f, fontBuf, f.fsize) != f.fsize &&
 		(FileClose(&f) || true)
 	)) {
-		fontIsLoaded = 0;
- 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
+ 		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 	} else {
-		fontIsLoaded = 1;
 		FileClose(&f);
 		font16.addr = fontBuf;
 		font24 = (FontMetrics){12, 24, 24, font16.dwstart, font16.addr + font16.dw * font16.h * 0x10000 / (8 * sizeof(font24.addr[0]))};
@@ -151,29 +143,32 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 			langInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, langDir, jsonPattern) &&
 			langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET) &&
 			swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, cfgs[CFG_LANGUAGE].val.s, wcsrchr(jsonPattern, L'.'))
-		)) DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
-	 		
-		preloadStringsU();
+		)) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 	}
 	
-	r = loadStrings();
-
 	swprintf(path, _MAX_LFN + 1, rxRootPath, menuPath);
 	if (!(size = FileSize(path)) ||
 		!menuLoad(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, path)
-	) DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
+	) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 
 	if (getMpInfo() != MPINFO_KTR || (
-		(initKeyX(0x16, keyX16path) || (DrawInfo(lang(S_NO_KTR_KEYS, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX16path) && false)) &&
-		(initKeyX(0x1B, keyX1Bpath) || (DrawInfo(lang(S_NO_KTR_KEYS, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX1Bpath) && false))
-	)) install();
+		(initKeyX(0x16, keyX16path) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX16path) && false)) &&
+		(initKeyX(0x1B, keyX1Bpath) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX1Bpath) && false))
+	)) {
+		swprintf(path, _MAX_LFN + 1, rxRootPath, L"");
+		f_mkdir(path);
+		wcscat(path, L"nand");
+		f_mkdir(path);
+		InstallConfigData();
+	}
 
 	if (!(swprintf(themeDir, _MAX_LFN + 1, rxRootPath, L"theme") > 0 &&
 		(size = FileMaxSize(themeDir, jsonPattern)) &&
 		themeInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, themeDir, jsonPattern) &&
 		themeLoad(cfgs[CFG_THEME].val.s, THEME_SET) &&
-		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", themeDir, cfgs[CFG_THEME].val.s, wcsrchr(jsonPattern, L'.')) > 0
-	)) DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
+		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", themeDir, cfgs[CFG_THEME].val.s, wcsrchr(jsonPattern, L'.')) > 0) &&
+		(themeFailed = true)
+	) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 
 	pad = GetInput();
 
@@ -193,13 +188,14 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 				PastaMode();
 		}
 	}
-	if (r < 0) { //Fallback to Emu- or SysNAND if UI should be loaded but theme is not available
- 		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), path);
+
+	if (themeFailed) { //Fallback to Emu- or SysNAND if UI should be loaded but theme is not available
+ 		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 		rxMode(checkEmuNAND() ? 1 : 0);
 	}
 
 	if (sysver < 7 && !initKeyX(0x25, keyX25path))
-		DrawInfo(lang(S_NO_KEYX25, -1), lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), keyX25path);
+		DrawInfo(lang(S_NO_KEYX25), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX25path);
 
 	MenuInit();
 	MenuShow();

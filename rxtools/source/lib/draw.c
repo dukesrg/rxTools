@@ -64,7 +64,7 @@ void DrawRect(Screen *screen, Rect *rect, Color color) {
 	if (rect->y + rect->h > screen->h) rect->h = screen->h - rect->y;
 
 	for (uint_fast16_t x = rect->x + 1; x < rect->x + rect->w - 1; pScreen[x][screen->h - rect->y - 1] = pScreen[x][screen->h - rect->y - rect->h] = color.pixel, x++);
-	for (uint_fast16_t y = screen->h - rect->y - rect->h; y < screen->h - rect->y; pScreen[rect->x][y] = pScreen[rect->x + rect->w][y] = color.pixel, y++);
+	for (uint_fast16_t y = screen->h - rect->y - rect->h; y < screen->h - rect->y; pScreen[rect->x][y] = pScreen[rect->x + rect->w - 1][y] = color.pixel, y++);
 }
 
 void FillRect(Screen *screen, Rect *rect, Color color) {
@@ -79,7 +79,7 @@ void FillRect(Screen *screen, Rect *rect, Color color) {
 		for (uint_fast16_t y = screen->h - rect->y - rect->h; y < screen->h - rect->y; pScreen[x][y++] = color.pixel);
 }
 
-void DrawProgress(Screen *screen, Rect *rect, Color border, Color back, Color fill, TextColors *text, FontMetrics *font, uint32_t posmax, uint32_t pos) {
+void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, TextColors *textcolor, FontMetrics *font, uint32_t posmax, uint32_t pos) {
 	uint_fast16_t x;
 	wchar_t percent[5];
 	
@@ -87,10 +87,10 @@ void DrawProgress(Screen *screen, Rect *rect, Color border, Color back, Color fi
 	if (pos > posmax) pos = posmax;	
 	x = (rect->w - 2) * pos / posmax;
 	swprintf(percent, 5, L"%u%%", 100 * pos / posmax);
-	DrawRect(screen, rect, border);
-	FillRect(screen, &(Rect){rect->x + 1, rect->y + 1, x, rect->h - 2}, fill);
+	DrawRect(screen, rect, frame);
+	FillRect(screen, &(Rect){rect->x + 1, rect->y + 1, x, rect->h - 2}, done);
 	FillRect(screen, &(Rect){rect->x + 1 + x, rect->y + 1, rect->w - 2 - x, rect->h - 2}, back);
-	DrawSubString(screen, percent, -1, rect->x + (rect->w - GetSubStringWidth(percent, -1, font)) / 2, rect->y + (rect->h - font->h) / 2, text, font);
+	DrawSubString(screen, percent, -1, rect->x + (rect->w - GetSubStringWidth(percent, -1, font)) / 2, rect->y + (rect->h - font->h) / 2, textcolor, font);
 }
 
 static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font) {
@@ -144,8 +144,8 @@ uint_fast16_t GetSubStringWidth(const wchar_t *str, size_t count, FontMetrics *f
 	return dx;
 }
 
-uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rect *rect, TextColors *color, FontMetrics *font) {
-	uint_fast16_t dy = 0;
+uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rect *rect, TextColors *color, FontMetrics *font, align a) {
+	uint_fast16_t dx = 0, dy = 0;
 	size_t len = wcslen(str);
 	if (count < 0 || count > len)
 		count = len;
@@ -171,16 +171,21 @@ uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count
 		else //word crosses the area border - take all but last word
 			j = k;                                                                                                	
 		 //add trailing spaces, if any, to draw non-transparent background color and remove trailing word part or added spaces that won't fit
-		for (j += wcsspn(str + i + j, L" "); GetSubStringWidth(str + i, j, font) > rect->w; j--);
-		DrawSubString(screen, str + i, j, rect->x, rect->y + dy, color, font);
+		for (j += wcsspn(str + i + j, L" "); (sw = GetSubStringWidth(str + i, j, font)) > rect->w; j--);
+		switch (a) {
+			case ALIGN_LEFT: dx = 0; break;
+			case ALIGN_MIDDLE: dx = (rect->w - sw) / 2; break;
+			case ALIGN_RIGHT: dx = rect->w - sw; break;
+		}
+		DrawSubString(screen, str + i, j, rect->x + dx, rect->y + dy, color, font);
 		i += j + wcsspn(str + i + j, L" "); //skip the rest of spaces to the next line start
 		dy += font->h;
 	}
 	return dy;
 }
 
-uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, FontMetrics *font) {
-	return DrawSubStringRect(screen, str, -1, rect, color, font);
+uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, FontMetrics *font, align a) {
+	return DrawSubStringRect(screen, str, -1, rect, color, font, a);
 }
 
 uint_fast16_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, Color color, Color bgcolor) {
@@ -195,12 +200,12 @@ uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t
 	va_start(va, format);
 	vswprintf(str, _MAX_LFN + 1, format, va);
 	va_end(va);
-	rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24);
+	rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24, ALIGN_LEFT);
 	if (info)
-		rect.y += DrawStringRect(&bottomScreen, info, &rect, &(TextColors){RED, BLACK}, &font16);
+		rect.y += DrawStringRect(&bottomScreen, info, &rect, &(TextColors){RED, BLACK}, &font16, ALIGN_LEFT);
 	if (action) {
-		swprintf(str, _MAX_LFN + 1, lang(SF_PRESS_BUTTON_ACTION, -1), lang(S_ANY_KEY, -1), action);
-		rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24);
+		swprintf(str, _MAX_LFN + 1, lang(SF_PRESS_BUTTON_ACTION), lang(S_ANY_KEY), action);
+		rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24, ALIGN_LEFT);
 	}
 	DisplayScreen(&bottomScreen);
 	if (action)
@@ -215,7 +220,7 @@ void DrawSplash(Screen *screen, wchar_t *splash_file) {
 		(FileRead2(&Splash, (void*)(screen->buf2), Splash.fsize) != Splash.fsize &&
 		(FileClose(&Splash) || true)
 	))
-		DrawInfo(NULL, lang(S_CONTINUE, -1), lang(SF_FAILED_TO, -1), lang(S_LOAD, -1), splash_file);
+		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), splash_file);
 	else
 		FileClose(&Splash);
 }

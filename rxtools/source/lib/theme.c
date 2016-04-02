@@ -23,21 +23,37 @@
 static Json themeJson, *themeJsonInit;
 static const wchar_t *themeDir, *themePattern;
 
-themeStyle style, styleDefault = {
+static themeStyle styleDefault;
+themeStyle style = {
 	L"",
 	L"",
 	L"",
 	{WHITE, TRANSPARENT},
 	{0, 0, 0, 24},
+	0,
 	{WHITE, TRANSPARENT},
 	{BLACK, WHITE},
 	{GREY, TRANSPARENT},
 	{BLACK, GREY},
 	{0, 24, 160, 0},
+	0,
 	{WHITE, TRANSPARENT},
 	{160, 24, 0, 0},
+	0,
 	{WHITE, TRANSPARENT},
-	{160, 24, 0, 16}
+	{160, 24, 0, 16},
+	0,
+	{WHITE, TRANSPARENT},
+	{0, 96, 320, 0},
+	1,
+	L"",
+	L"",
+	L"",
+	{WHITE, TRANSPARENT},
+	{16, 132, 288, 32},
+	WHITE,
+	GREY,
+	TRANSPARENT
 };
 
 typedef enum {
@@ -46,7 +62,9 @@ typedef enum {
 	OBJ_CAPTION,
 	OBJ_ITEMS,
 	OBJ_DESCRIPTION,
-	OBJ_VALUE
+	OBJ_VALUE,
+	OBJ_ACTIVITY,
+	OBJ_GAUGE
 } objtype;
 
 enum {
@@ -59,10 +77,7 @@ enum {
 	CAPTIONY,
 	CAPTIONW,
 	CAPTIONH,
-	ITEMSX,
-	ITEMSY,
-	ITEMSW,
-	ITEMSH,
+	CAPTIONALIGN,
 	ITEMSCOLORFG,
 	ITEMSCOLORBG,
 	ITEMSSELECTEDFG,
@@ -71,18 +86,44 @@ enum {
 	ITEMSDISABLEDBG,
 	ITEMSUNSELECTEDFG,
 	ITEMSUNSELECTEDBG,
+	ITEMSX,
+	ITEMSY,
+	ITEMSW,
+	ITEMSH,
+	ITEMSALIGN,
+	DESCRIPTIONFG,
+	DESCRIPTIONBG,
 	DESCRIPTIONX,
 	DESCRIPTIONY,
 	DESCRIPTIONW,
 	DESCRIPTIONH,
-	DESCRIPTIONFG,
-	DESCRIPTIONBG,
+	DESCRIPTIONALIGN,
+	VALUEFG,
+	VALUEBG,
 	VALUEX,
 	VALUEY,
 	VALUEW,
 	VALUEH,
-	VALUEFG,
-	VALUEBG,
+	VALUEALIGN,
+	ACTIVITYFG,
+	ACTIVITYBG,
+	ACTIVITYX,
+	ACTIVITYY,
+	ACTIVITYW,
+	ACTIVITYH,
+	ACTIVITYALIGN,
+	ACTIVITYTOP1,
+	ACTIVITYTOP2,
+	ACTIVITYBOTTOM,
+	GAUGETEXTFG,
+	GAUGETEXTBG,
+	GAUGEX,
+	GAUGEY,
+	GAUGEW,
+	GAUGEH,
+	GAUGEFRAME,
+	GAUGEDONE,
+	GAUGEBACK,
 	IDX_COUNT
 };
 
@@ -102,10 +143,43 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 				isTarget = true;
 
 			switch (themeJson.js[themeJson.tok[s+j].start]) {
-				case 'b': //"bottomimg"
-					idx[BOTTOM] = s + ++j;
+				case 'a':
+					switch(type) {
+						case OBJ_CAPTION:
+							idx[CAPTIONALIGN] = s + ++j;
+							break;
+						case OBJ_ITEMS:
+							idx[ITEMSALIGN] = s + ++j;
+							break;
+						case OBJ_DESCRIPTION:
+							idx[DESCRIPTIONALIGN] = s + ++j;
+							break;
+						case OBJ_VALUE:
+							idx[VALUEALIGN] = s + ++j;
+							break;
+						case OBJ_ACTIVITY: //"align"
+							idx[ACTIVITYALIGN] = s + ++j;
+							break;
+						case OBJ_MENU: //"activity"
+							j += themeParse(s+j+1, OBJ_ACTIVITY, key, idx);
+							break;
+						default:
+							j += themeParse(s+j+1, type, key, idx);
+					}
 					break;
-				case 'c'://"color"
+				case 'b': //"bottomimg"
+					switch(type) {
+						case OBJ_ACTIVITY:
+							idx[ACTIVITYBOTTOM] = s + ++j;
+							break;
+						case OBJ_GAUGE:
+							j += colorParse(s+j+1, key, idx, GAUGEBACK);
+							break;
+						default:
+							idx[BOTTOM] = s + ++j;
+					}
+					break;
+				case 'c':
 					switch(type) {
 						case OBJ_CAPTION: //"color"
 							j += colorParse(s+j+1, key, idx, CAPTIONFG);
@@ -119,8 +193,15 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 						case OBJ_VALUE:
 							j += colorParse(s+j+1, key, idx, VALUEFG);
 							break;
+						case OBJ_ACTIVITY:
+							j += colorParse(s+j+1, key, idx, ACTIVITYFG);
+							break;
+						case OBJ_GAUGE:
+							j += colorParse(s+j+1, key, idx, GAUGETEXTFG);
+							break;
 						case OBJ_MENU: //"caption"
-							type = OBJ_CAPTION;
+							j += themeParse(s+j+1, OBJ_CAPTION, key, idx);
+							break;
 						default:
 							j += themeParse(s+j+1, type, key, idx);
 					}
@@ -130,8 +211,29 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 						case OBJ_ITEMS: //"disabled"
 							j += colorParse(s+j+1, key, idx, ITEMSDISABLEDFG);
 							break;
+						case OBJ_GAUGE: //"done"
+							j += colorParse(s+j+1, key, idx, GAUGEDONE);
+							break;
 						default: //"description"
 							j += themeParse(s+j+1, OBJ_DESCRIPTION, key, idx);
+					}
+					break;
+				case 'f':
+					switch(type) {
+						case OBJ_GAUGE:
+							j += colorParse(s+j+1, key, idx, GAUGEFRAME);
+							break;
+						default:
+							j += themeParse(s+j+1, type, key, idx);
+					}
+					break;
+				case 'g':
+					switch(type) {
+						case OBJ_MENU: //"gauge"
+							j += themeParse(s+j+1, OBJ_GAUGE, key, idx);
+							break;
+						default:
+							j += themeParse(s+j+1, type, key, idx);
 					}
 					break;
 				case 'i': //"items"
@@ -151,11 +253,25 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 					break;
 				case 't': //"topimg"
 					if (themeJson.tok[s+j+1].type == JSMN_STRING)
-						idx[TOP1] = idx[TOP2] = s + j + 1;
+						switch(type) {
+							case OBJ_ACTIVITY:
+								idx[ACTIVITYTOP1] = idx[ACTIVITYTOP2] = s + j + 1;
+								break;
+							default:
+							idx[TOP1] = idx[TOP2] = s + j + 1;
+						}
 					else if (themeJson.tok[s+j+1].type == JSMN_ARRAY && themeJson.tok[s+j+1].size > 0) {
-						idx[TOP1] = s + j + 2;
-						if (themeJson.tok[s+j+1].size > 1)
-							idx[TOP2] = s + j + 3;
+						switch(type) {
+							case OBJ_ACTIVITY:
+								idx[ACTIVITYTOP1] = s + j + 2;
+								if (themeJson.tok[s+j+1].size > 1)
+									idx[ACTIVITYTOP2] = s + j + 3;
+								break;
+							default:
+							idx[TOP1] = s + j + 2;
+							if (themeJson.tok[s+j+1].size > 1)
+								idx[TOP2] = s + j + 3;
+						}
 					}
 					j += themeParse(s+j+1, type, key, idx);
 					break;
@@ -173,8 +289,14 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 						case OBJ_VALUE:
 							idx[VALUEH] = s + ++j;
 							break;
+						case OBJ_ACTIVITY:
+							idx[ACTIVITYH] = s + ++j;
+							break;
+						case OBJ_GAUGE:
+							idx[GAUGEH] = s + ++j;
+							break;
 						default:
-							j++;
+							j += themeParse(s+j+1, type, key, idx);
 					}
 					break;
 				case 'w': //"width"
@@ -191,8 +313,14 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 						case OBJ_VALUE:
 							idx[VALUEW] = s + ++j;
 							break;
+						case OBJ_ACTIVITY:
+							idx[ACTIVITYW] = s + ++j;
+							break;
+						case OBJ_GAUGE:
+							idx[GAUGEW] = s + ++j;
+							break;
 						default:
-							j++;
+							j += themeParse(s+j+1, type, key, idx);
 					}
 					break;
 				case 'x': //"x"
@@ -209,8 +337,14 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 						case OBJ_VALUE:
 							idx[VALUEX] = s + ++j;
 							break;
+						case OBJ_ACTIVITY:
+							idx[ACTIVITYX] = s + ++j;
+							break;
+						case OBJ_GAUGE:
+							idx[GAUGEX] = s + ++j;
+							break;
 						default:
-							j++;
+							j += themeParse(s+j+1, type, key, idx);
 					}
 					break;
 				case 'y': //"y"
@@ -227,8 +361,14 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 						case OBJ_VALUE:
 							idx[VALUEY] = s + ++j;
 							break;
+						case OBJ_ACTIVITY:
+							idx[ACTIVITYY] = s + ++j;
+							break;
+						case OBJ_GAUGE:
+							idx[GAUGEY] = s + ++j;
+							break;
 						default:
-							j++;
+							j += themeParse(s+j+1, type, key, idx);
 					}
 					break;
 				case 'm': //"menu"
@@ -297,6 +437,9 @@ void themeStyleSet(char *key) {
 	setImg(style.top1img, idx[TOP1]);
 	setImg(style.top2img, idx[TOP2]);
 	setImg(style.bottomimg, idx[BOTTOM]);
+	setImg(style.activitytop1img, idx[ACTIVITYTOP1]);
+	setImg(style.activitytop2img, idx[ACTIVITYTOP2]);
+	setImg(style.activitybottomimg, idx[ACTIVITYBOTTOM]);
 	setColor(&style.captionColor.fg.color, idx[CAPTIONFG]);
 	setColor(&style.captionColor.bg.color, idx[CAPTIONBG]);
 	setColor(&style.itemsColor.fg.color, idx[ITEMSCOLORFG]);
@@ -311,25 +454,46 @@ void themeStyleSet(char *key) {
 	setColor(&style.descriptionColor.bg.color, idx[DESCRIPTIONBG]);
 	setColor(&style.valueColor.fg.color, idx[VALUEFG]);
 	setColor(&style.valueColor.bg.color, idx[VALUEBG]);
+	setColor(&style.activityColor.fg.color, idx[ACTIVITYFG]);
+	setColor(&style.activityColor.bg.color, idx[ACTIVITYBG]);
+	setColor(&style.gaugeTextColor.fg.color, idx[GAUGETEXTFG]);
+	setColor(&style.gaugeTextColor.bg.color, idx[GAUGETEXTBG]);
+	setColor(&style.gaugeFrameColor.color, idx[GAUGEFRAME]);
+	setColor(&style.gaugeDoneColor.color, idx[GAUGEDONE]);
+	setColor(&style.gaugeBackColor.color, idx[GAUGEBACK]);
 	setInt(&style.captionRect.x, idx[CAPTIONX]);
 	setInt(&style.captionRect.y, idx[CAPTIONY]);
 	setInt(&style.captionRect.w, idx[CAPTIONW]);
 	setInt(&style.captionRect.h, idx[CAPTIONH]);
+	setInt(&style.captionAlign, idx[CAPTIONALIGN]);
 	setInt(&style.itemsRect.x, idx[ITEMSX]);
 	setInt(&style.itemsRect.y, idx[ITEMSY]);
 	setInt(&style.itemsRect.w, idx[ITEMSW]);
 	setInt(&style.itemsRect.h, idx[ITEMSH]);
+	setInt(&style.itemsAlign, idx[ITEMSALIGN]);
 	setInt(&style.descriptionRect.x, idx[DESCRIPTIONX]);
 	setInt(&style.descriptionRect.y, idx[DESCRIPTIONY]);
 	setInt(&style.descriptionRect.w, idx[DESCRIPTIONW]);
 	setInt(&style.descriptionRect.h, idx[DESCRIPTIONH]);
+	setInt(&style.descriptionAlign, idx[DESCRIPTIONALIGN]);
 	setInt(&style.valueRect.x, idx[VALUEX]);
 	setInt(&style.valueRect.y, idx[VALUEY]);
 	setInt(&style.valueRect.w, idx[VALUEW]);
 	setInt(&style.valueRect.h, idx[VALUEH]);
+	setInt(&style.valueAlign, idx[VALUEALIGN]);
+	setInt(&style.activityRect.x, idx[ACTIVITYX]);
+	setInt(&style.activityRect.y, idx[ACTIVITYY]);
+	setInt(&style.activityRect.w, idx[ACTIVITYW]);
+	setInt(&style.activityRect.h, idx[ACTIVITYH]);
+	setInt(&style.activityAlign, idx[ACTIVITYALIGN]);
+	setInt(&style.gaugeRect.x, idx[GAUGEX]);
+	setInt(&style.gaugeRect.y, idx[GAUGEY]);
+	setInt(&style.gaugeRect.w, idx[GAUGEW]);
+	setInt(&style.gaugeRect.h, idx[GAUGEH]);
 }
 
 bool themeInit(Json *json, const wchar_t *path, const wchar_t *pattern) {
+	styleDefault = style;
 	return json && json->js && json->tok && (themeJsonInit = json)->tok && (themeDir = path) && (themePattern = pattern);
 }
 

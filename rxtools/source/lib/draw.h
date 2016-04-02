@@ -90,22 +90,20 @@ typedef struct {
 extern Screen top1Screen, top2Screen, bottomScreen;
 extern FontMetrics font16, font24;
 
-/*
 typedef enum{
-	JUSTIFY_LEFT,
-	JUSTIFY_MIDDLE,
-	JUSTIFY_RIGHT,
-} justify;
-*/
+	ALIGN_LEFT,
+	ALIGN_MIDDLE,
+	ALIGN_RIGHT,
+} align;
 
 void ClearScreen(Screen *screen, Color color);
 void DisplayScreen(Screen *screen);
 uint_fast16_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, Color color, Color bgcolor);
-uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rect *rect, TextColors *color, FontMetrics *font);
-uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, FontMetrics *font);
+uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rect *rect, TextColors *color, FontMetrics *font, align a);
+uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, FontMetrics *font, align a);
 uint_fast16_t DrawSubString(Screen *screen, const wchar_t *str, size_t count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font);
 uint_fast16_t GetSubStringWidth(const wchar_t *str, size_t count, FontMetrics *font);
-void DrawProgress(Screen *screen, Rect *rect, Color border, Color back, Color fill, TextColors *text, FontMetrics *font, uint32_t posmax, uint32_t pos);
+void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, TextColors *textcolor, FontMetrics *font, uint32_t posmax, uint32_t pos);
 void DrawSplash(Screen *screen, wchar_t *splash_file);
 void fadeOut();
 uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t *format, ...);
