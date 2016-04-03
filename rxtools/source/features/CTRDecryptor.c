@@ -39,41 +39,44 @@ uint32_t DecryptPartition(PartitionInfo* info){
 		setup_aeskey(info->keyslot, AES_BIG_INPUT|AES_NORMAL_INPUT, info->keyY);
 	use_aeskey(info->keyslot);
 
-	uint8_t ctr[16] __attribute__((aligned(32)));
-	memcpy(ctr, info->ctr, 16);
+	aes_ctr ctr __attribute__((aligned(32))) = *info->ctr;
 
 	uint32_t size_bytes = info->size;
 	for (uint32_t i = 0; i < size_bytes; i += BLOCK_SIZE) {
-		uint32_t j;
-		for (j = 0; (j < BLOCK_SIZE) && (i+j < size_bytes); j+= 16) {
-			set_ctr(AES_BIG_INPUT|AES_NORMAL_INPUT, ctr);
-			aes_decrypt((void*)info->buffer+j, (void*)info->buffer+j, ctr, 1, AES_CTR_MODE);
-			add_ctr(ctr, 1);
+		for (uint32_t j = 0; (j < BLOCK_SIZE) && (i+j < size_bytes); j+= 16) {
+			set_ctr(AES_BIG_INPUT|AES_NORMAL_INPUT, &ctr);
+			aes_decrypt((void*)info->buffer+j, (void*)info->buffer+j, 1, AES_CTR_MODE);
+			add_ctr(&ctr, 1);
 			TryScreenShot(); //Putting it here allows us to take screenshots at any decryption point, since everyting loops in this
 		}
 	}
 	return 0;
 }
 
-void ProcessExeFS(PartitionInfo* info){ //We expect Exefs to take just a block. Why? No exefs right now reached 8MB.
+void ProcessExeFS(PartitionInfo *info){ //We expect Exefs to take just a block. Why? No exefs right now reached 8MB.
 	if(info->keyslot == 0x2C){
 		DecryptPartition(info);
 	}else if(info->keyslot == 0x25){  //The new keyX is a bit tricky, 'couse only .code is encrypted with it
-		PartitionInfo myInfo;
-		memcpy((void*)&myInfo, (void*)info, sizeof(PartitionInfo));
-		uint8_t OriginalCTR[16]; memcpy(OriginalCTR, info->ctr, 16);
-		myInfo.keyslot = 0x2C; myInfo.size = 0x200;
-		DecryptPartition(&myInfo); add_ctr(myInfo.ctr, 0x200 / 16);
+		PartitionInfo myInfo = *info;
+		aes_ctr OriginalCTR = *myInfo.ctr;
+		myInfo.keyslot = 0x2C;
+		myInfo.size = 0x200;
+		DecryptPartition(&myInfo);
+		add_ctr(myInfo.ctr, 0x200 / 16);
 		if(myInfo.buffer[0] == '.' && myInfo.buffer[1] == 'c' && myInfo.buffer[2] == 'o' && myInfo.buffer[3] == 'd' && myInfo.buffer[4] == 'e'){
 			//The 7.xKey encrypted .code partition
 			uint32_t codeSize = *((unsigned int*)(myInfo.buffer + 0x0C));
 			uint32_t nextSection = *((unsigned int*)(myInfo.buffer + 0x18)) + 0x200;
-			myInfo.buffer += 0x200; myInfo.size = codeSize; myInfo.keyslot = 0x25;
+			myInfo.buffer += 0x200;
+			myInfo.size = codeSize;
+			myInfo.keyslot = 0x25;
 			DecryptPartition(&myInfo);
 			//The rest is normally encrypted
-			memcpy((void*)&myInfo, (void*)info, sizeof(PartitionInfo));
-			myInfo.buffer += nextSection; myInfo.size -= nextSection; myInfo.keyslot = 0x2C;
-			myInfo.ctr = OriginalCTR;
+			myInfo = *info;
+			myInfo.buffer += nextSection;
+			myInfo.size -= nextSection;
+			myInfo.keyslot = 0x2C;
+			*myInfo.ctr = OriginalCTR;
 			add_ctr(myInfo.ctr, nextSection/16);
 			DecryptPartition(&myInfo);
 		}else{
@@ -87,35 +90,23 @@ void ProcessExeFS(PartitionInfo* info){ //We expect Exefs to take just a block. 
 int ProcessCTR(wchar_t *path){
 	PartitionInfo myInfo;
 	File myFile;
-	if(FileOpen(&myFile, path, 0)){
+	if(FileOpen(&myFile, path, false)){
 		ConsoleInit();
 		ConsoleSetTitle(strings[STR_DECRYPT], strings[STR_CTR]);
-		unsigned int ncch_base = 0x100;
-		unsigned char magic[] = { 0, 0, 0, 0, 0};
-		FileRead(&myFile, magic, 4, ncch_base);
-		if(magic[0] == 'N' && magic[1] == 'C' && magic[2] == 'S' && magic[3] == 'D'){
-			ncch_base = 0x4000;
-			FileRead(&myFile, magic, 4, ncch_base+0x100);
-			if(!(magic[0] == 'N' && magic[1] == 'C' && magic[2] == 'C' && magic[3] == 'H')){
-				FileClose(&myFile);
-				return 2;
-			}
-		}else if(magic[0] == 'N' && magic[1] == 'C' && magic[2] == 'C' && magic[3] == 'H'){
-			ncch_base = 0x0;
-		}else{
+		uint32_t ncch_base;
+		ctr_ncchheader NCCH;
+		FileRead(&myFile, &NCCH, sizeof(NCCH), ncch_base = 0);
+		if (NCCH.magic == 'DSCN') //NCSD
+			FileRead(&myFile, &NCCH, sizeof(NCCH), ncch_base = 0x4000);
+		if (NCCH.magic != 'HCCN') { //NCCH
 			FileClose(&myFile);
 			return 2;
 		}
-		ctr_ncchheader NCCH; unsigned int mediaunitsize = 0x200;
-		FileRead(&myFile, &NCCH, 0x200, ncch_base);
 
-		print(L"%s\n", (char*)NCCH.productcode);
-		unsigned int NEWCRYPTO = 0, CRYPTO = 1;
-		if(NCCH.flags[3] != 0) NEWCRYPTO = 1;
-		if(NCCH.flags[7] & 4) CRYPTO = 0;
-		if(NEWCRYPTO){
+		print(L"%s\n", NCCH.productcode);
+		if(NCCH.cryptomethod){
 			print(strings[STR_CRYPTO_TYPE], strings[STR_KEY7]);
-		}else if(CRYPTO){
+		}else if(!(NCCH.flags7 | NCCHFLAG_NOCRYPTO)){
 			print(strings[STR_CRYPTO_TYPE], strings[STR_SECURE]);
 		}else{
 			print(strings[STR_CRYPTO_TYPE], strings[STR_NONE]);
@@ -125,62 +116,51 @@ int ProcessCTR(wchar_t *path){
 			return 3;
 		}
 
-		uint8_t CTR[16];
-		if(getle32(NCCH.extendedheadersize) > 0){
+		aes_ctr CTR;
+		if(NCCH.extendedheadersize){
 			print(strings[STR_DECRYPTING], strings[STR_EXHEADER]);
 			ConsoleShow();
-			ncch_get_counter(NCCH, CTR, 1);
-			FileRead(&myFile, BUFFER_ADDR, 0x800, ncch_base + 0x200);
-			myInfo.buffer = BUFFER_ADDR;
-			myInfo.size = 0x800;
-			myInfo.keyslot = 0x2C;
-			myInfo.ctr = CTR;
-			myInfo.keyY = NCCH.signature;
+			ncch_get_counter(&NCCH, &CTR, NCCHTYPE_EXHEADER);
+			FileRead(&myFile, BUFFER_ADDR, sizeof(ctr_ncchexheader), ncch_base + sizeof(ctr_ncchheader));
+			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, &CTR, sizeof(ctr_ncchexheader), 0x2C};
 			DecryptPartition(&myInfo);
-			FileWrite(&myFile, BUFFER_ADDR, 0x800, ncch_base + 0x200);
+			FileWrite(&myFile, BUFFER_ADDR, sizeof(ctr_ncchexheader), sizeof(ctr_ncchheader));
 		}
-		if(getle32(NCCH.exefssize) > 0){
+		if(NCCH.exefssize){
 			print(strings[STR_DECRYPTING], strings[STR_EXEFS]);
 			ConsoleShow();
-			ncch_get_counter(NCCH, CTR, 2);
-			myInfo.buffer = BUFFER_ADDR;
-			myInfo.keyslot = NEWCRYPTO ? 0x25 : 0x2C;
-			myInfo.ctr = CTR;
-			myInfo.keyY = NCCH.signature;
-
-			size_t bytesRead = FileRead(&myFile, BUFFER_ADDR, getle32(NCCH.exefssize) * mediaunitsize, ncch_base + getle32(NCCH.exefsoffset) * mediaunitsize);
-			myInfo.size = bytesRead;
+			ncch_get_counter(&NCCH, &CTR, NCCHTYPE_EXEFS);
+			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, &CTR, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, NCCH.cryptomethod ? 0x25 : 0x2C};
+			FileRead(&myFile, BUFFER_ADDR, myInfo.size, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
 			ProcessExeFS(&myInfo); //Explanation at function definition
-			FileWrite(&myFile, BUFFER_ADDR, getle32(NCCH.exefssize) * mediaunitsize, ncch_base + getle32(NCCH.exefsoffset) * mediaunitsize);
+			FileWrite(&myFile, BUFFER_ADDR, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
 		}
-		if(getle32(NCCH.romfssize) > 0){
+		if(NCCH.romfssize){
 			print(strings[STR_DECRYPTING], strings[STR_ROMFS]);
 			ConsoleShow();
-			ncch_get_counter(NCCH, CTR, 3);
-			myInfo.buffer = BUFFER_ADDR;
-			myInfo.keyslot = NEWCRYPTO ? 0x25 : 0x2C;
-			myInfo.ctr = CTR;
-			myInfo.keyY = NCCH.signature;
-			for(int i = 0; i < (getle32(NCCH.romfssize) * mediaunitsize + BLOCK_SIZE - 1) / BLOCK_SIZE; i++){
+			ncch_get_counter(&NCCH, &CTR, NCCHTYPE_ROMFS);
+			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, &CTR, 0, NCCH.cryptomethod ? 0x25 : 0x2C};
+			for(int i = 0; i < (NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE + BLOCK_SIZE - 1) / BLOCK_SIZE; i++){
 				print(L"%3d%%\b\b\b\b",
-					(int)((i*BLOCK_SIZE)/(getle32(NCCH.romfssize) * mediaunitsize/ 100)));
-				size_t bytesRead = FileRead(&myFile, BUFFER_ADDR, i*BLOCK_SIZE <= (getle32(NCCH.romfssize) * mediaunitsize) ? BLOCK_SIZE : (getle32(NCCH.romfssize) * mediaunitsize) % BLOCK_SIZE, ncch_base + getle32(NCCH.romfsoffset) * mediaunitsize + i*BLOCK_SIZE);
-				myInfo.size = bytesRead;
+					(int)((i*BLOCK_SIZE)/(NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE / 100)));
+				myInfo.size = FileRead(&myFile, BUFFER_ADDR, i*BLOCK_SIZE <= (NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE) ? BLOCK_SIZE : (NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE) % BLOCK_SIZE, ncch_base + NCCH.romfsoffset * NCCH_MEDIA_UNIT_SIZE + i*BLOCK_SIZE);
 				DecryptPartition(&myInfo);
-				add_ctr(myInfo.ctr, bytesRead/16);
-				FileWrite(&myFile, BUFFER_ADDR, bytesRead, ncch_base + getle32(NCCH.romfsoffset) * mediaunitsize + i*BLOCK_SIZE);
+				add_ctr(myInfo.ctr, myInfo.size/16);
+				FileWrite(&myFile, BUFFER_ADDR, myInfo.size, ncch_base + NCCH.romfsoffset * NCCH_MEDIA_UNIT_SIZE + i*BLOCK_SIZE);
 			}
 			print(L"\n");
 		}
-		NCCH.flags[7] |= 4; //Disable encryption
-		NCCH.flags[3] = 0;  //Disable 7.XKey usage
-		FileWrite(&myFile, &NCCH, 0x200, ncch_base);
-		if(ncch_base == 0x4000) FileWrite(&myFile, ((uint8_t*)&NCCH) + 0x100, 0x100, 0x1100);   //Only for NCSD
+		NCCH.flags7 |= NCCHFLAG_NOCRYPTO; //Disable encryption
+		NCCH.cryptomethod = 0;  //Disable 7.XKey usage
+		if (ncch_base == 0x4000) //Only for NCSD
+			FileWrite(&myFile, ((uint8_t*)&NCCH) + sizeof(NCCH.signature), sizeof(NCCH) - sizeof(NCCH.signature), 0x1100);
+		FileWrite(&myFile, &NCCH, sizeof(NCCH), ncch_base);
 		FileClose(&myFile);
 		print(strings[STR_COMPLETED]);
 		ConsoleShow();
 		return 0;
-	}else return 1;
+	}
+	return 1;
 }
 
 int ExploreFolders(wchar_t* folder){

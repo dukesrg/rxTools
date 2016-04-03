@@ -30,11 +30,11 @@ void setup_aeskeyX(uint8_t keyslot, void* keyx)
     *REG_AESKEYXFIFO = _keyx[3];
 }
 
-void decrypt(void* key, void* iv, void* inbuf, void* outbuf, size_t size)
+void decrypt(void* key, void* inbuf, void* outbuf, size_t size)
 {
     setup_aeskey(0x2C, AES_BIG_INPUT|AES_NORMAL_INPUT, key);
     use_aeskey(0x2C);
-    aes_decrypt(inbuf, outbuf, iv, size / AES_BLOCK_SIZE, AES_CTR_MODE);
+    aes_decrypt(inbuf, outbuf, size / AES_BLOCK_SIZE, AES_CTR_MODE);
 }
 
 void setup_aeskey(uint32_t keyno, int value, void* key)
@@ -86,59 +86,23 @@ void use_aeskey(uint32_t keyno)
     *REG_AESCNT    = *REG_AESCNT | 0x04000000; /* mystery bit */
 }
 
-void set_ctr(int mode, void* iv)
-{
-    uint32_t * _iv = (uint32_t*)iv;
+void set_ctr(int mode, aes_ctr *iv) {
     *REG_AESCNT = (*REG_AESCNT & ~(AES_CNT_INPUT_ENDIAN|AES_CNT_INPUT_ORDER)) | (mode << 23);
-    if (mode & AES_NORMAL_INPUT)
-    {
-        *(REG_AESCTR + 0) = _iv[3];
-        *(REG_AESCTR + 1) = _iv[2];
-        *(REG_AESCTR + 2) = _iv[1];
-        *(REG_AESCTR + 3) = _iv[0];
-    }
-    else
-    {
-        *(REG_AESCTR + 0) = _iv[0];
-        *(REG_AESCTR + 1) = _iv[1];
-        *(REG_AESCTR + 2) = _iv[2];
-        *(REG_AESCTR + 3) = _iv[3];
+    for (size_t i = 0; i < 4; i++)
+        *(REG_AESCTR + i) = iv->data32[(mode & AES_NORMAL_INPUT) ? 3-i : i];
+}
+
+void add_ctr(aes_ctr *ctr, uint32_t carry) {
+    uint32_t counter;
+    for (size_t i = 4; i--;) {
+        counter = __builtin_bswap32(ctr->data32[i]);
+        carry += counter;
+        ctr->data32[i] = __builtin_bswap32(carry);
+        carry = carry < counter ? 1 : 0;
     }
 }
 
-void add_ctr(void* ctr, uint32_t carry)
-{
-    uint32_t counter[4];
-    uint8_t *outctr = (uint8_t *) ctr;
-    uint32_t sum;
-    int32_t i;
-
-    for(i=0; i<4; i++) {
-        counter[i] = (outctr[i*4+0]<<24) | (outctr[i*4+1]<<16) | (outctr[i*4+2]<<8) | (outctr[i*4+3]<<0);
-    }
-
-    for(i=3; i>=0; i--)
-    {
-        sum = counter[i] + carry;
-        if (sum < counter[i]) {
-            carry = 1;
-        }
-        else {
-            carry = 0;
-        }
-        counter[i] = sum;
-    }
-
-    for(i=0; i<4; i++)
-    {
-        outctr[i*4+0] = counter[i]>>24;
-        outctr[i*4+1] = counter[i]>>16;
-        outctr[i*4+2] = counter[i]>>8;
-        outctr[i*4+3] = counter[i]>>0;
-    }
-}
-
-void aes_decrypt(void* inbuf, void* outbuf, void* iv, size_t size, uint32_t mode)
+void aes_decrypt(void* inbuf, void* outbuf, size_t size, uint32_t mode) //Initialization vector not used?
 {
     uint32_t in  = (uint32_t)inbuf;
     uint32_t out = (uint32_t)outbuf;

@@ -17,7 +17,7 @@
 
 #include "ncch.h"
 
-unsigned int align(unsigned int offset, unsigned int alignment)
+/*unsigned int align(unsigned int offset, unsigned int alignment)
 {
 	unsigned int mask = ~(alignment-1);
 
@@ -93,7 +93,8 @@ void putle32(unsigned char* p, unsigned int n)
 	p[2] = n>>16;
 	p[3] = n>>24;
 }
-
+*/
+/*
 void ncch_get_counter(ctr_ncchheader header, unsigned char counter[16], unsigned char type)
 {
 	unsigned int version = getle16(header.version);
@@ -123,5 +124,37 @@ void ncch_get_counter(ctr_ncchheader header, unsigned char counter[16], unsigned
 			counter[i] = partitionid[i];
 		for(i=0; i<4; i++)
 			counter[12+i] = x>>((3-i)*8);
+	}
+}
+*/
+typedef union {
+	struct {
+		uint64_t partitionid;
+		uint32_t type;
+		uint32_t offset;
+	};
+	aes_ctr ctr;
+} __attribute__((packed)) ncchcounter;
+
+void ncch_get_counter(ctr_ncchheader *header, aes_ctr *counter, ctr_ncchtype type) {
+	switch (header->version) {
+		case 0:
+		case 2:
+			*counter = ((ncchcounter){{__builtin_bswap64(header->partitionid), type, 0}}).ctr;
+			break;
+		case 1:
+			switch (type) {
+				case NCCHTYPE_EXHEADER:
+					((ncchcounter*)counter)->offset = sizeof(header);
+					break;
+				case NCCHTYPE_EXEFS:
+					((ncchcounter*)counter)->offset = header->exefsoffset * NCCH_MEDIA_UNIT_SIZE;
+					break;
+				case NCCHTYPE_ROMFS:
+					((ncchcounter*)counter)->offset = header->romfsoffset * NCCH_MEDIA_UNIT_SIZE;
+					break;
+			}
+			*counter = ((ncchcounter){{header->partitionid, 0, __builtin_bswap32(((ncchcounter*)counter)->offset)}}).ctr;
+		break;
 	}
 }

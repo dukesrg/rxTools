@@ -20,14 +20,15 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "crypto.h"
 
-typedef struct{
+typedef struct {
 	uint8_t* buffer;
 	uint8_t* keyY;
-	uint8_t* ctr;
+	aes_ctr *ctr;
 	size_t size;
 	uint32_t keyslot;
-}PartitionInfo;  //This basic struct can be useful anytime, even if i'll add nand decryption/exploring
+} PartitionInfo;  //This basic struct can be useful anytime, even if i'll add nand decryption/exploring
 
 uint32_t DecryptPartition(PartitionInfo* info);
 void CTRDecryptor();

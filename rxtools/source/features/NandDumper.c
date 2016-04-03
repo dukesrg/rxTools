@@ -170,7 +170,8 @@ void DumpNandPartitions(){
 void GenerateNandXorpads(){
 
 	PadInfo myInfo = { .keyslot = getMpInfo() == MPINFO_KTR ? 0x5 : 0x4, .setKeyY = 0, .size_mb = getMpInfo() == MPINFO_KTR ? 1055 : 758, .filename = "rxTools/nand.fat16.xorpad" };
-	GetNANDCTR(myInfo.CTR); add_ctr(myInfo.CTR, 0xB93000);
+	GetNANDCTR(&myInfo.CTR);
+	add_ctr(&myInfo.CTR, 0xB93000);
 
 	ConsoleInit();
 	ConsoleSetTitle(strings[STR_GENERATE], strings[STR_NAND_XORPAD]);
@@ -212,13 +213,13 @@ void DumpNANDSystemTitles(){
 			print(strings[STR_DUMPING], L"", filename);
 			ConsoleShow();
 			FileOpen(&pfile, filename, 1);
-			for(int j = 0; j < getle32(ncch.contentsize); j++){
+			for(int j = 0; j < ncch.contentsize; j++){
 				if(isEmuNand) emunand_readsectors(i + j, 1, BUF1, CTRNAND);
 				else nand_readsectors(i + j, 1, BUF1, CTRNAND);
 				FileWrite(&pfile, BUF1, NAND_SECTOR_SIZE, j*NAND_SECTOR_SIZE);
 			}
 			FileClose(&pfile);
-			i += getle32(ncch.contentsize);
+			i += ncch.contentsize;
 			nTitle++;
 		}
 	}

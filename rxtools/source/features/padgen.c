@@ -66,7 +66,7 @@ uint32_t NcchPadgen()
 	ConsoleShow();
 	for(uint32_t i = 0; i < info->n_entries; i++) {
 		PadInfo padInfo = {.setKeyY = 1, .size_mb = info->entries[i].size_mb};
-		memcpy(padInfo.CTR, info->entries[i].CTR, 16);
+		padInfo.CTR = info->entries[i].CTR;
 		memcpy(padInfo.keyY, info->entries[i].keyY, 16);
 		memcpy(padInfo.filename, info->entries[i].filename, 112);
 
@@ -142,7 +142,7 @@ uint32_t SdPadgen()
 
 	for(uint32_t i = 0; i < info->n_entries; i++) {
 		PadInfo padInfo = {.keyslot = 0x34, .setKeyY = 0, .size_mb = info->entries[i].size_mb};
-		memcpy(padInfo.CTR, info->entries[i].CTR, 16);
+		padInfo.CTR = info->entries[i].CTR;
 		memcpy(padInfo.filename, info->entries[i].filename, 180);
 
 		result = CreatePad(&padInfo, i);
@@ -181,8 +181,7 @@ uint32_t CreatePad(PadInfo *info, int index)
 		setup_aeskey(info->keyslot, AES_BIG_INPUT|AES_NORMAL_INPUT, info->keyY);
 	use_aeskey(info->keyslot);
 
-	uint8_t ctr[16] __attribute__((aligned(32)));
-	memcpy(ctr, info->CTR, 16);
+	aes_ctr ctr __attribute__((aligned(32))) = info->CTR;
 
 	uint32_t size_bytes = info->size_mb*1024*1024;
 	uint32_t size_100 = size_bytes/100;
@@ -191,9 +190,9 @@ uint32_t CreatePad(PadInfo *info, int index)
 	for (uint32_t i = 0; i < size_bytes; i += BLOCK_SIZE) {
 		uint32_t j;
 		for (j = 0; (j < BLOCK_SIZE) && (i+j < size_bytes); j+= 16) {
-			set_ctr(AES_BIG_INPUT|AES_NORMAL_INPUT, ctr);
-			aes_decrypt((void*)zero_buf, (void*)BUFFER_ADDR+j, ctr, 1, AES_CTR_MODE);
-			add_ctr(ctr, 1);
+			set_ctr(AES_BIG_INPUT|AES_NORMAL_INPUT, &ctr);
+			aes_decrypt((void*)zero_buf, (void*)BUFFER_ADDR+j, 1, AES_CTR_MODE);
+			add_ctr(&ctr, 1);
 		}
 
 		print(L"\r\033[K%i : %i%%", index, (i+j)/size_100);

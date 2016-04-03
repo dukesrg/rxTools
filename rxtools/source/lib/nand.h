@@ -19,25 +19,26 @@
 #define NAND_H
 
 #include <stdint.h>
+#include "crypto.h"
 
-enum {
+typedef enum {
 	TWLN = 0x00012E00,
 	TWLP = 0x09011A00,
 	AGB_SAVE = 0x0B100000,
 	FIRM0 = 0x0B130000,
 	FIRM1 = 0x0B530000,
 	CTRNAND = 0x0B95CA00,
-	KTR_CTRNAND = 0x0B95AE00,
-} NAND_PARTITIONS;
+	KTR_CTRNAND = 0x0B95AE00
+} nand_partition;
 
 extern int sysver;
 
 void FSNandInitCrypto(void);
 unsigned int checkEmuNAND();
-void GetNANDCTR(uint8_t *ctr);
-void nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, unsigned int partition);
-void nand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, unsigned int partition);
-void emunand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, unsigned int partition);
-void emunand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, unsigned int partition);
+void GetNANDCTR(aes_ctr *ctr);
+void nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
+void nand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
+void emunand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
+void emunand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
 
 #endif

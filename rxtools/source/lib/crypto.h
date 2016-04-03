@@ -54,14 +54,19 @@
 #define AES_CNT_FLUSH_READ    0x00000800
 #define AES_CNT_FLUSH_WRITE   0x00000400
 
-void add_ctr(void* ctr, uint32_t carry);
+typedef union {
+	uint8_t data[16];
+	uint32_t data32[4];
+} aes_ctr;  
+
+void add_ctr(aes_ctr *ctr, uint32_t carry);
 
 void setup_aeskeyX(uint8_t keyslot, void* keyx);
-void decrypt(void* key, void* iv, void* inbuf, void* outbuf, size_t size);
+void decrypt(void* key, void* inbuf, void* outbuf, size_t size);
 void setup_aeskey(uint32_t keyno, int value, void* key);
 void use_aeskey(uint32_t keyno);
-void set_ctr(int mode, void* iv);
-void aes_decrypt(void* inbuf, void* outbuf, void* iv, size_t size, uint32_t mode);
+void set_ctr(int mode, aes_ctr *iv);
+void aes_decrypt(void* inbuf, void* outbuf, size_t size, uint32_t mode);
 void _decrypt(uint32_t value, void* inbuf, void* outbuf, size_t blocks);
 void aes_fifos(void* inbuf, void* outbuf, size_t blocks);
 void set_aeswrfifo(uint32_t value);
