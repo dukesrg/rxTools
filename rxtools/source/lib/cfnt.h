@@ -38,33 +38,7 @@ typedef struct {
 } __attribute__((packed)) char_width;
 
 typedef struct {
-	uint32_t magic; //CFNT/CFNU/FFNT
-	uint16_t endianness;
-	uint16_t header_size;
-	uint32_t version;
-	uint32_t file_size;
-	uint32_t number_of_blocks;
-} __attribute__((packed)) cfnt_header;
-
-typedef struct {
-	uint32_t magic; //FINF
-	uint32_t section_size;
-	uint8_t font_type;
-	uint8_t line_feed;
-	uint16_t alter_char_index;
-	char_width default_char_width;
-	uint8_t encoding;
-	uint32_t tglp_offset;
-	uint32_t cwdh_offset;
-	uint32_t cmap_offset;
-	uint8_t height;
-	uint8_t width;
-	uint8_t ascent;
-	uint8_t reserved;
-} __attribute__((packed)) finf_header;
-
-typedef struct {
-	uint32_t magic; //TGLP
+	uint32_t magic;
 	uint32_t section_size;
 	uint8_t cell_width;
 	uint8_t cell_height;
@@ -77,29 +51,65 @@ typedef struct {
 	uint16_t number_of_rows;
 	uint16_t sheet_width;
 	uint16_t sheet_height;
-	uint32_t sheet_data_offset;
+	uint8_t *sheet_data_offset;
 } __attribute__((packed)) tglp_header;
 
-typedef struct {
-	uint32_t magic;//CMAP
+typedef struct cwdh_header_t  {
+	uint32_t magic;
+	uint32_t section_size;
+	uint16_t start_index;
+	uint16_t end_index;
+	cwdh_header_t *next_cwdh_offset;
+	char_width widths[];
+} __attribute__((packed)) cwdh_header;
+
+typedef struct cmap_header_t {
+	uint32_t magic;
 	uint32_t section_size;
 	uint16_t code_begin;
 	uint16_t code_end;
 	uint16_t mapping_method;
 	uint16_t reserved;
-	uint32_t next_cmap_offset;
+	cmap_header_t *next_cmap_offset;
+	union {
+		uint16_t direct_glyph_start;
+		uint16_t table_glyphs[];
+		struct
+		{
+			uint16_t scan_pair_count;
+			struct
+			{
+				uint16_t code;
+				uint16_t glyph;
+			} scan_pairs[];
+		};
+	};
 } __attribute__((packed)) cmap_header;
-//	uint16_t index_offset //direct
-//	uint16_t *index_table //[code_end-code-begin+1] table
-//	uint16_t scan_entries_count; entry *uint16//[2*scan_entries_count] scan
 
 typedef struct {
-	uint32_t magic;//CWDH
+	uint32_t magic;
+	uint16_t endianness;
+	uint16_t header_size;
+	uint32_t version;
+	uint32_t file_size;
+	uint32_t number_of_blocks;
+} __attribute__((packed)) cfnt_header;
+
+typedef struct {
+	uint32_t magic;
 	uint32_t section_size;
-	uint16_t start_index;
-	uint16_t end_index;
-	uint32_t next_cwdh_offset;
-} __attribute__((packed)) cwdh_header;
-//	char_width *width //[end_index-start_index+1]
+	uint8_t font_type;
+	uint8_t line_feed;
+	uint16_t alter_char_index;
+	char_width default_char_width;
+	uint8_t encoding;
+	tglp_header *tglp_offset;
+	cwdh_header *cwdh_offset;
+	cmap_header *cmap_offset;
+	uint8_t height;
+	uint8_t width;
+	uint8_t ascent;
+	uint8_t reserved;
+} __attribute__((packed)) finf_header;
 
 #endif
