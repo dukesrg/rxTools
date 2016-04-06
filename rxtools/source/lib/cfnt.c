@@ -2,147 +2,142 @@
 #include <malloc.h>
 #include "cfnt.h"
 
-cfnt_header cfnt;
-finf_header finf;
-tglp_header tglp;
-cwdh_header cwdh;
-cmap_header cmap;
-uint8_t sheets[2048];
-
-void decodetile(uint8_t **in, uint8_t *out, int iconsize, int tilesize, int ax, int ay){
-	int x,y;
-	for (y = 0; y < iconsize; y += tilesize){
-		if (tilesize==1){
-			out[ax+(ay+y)*tglp.sheet_width] = (**in)&0x0f;
-			out[ax+(ay+y)*tglp.sheet_width+1] = *((*in)++)>>4;
-		} else {
-			for (x = 0; x < iconsize; x += tilesize){
-				decodetile(in, out, tilesize,tilesize / 2,ax + x,ay + y);
+static uint16_t Glyph(finf_header *finf, wchar_t c) {
+	cmap_header *cmap = finf->cmap_offset;
+	do {
+		if (c >= cmap->code_begin && c <= cmap->code_end) {
+			switch(cmap->mapping_method) {
+				case MAPPING_DIRECT: return cmap->direct_glyph_start - cmap->code_begin + c;
+				case MAPPING_TABLE: return cmap->table_glyphs[c - cmap->code_begin];
+				case MAPPING_SCAN:
+					for (size_t i = 0; i < cmap->scan_pair_count; i++)
+						if (cmap->scan_pairs[i].code == c)
+							return cmap->scan_pairs[i].glyph;
 			}
+		}
+	} while (cmap = cmap->next_cmap_offset);
+	return 0;
+}
+
+static char_width *GlyphWidth(finf_header *finf, uint16_t glyph) {
+	cwdh_header *cwdh = finf->cwdh_offset;
+	do {
+		if (glyph >= cwdh->start_index && glyph <= cwdh->end_index)
+			return cwdh->widths + glyph - cwdh->start_index;
+	} while (cwdh = cwdh->next_cwdh_offset);
+	return &finf->default_char_width;
+}
+
+static inline uint8_t *GlyphSheet(finf_header *finf, uint16_t glyph) {
+	tglp_header *tglp = finf->tglp_offset;
+	return (uint8_t*)tglp->sheet_data_offset + tglp->sheet_size * (glyph / (tglp->number_of_columns * tglp->number_of_rows));
+}
+
+void decodetile(uint8_t **in, uint16_t *out, int iconsize, int tilesize, int ax, int ay, int w) {
+	size_t x, y;
+	uint16_t a;
+	for (y = 0; y < iconsize; y += tilesize) {
+		if (tilesize == 1) {
+			a = *(*in)++;
+			out[ax / 2 + (ay + y) * w / 2] = (a << 4 | a) & 0x0F0F;
+//			out[ax / 2 + (ay + y) * w / 2] = (a << 4 | a >> 1) & 0x0707; //for simple alpha-blending
+		} else {
+			for (x = 0; x < iconsize; x += tilesize)
+				decodetile(in, out, tilesize, tilesize / 2, ax + x, ay + y, w);
 		}
 	}
 }
 
+void decodetile2(uint16_t **in, uint8_t *out, int iconsize, int tilesize, int ax, int ay, int w) {
+	size_t x, y;
+	uint16_t a;
+	if (iconsize == 2){
+		a = *(*in)++;
+		a = (a & 0x0F0F) + (a >> 4 & 0x0F0F);
+		out[ax / 2 + ay * w / 4] = (a + (a >> 8)) >> 2 & 0x0F;
+//		out[ax / 2 + ay * w / 4] = (a + (a >> 8)) >> 3 & 0x07; //for simple alpha-blending
+	} else {
+		for (y = 0; y < iconsize; y += tilesize)
+			for (x = 0; x < iconsize; x += tilesize)
+				decodetile2(in, out, tilesize, tilesize / 2, ax + x, ay + y, w);
+	}
+}
 
-void printGlyph(uint16_t glyph){
-	size_t x,y,i;
-	uint32_t offs=0;
-	uint8_t sheet[4096] = {0};
-	
-			uint8_t *sheets2 = sheets;
-					for (y = 0; y < tglp.sheet_height; y += 8)
-					{
-						for (x = 0; x < tglp.sheet_width; x += 8)
-						{
-							decodetile(&sheets2, sheet, 8, 8, x, y);
-/*							for (i = 0; i < 64; i++)
-							{
-								int x2 = i % 8;
-								if (x + x2 >= tglp.sheet_width) continue;
-								int y2 = i / 8;
-								if (y + y2 >= tglp.sheet_height) continue;
-								int pos = tiles[x2 % 4 + y2 % 4 * 4] + 16 * (x2 / 4) + 32 * (y2 / 4);
-								int shift = (pos & 1) * 4;
-								sheet[(y + y2) * tglp.sheet_width + x + x2] = (((sheets[offs + pos / 2] >> shift) & 0xF) );//* 0x11
-							}
-							offs += 64 / 2;
-*/						}
-					}
+void printGlyph(finf_header *finf, uint16_t glyph){
+	size_t x, y ,i;
+	uint8_t *sheet, val;
+	tglp_header *tglp = finf->tglp_offset;
 
-	int val;
-	for(y=0; y<tglp.sheet_height; y++){
-		for(x=0; x<tglp.sheet_width; x++){
-			val = sheet[x+y*tglp.sheet_width];
-			printf(val?"%1X":"%c",val?val:' ');
+	sheet = (uint8_t*)malloc(tglp->sheet_width * tglp->sheet_height);
+
+	uint8_t *sheets2 = GlyphSheet(finf, glyph);
+
+	for (y = 0; y < tglp->sheet_height; y += 8)
+		for (x = 0; x < tglp->sheet_width; x += 8)
+			decodetile(&sheets2, (uint16_t*)sheet, 8, 8, x, y, tglp->sheet_width);
+
+	for(y = 0; y < tglp->sheet_height; y++) {
+		for(x = 0; x < tglp->sheet_width; x++) {
+			val = sheet[x + y * tglp->sheet_width];
+			printf(val ? "%X" : "%c", val ? val : ' ');
 		}
 		printf("\n");
 	}
+
+	memset(sheet, 0, tglp->sheet_width * tglp->sheet_height);
+	sheets2 = GlyphSheet(finf, glyph);
+	for (y = 0; y < tglp->sheet_height; y += 8)
+		for (x = 0; x < tglp->sheet_width; x += 8)
+			decodetile2(&(uint16_t*)sheets2, sheet, 8, 8, x, y, tglp->sheet_width);
+
+	for (y = 0; y < tglp->sheet_height / 2; y++) {
+		for (x = 0; x < tglp->sheet_width / 2; x++) {
+			val = sheet[x + y * tglp->sheet_width / 2];
+			printf(val ? "%X" : "%c", val ? val : ' ');
+		}
+		printf("\n");
+	}
+
+}
+
+
+size_t cfntPreload(char *path) {
+	cfnt_header cfnt;
+	FILE *fp = fopen(path, "rb");
+	fread(&cfnt, sizeof(cfnt), 1, fp);
+	fclose(fp);
+	if (cfnt.magic != 'TNFC')
+		return 0;
+	return cfnt.file_size - sizeof(cfnt_header);
+}
+
+bool cfntLoad(finf_header *finf, char *path, size_t size) {
+	FILE *fp = fopen(path, "rb");
+	fseek(fp, sizeof(cfnt_header), SEEK_SET);
+	fread(finf, size, 1, fp);
+	fclose(fp);
+	finf->tglp_offset = (tglp_header*)((uintptr_t)finf->tglp_offset + (uintptr_t)finf - sizeof(cfnt_header) - 8);
+	finf->cwdh_offset = (cwdh_header*)((uintptr_t)finf->cwdh_offset + (uintptr_t)finf - sizeof(cfnt_header) - 8);
+	finf->cmap_offset = (cmap_header*)((uintptr_t)finf->cmap_offset + (uintptr_t)finf - sizeof(cfnt_header) - 8);
+	finf->tglp_offset->sheet_data_offset += (uintptr_t)finf - sizeof(cfnt_header);
+	for (cwdh_header *cwdh = finf->cwdh_offset; cwdh->next_cwdh_offset; cwdh = (cwdh->next_cwdh_offset = (cwdh_header*)((uintptr_t)cwdh->next_cwdh_offset + (uintptr_t)finf - sizeof(cfnt_header) - 8)));
+	for (cmap_header *cmap = finf->cmap_offset; cmap->next_cmap_offset; cmap = (cmap->next_cmap_offset = (cmap_header*)((uintptr_t)cmap->next_cmap_offset + (uintptr_t)finf - sizeof(cfnt_header) - 8)));
+	return true;
 }
 
 int main(int argc, char *argv[]){
-	FILE *fp = fopen(argv[1], "rb");
+	size_t size = cfntPreload(argv[1]);
+	if (!size)
+		return 1;
 
-	fread(&cfnt, sizeof(cfnt), 1, fp);
-	printf("\n=====CFNT=====\n");
-	printf("Magic: %.*s\n", sizeof(cfnt.magic), &cfnt.magic);
-	printf("Endianness: 0x%04x\n", cfnt.endianness);
-	printf("Version: 0x%08x\n", cfnt.version);
-	printf("File size: %u\n", cfnt.file_size);
-	printf("Number of blocks: 0x%08x\n", cfnt.number_of_blocks);
+	finf_header *finf = (finf_header*)malloc(size);
 
-	fread(&finf, sizeof(finf), 1, fp);
-	printf("\n=====FINF=====\n");
-	printf("Magic: %.*s\n", sizeof(finf.magic), &finf.magic);
-	printf("Section size: %u\n", finf.section_size);
-	printf("Font type: 0x%02x\n", finf.font_type);
-	printf("Line feed: 0x%02x\n", finf.line_feed);
-	printf("Alter char index: %u\n", finf.alter_char_index);
-	printf("Default left width: %u\n", finf.default_char_width.left);
-	printf("Default glyph width: %u\n", finf.default_char_width.glyph);
-	printf("Default char width: %u\n", finf.default_char_width.character);
-	printf("Encoding: %u\n", finf.encoding);
-	printf("TGLP offset: 0x%08x\n", finf.tglp_offset);
-	printf("CWDH offset: 0x%08x\n", finf.cwdh_offset);
-	printf("CMAP offset: 0x%08x\n", finf.cmap_offset);
-	printf("Height: %u\n", finf.height);
-	printf("Width: %u\n", finf.width);
-	printf("Ascent: %u\n", finf.ascent);
-	printf("Reserved: 0x%02x\n", finf.reserved);
+	if (!cfntLoad(finf, "cbf_std.bcfnt", size))
+		return 1;
 
-	fread(&tglp, sizeof(tglp), 1, fp);
-	printf("\n=====TGLP=====\n");
-	printf("Magic: %.*s\n", sizeof(tglp.magic), &tglp.magic);
-	printf("Section size: %u\n", tglp.section_size);
-	printf("Cell width: %u\n", tglp.cell_width);
-	printf("Cell height: %u\n", tglp.cell_height);
-	printf("Baseline position: %u\n", tglp.baseline_position);
-	printf("Max character width: %u\n", tglp.max_character_width);
-	printf("Sheet size: %u\n", tglp.sheet_size);
-	printf("Number of sheets: %u\n", tglp.number_of_sheets);
-	printf("Sheet image format: %u\n", tglp.sheet_image_format);
-	printf("Number of columns: %u\n", tglp.number_of_columns);
-	printf("Number of rows: %u\n", tglp.number_of_rows);
-	printf("Sheet width: %u\n", tglp.sheet_width);
-	printf("Sheet height: %u\n", tglp.sheet_height);
-	printf("Sheet data offset: 0x%08x\n", tglp.sheet_data_offset);
+	uint16_t glyph = Glyph(finf, '%');
+	char_width *cw = GlyphWidth(finf, glyph);
+	printGlyph(finf, glyph);
 
-	fseek(fp, tglp.sheet_data_offset, SEEK_SET);
-//	sheets = malloc(tglp.sheet_size*tglp.number_of_sheets);
-//	fread(&sheets, tglp.sheet_size, tglp.number_of_sheets, fp);
-	fread(&sheets, tglp.sheet_size, 1, fp);
-
-	fseek(fp, finf.cwdh_offset-8, SEEK_SET);
-	fread(&cwdh, sizeof(cwdh), 1, fp);
-	printf("\n=====CWDH=====\n");
-	printf("Magic: %.*s\n", sizeof(cwdh.magic), &cwdh.magic);
-	printf("Section size: %u\n", cwdh.section_size);
-	printf("Start index: %u\n", cwdh.start_index);
-	printf("End index: %u\n", cwdh.end_index);
-	printf("Next cwdh offset: 0x%08x\n", cwdh.next_cwdh_offset);
-
-	uint16_t char_count = cwdh.end_index - cwdh.start_index + 1;
-	char_width character_widths[char_count];
-	fread(character_widths, sizeof(char_width), char_count, fp);
-
-
-	uint32_t cmap_offset = finf.cmap_offset;
-	do {
-		fseek(fp, cmap_offset-8, SEEK_SET);
-		fread(&cmap, sizeof(cmap), 1, fp);
-
-		printf("\n=====CMAP=====\n");
-		printf("Magic: %.*s\n", sizeof(cmap.magic), &cmap.magic);
-		printf("Section size: %u\n", cmap.section_size);
-		printf("Code begin: %u\n", cmap.code_begin);
-		printf("Code end: %u\n", cmap.code_end);
-		printf("Mapping method: %u\n", cmap.mapping_method);
-		printf("Reserved: 0x%04x\n", cmap.reserved);
-		printf("Next CMAP offset: 0x%08x\n", cmap.next_cmap_offset);
-	}
-	while ((cmap_offset = cmap.next_cmap_offset));
-
-	printGlyph(5);
-
-	fclose(fp);
 	return 0;
 };
