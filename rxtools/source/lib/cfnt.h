@@ -1,6 +1,8 @@
 #ifndef CFNT_H
 #define CFNT_H
 
+#include <stdint.h>
+
 enum {
 	CFNT_LE = 0xFEFF,
 	CFNT_BE = 0xFFFE
@@ -23,16 +25,16 @@ enum {
 	 FORMAT_ETC1A4 = 13
 };
 
- enum {
+enum {
  	MAPPING_DIRECT = 0,
  	MAPPING_TABLE = 1,
  	MAPPING_SCAN = 2
- }
+};
 
 typedef struct {
 	uint8_t left;
 	uint8_t glyph;
-	uint8_t char;
+	uint8_t character;
 } __attribute__((packed)) char_width;
 
 typedef struct {
@@ -50,7 +52,7 @@ typedef struct {
 	uint8_t font_type;
 	uint8_t line_feed;
 	uint16_t alter_char_index;
-	char_width default;
+	char_width default_char_width;
 	uint8_t encoding;
 	uint32_t tglp_offset;
 	uint32_t cwdh_offset;
@@ -59,7 +61,7 @@ typedef struct {
 	uint8_t width;
 	uint8_t ascent;
 	uint8_t reserved;
-} __attribute__((packed)) bcfnt_header;
+} __attribute__((packed)) finf_header;
 
 typedef struct {
 	uint32_t magic; //TGLP
@@ -68,7 +70,7 @@ typedef struct {
 	uint8_t cell_height;
 	uint8_t baseline_position;
 	uint8_t max_character_width;
-	uint32_t shee_size;
+	uint32_t sheet_size;
 	uint16_t number_of_sheets;
 	uint16_t sheet_image_format;
 	uint16_t number_of_columns;
