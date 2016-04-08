@@ -35,6 +35,7 @@
 #include "theme.h"
 #include "mpcore.h"
 #include "strings.h"
+#include "cfnt.h"
 
 static const wchar_t *const keyX16path = L"0:key_0x16.bin";
 static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
@@ -101,6 +102,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	wchar_t langDir[_MAX_LFN + 1];
 	wchar_t themeDir[_MAX_LFN + 1];
 	wchar_t path[_MAX_LFN + 1];
+	wchar_t *bcfntPath = L"0:rxTools/data/cbf_std.bcfnt";
 	size_t size;
 	void *fontBuf;
 	FIL f;
@@ -121,6 +123,9 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang(S_MOUNT), lang(S_FILE_SYSTEM));
 		Shutdown(true);		
 	}
+
+	if (!((size = cfntPreload(bcfntPath)) && cfntLoad(__builtin_alloca(size), bcfntPath, size)))
+		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang("load"), lang("font"));
 
 	setConsole();
 

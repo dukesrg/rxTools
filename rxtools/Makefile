@@ -48,7 +48,7 @@ CCOBJS := $(addprefix $(BUILD)/,main.o features/CTRDecryptor.o	\
 	lib/tmio/tmio.o	\
 	lib/console.o lib/crypto.o lib/draw.o lib/fs.o lib/hid.o lib/lang.o	\
 	lib/log.o lib/i2c.o lib/jsmn/jsmn.o lib/menu.o lib/nand.o lib/ncch.o	\
-	features/reboot.o lib/json.o lib/theme.o lib/tmd.o lib/progress.o)
+	features/reboot.o lib/json.o lib/theme.o lib/tmd.o lib/progress.o lib/cfnt.o)
 
 MBEDTLS_DIR := mbedtls/library
 MBEDTLS_CCOBJS := aes.o sha256.o md5.o

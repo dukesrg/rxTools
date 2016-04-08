@@ -666,21 +666,21 @@ int menuTry(int targetposition, int currentposition) {
 			wcscat(str, lang(S_PARENT_SEPARATOR));
 		wcscat(str, langn(menuJson.js + menuJson.tok[ancestors[i]].start, menuJson.tok[ancestors[i]].end - menuJson.tok[ancestors[i]].start));
 	}
-	DrawStringRect(&bottomScreen, str, &style.captionRect, &style.captionColor, &font24, style.captionAlign);
+	DrawStringRect(&bottomScreen, str, &style.captionRect, &style.captionColor, style.captionAlign, 30);
 
 	for (i = 0; i < sizeof(siblings)/sizeof(siblings[0]) && siblings[i].caption != 0; i++) {
 		if (siblings[i].resolve)
-			DrawStringRect(&bottomScreen, lang(runResolve(siblings[i].resolve, siblings[i].params)), &(Rect){style.valueRect.x, y, style.valueRect.w, style.valueRect.h}, &style.valueColor, &font16, style.valueAlign);
+			DrawStringRect(&bottomScreen, lang(runResolve(siblings[i].resolve, siblings[i].params)), &(Rect){style.valueRect.x, y, style.valueRect.w, style.valueRect.h}, &style.valueColor, style.valueAlign, 16);
 		if (!enabledsiblings[i])
 			enabledsiblings[i] = !siblings[i].enabled || runFunc(siblings[i].enabled, siblings[i].params, 0, 0) ? 1 : -1;
 		enabled = enabledsiblings[i] > 0;
 
 		if (i == target.index) {
 			if (target.description != 0)
-				DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[target.description].start, menuJson.tok[target.description].end - menuJson.tok[target.description].start), &style.descriptionRect, &style.descriptionColor, &font16, style.descriptionAlign);
-			y += DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? &style.itemsSelected : &style.itemsUnselected, &font16, style.itemsAlign);
+				DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[target.description].start, menuJson.tok[target.description].end - menuJson.tok[target.description].start), &style.descriptionRect, &style.descriptionColor, style.descriptionAlign, 16);
+			y += DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? &style.itemsSelected : &style.itemsUnselected, style.itemsAlign, 16);
 		} else {
-			y += DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? &style.itemsColor : &style.itemsDisabled, &font16, style.itemsAlign);
+			y += DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? &style.itemsColor : &style.itemsDisabled, style.itemsAlign, 16);
 		}
 	}
 	

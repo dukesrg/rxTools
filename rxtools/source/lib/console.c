@@ -111,7 +111,7 @@ void ConsoleShow(){
 	//}
 	int titlespace = 2 * font16.h - 2 * BorderWidth;
 	TextColors c = {TextColor, ConsoleGetBackgroundColor()};
-	DrawStringRect(&bottomScreen, consoletitle, &(Rect){ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0}, &c, &font24, ALIGN_MIDDLE);
+	DrawStringRect(&bottomScreen, consoletitle, &(Rect){ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0}, &c, ALIGN_MIDDLE, 30);
 
 	for (int i = 0; i < CONSOLE_MAX_LINES; i++)
 		DrawString(&bottomScreen, console[i],

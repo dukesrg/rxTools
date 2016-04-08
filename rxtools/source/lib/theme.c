@@ -29,7 +29,7 @@ themeStyle style = {
 	L"",
 	L"",
 	{WHITE, TRANSPARENT},
-	{0, 0, 0, 24},
+	{0, 0, 0, 30},
 	0,
 	{WHITE, TRANSPARENT},
 	{BLACK, WHITE},

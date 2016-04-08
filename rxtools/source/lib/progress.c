@@ -60,7 +60,7 @@ void statusInit(uint_fast16_t gaugemax, wchar_t *format, ...) {
 	vswprintf(str, _MAX_LFN + 1, format, va);
 	va_end(va);
 
-	DrawStringRect(&bottomScreen, str, &style.activityRect, &style.activityColor, &font24, style.activityAlign);
+	DrawStringRect(&bottomScreen, str, &style.activityRect, &style.activityColor, style.activityAlign, 30);
 
 	if (gaugemax)
 		progressInit(&bottomScreen, &style.gaugeRect, style.gaugeFrameColor, style.gaugeDoneColor, style.gaugeBackColor, &style.gaugeTextColor, &font24, gaugemax);

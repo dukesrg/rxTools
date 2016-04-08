@@ -18,6 +18,7 @@
 #ifndef LANG_H
 #define LANG_H
 
+#include <stdbool.h>
 #include <wchar.h>
 #include "configuration.h"
 #include "json.h"

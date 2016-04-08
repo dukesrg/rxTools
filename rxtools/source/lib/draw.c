@@ -25,6 +25,7 @@
 #include "hid.h"
 #include "lang.h"
 #include "strings.h"
+#include "cfnt.h"
 
 Screen top1Screen = {400, 240, sizeof(Pixel), 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC0, (uint8_t*)0x27000000};
 Screen top2Screen = {400, 240, sizeof(Pixel), 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC8, (uint8_t*)0x27000000+400*240*3};
@@ -33,6 +34,103 @@ Screen bottomScreen = {320, 240, sizeof(Pixel), 320*240*sizeof(Pixel), (uint8_t*
 extern uint32_t _binary_font_ascii_bin_start[];
 FontMetrics font16 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //default font metrics
 FontMetrics font24 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //use default in case unicode glyps won't be loaded
+
+uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, Glyph glyph, Color color, uint8_t fontsize) {
+	uint_fast16_t charx, chary;
+	tglp_header *tglp = finf->tglp_offset;
+	uint_fast16_t sheet_width = tglp->sheet_width;
+	uint_fast16_t glyphXoffs = glyphXoffs = glyph.code % tglp->number_of_columns * (tglp->cell_width + 1) + 1;
+	uint_fast16_t glyphYoffs = glyph.code % (tglp->number_of_columns * tglp->number_of_rows) / tglp->number_of_columns * (tglp->cell_height + 1) + 1;
+	uint_fast16_t height = tglp->cell_height;
+	glyph_width widths = *glyph.width;
+	fontsize = fontsize >= finf->height ? finf->height : (finf->height + 1) / 2;
+	if (fontsize < finf->height) {
+		glyphXoffs >>= 1;
+		glyphYoffs >>= 1;
+		height = (height + 1) / 2;
+		widths.left = (widths.left + 1) / 2;
+		widths.glyph = (widths.glyph + 1) / 2;
+		widths.character = (widths.character + 1) / 2;
+		sheet_width >>= 1;
+	}
+	uint8_t sheet[tglp->sheet_height * tglp->sheet_width];
+	uint8_t *sheetsrc = GlyphSheet(glyph.code);
+	for (chary = 0; chary < tglp->sheet_height; chary += 8)
+		for (charx = 0; charx < tglp->sheet_width; charx += 8)
+			if (fontsize == finf->height)
+				sheetsrc = decodetile(sheetsrc, sheet, 8, 8, charx, chary, sheet_width);
+			else			
+				sheetsrc = decodetile2(sheetsrc, sheet, 8, 8, charx, chary, sheet_width);
+	Pixel (*pScreen)[screen->h] = screen->buf2;
+
+	uint8_t fonta;
+//	Color bg;
+	for (charx = 0; charx < widths.glyph; charx++) {
+		for (chary = 0; chary < height; chary++) {
+			fonta = sheet[charx + glyphXoffs + (glyphYoffs + chary) * sheet_width];
+			if (fonta) {
+				pScreen[x + widths.left][screen->h - (y + chary)].r = (pScreen[x + widths.left][screen->h - (y + chary)].r * (0x0F - fonta) + color.pixel.r * (fonta + 1)) >> 4;
+				pScreen[x + widths.left][screen->h - (y + chary)].g = (pScreen[x + widths.left][screen->h - (y + chary)].g * (0x0F - fonta) + color.pixel.g * (fonta + 1)) >> 4;
+				pScreen[x + widths.left][screen->h - (y + chary)].b = (pScreen[x + widths.left][screen->h - (y + chary)].b * (0x0F - fonta) + color.pixel.b * (fonta + 1)) >> 4;
+
+/*				bg.pixel = pScreen[x + (glyph.width->left+1)/2][screen->h - (y - chary)];
+				bg.pixel.r = (bg.pixel.r*(0x0F-fonta) + color.pixel.r*(fonta+1)) >> 4;
+				bg.pixel.g = (bg.pixel.g*(0x0F-fonta) + color.pixel.g*(fonta+1)) >> 4;
+				bg.pixel.b = (bg.pixel.b*(0x0F-fonta) + color.pixel.b*(fonta+1)) >> 4;
+				pScreen[x + (glyph.width->left+1)/2][screen->h - (y + chary)] = bg.pixel;
+*/
+			}
+
+/*			fonta = (sheet[charx + glyphXoffs + (glyphYoffs + chary) * tglp->sheet_width] + 1) >> 3;
+			if (fonta == 1) {
+				bg.pixel = pScreen[x][screen->h - (y - chary)];
+				bg.color = (bg.color >> 1 & 0x007F7F7F) + (color.color >> 1 &0x007F7F7F);
+//				bg.color = (((bg.color >> fonta) & fontmask[fonta]) + ((color.color >> (7 - fonta)) & fontmask[7-fonta])) >> 1;
+//				bg.color = ((color.color >> (7 - fonta)) & fontmask[7-fonta]);
+				pScreen[x + cw->left][screen->h - (y + chary)] = bg.pixel;
+			} else if (fonta == 2) {
+				pScreen[x + cw->left][screen->h - (y + chary)] = color.pixel;
+			}
+*/
+		}
+		x++;
+	}
+	return widths.character;
+}
+
+/*
+uint_fast8_t DrawCharacterCFNT(Screen *screen, uint_fast16_t x, uint_fast16_t y, wchar_t c, Color color) {
+	return DrawGlyph(screen, x, y, GlyphCode(c), color);
+}
+
+uint16_t *char2glyph(uint16_t *glyphs, wchar_t *str, size_t count) {
+	if (!(glyphs && str && *str)) return NULL;
+	for (size_t i = count; i--; *glyphs++ = GlyphCode(*str++));
+	return glyphs;
+}
+*/
+
+uint_fast16_t GetSubStringWidthGlyph(Glyph *glyphs, size_t max) {
+	if (!glyphs)
+		return 0;
+	uint_fast16_t x = 0;
+	for (size_t i = max; i--; x += (glyphs++->width->character + 1) / 2);
+	return x;
+}
+
+uint_fast16_t DrawSubStringGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, const wchar_t *str, size_t max, Color color, uint_fast8_t fontsize) {
+	if (!(str && *str))
+		return 0;
+	size_t len = wcslen(str);
+	if (!max || max > len)
+		max = len;
+	len = x;
+	Glyph glyphs[max];
+	max = wcstoglyphs(glyphs, str, max);
+	fontsize = fontsize >= finf->height ? finf->height : (finf->height + 1) / 2;
+	for (size_t i = 0 ; i < max; x += DrawGlyph(screen, x, y, glyphs[i++], color, fontsize));
+	return x - len;
+}
 
 void ClearScreen(Screen *screen, Color color)
 {
@@ -78,21 +176,7 @@ void FillRect(Screen *screen, Rect *rect, Color color) {
 	for (uint_fast16_t x = rect->x; x < rect->x + rect->w; x++)
 		for (uint_fast16_t y = screen->h - rect->y - rect->h; y < screen->h - rect->y; pScreen[x][y++] = color.pixel);
 }
-
-void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, TextColors *textcolor, FontMetrics *font, uint32_t posmax, uint32_t pos) {
-	uint_fast16_t x;
-	wchar_t percent[5];
-	
-	if (!posmax) posmax = UINT32_MAX;
-	if (pos > posmax) pos = posmax;	
-	x = (rect->w - 2) * pos / posmax;
-	swprintf(percent, 5, L"%u%%", 100 * pos / posmax);
-	DrawRect(screen, rect, frame);
-	FillRect(screen, &(Rect){rect->x + 1, rect->y + 1, x, rect->h - 2}, done);
-	FillRect(screen, &(Rect){rect->x + 1 + x, rect->y + 1, rect->w - 2 - x, rect->h - 2}, back);
-	DrawSubString(screen, percent, -1, rect->x + (rect->w - GetSubStringWidth(percent, -1, font)) / 2, rect->y + (rect->h - font->h) / 2, textcolor, font);
-}
-
+/*
 static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font) {
 	uint32_t char_width = character < font->dwstart ? font->sw : font->dw;
 	y += font->h;
@@ -125,25 +209,31 @@ static uint32_t DrawCharacter(Screen *screen, wchar_t character, uint32_t x, uin
 	}
 	return char_width;
 }
-
-uint_fast16_t DrawSubString(Screen *screen, const wchar_t *str, size_t count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font) {
+*/
+//uint_fast16_t DrawSubString(Screen *screen, const wchar_t *str, size_t count, uint32_t x, uint32_t y, TextColors *color, FontMetrics *font) {
+//	return DrawSubStringGlyph(screen, x, y, str, count, color->fg);
+/*
 	size_t len = wcslen(str);
 	if (count < 0 || count > len)
 		count = len;
 	len = x;
 	for (uint32_t i = 0; i < count && (str[i] < font->dwstart ? font->sw : font->dw) <= screen->w - x; x += DrawCharacter(screen, str[i], x, y, color, font), i++);
 	return x - len;
-}
-
+*/
+//}
+/*
 uint_fast16_t GetSubStringWidth(const wchar_t *str, size_t count, FontMetrics *font) {
+	Glyph glyphs[count];
+	return GetSubStringWidthGlyph(glyphs, wcstoglyphs(glyphs, str, count));
 	size_t len = wcslen(str);
 	uint_fast16_t dx = 0;
 	if (count < 0 || count > len)
 		count = len;
 	for (uint32_t i = 0; i < count; dx += str[i++] < font->dwstart ? font->sw : font->dw);
 	return dx;
-}
-
+*/
+//}
+/*
 uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count, Rect *rect, TextColors *color, FontMetrics *font, align a) {
 	uint_fast16_t dx = 0, dy = 0;
 	size_t len = wcslen(str);
@@ -183,14 +273,59 @@ uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t count
 	}
 	return dy;
 }
+*/
+uint_fast16_t DrawSubStringRectGlyph(Screen *screen, const wchar_t *str, size_t max, Rect *rect, Color color, align a, uint_fast8_t fontsize) {
+	uint_fast16_t dx = 0, dy = 0;
+	size_t len = wcslen(str);
+	if (!max || max > len)
+		max = len;
+	if (!max || rect->x >= screen->w || rect->y >= screen->h)
+		return dy;
+	if (!rect->w || rect->x + rect->w > screen->w)
+		rect->w = screen->w - rect->x;
+	if (!rect->h || rect->y + rect->h > screen->h)
+		rect->h = screen->h - rect->y;
+	uint32_t i, j, k, sw;
+	Glyph glyphs[max];
+	max = wcstoglyphs(glyphs, str, max);
+	fontsize = fontsize >= finf->height ? finf->height : (finf->height + 1) / 2;
+	for (i = 0; i < max && (dy + fontsize) <= rect->h; ) {
+		sw = 0;
+		k = 0;
+		j = wcsspn(str + i, L" "); //include leading spaces
+		j += wcscspn(str + i + j, L" ");
+		for (; (sw += GetSubStringWidthGlyph(glyphs + i + k, j)) < rect->w && i + j + k < max; ) {
+			k += j;
+			j = wcsspn(str + i + k, L" "); //next gap
+			j += wcscspn(str + i + k + j, L" "); //next word
+		}
+		if (sw <= rect->w || k == 0) //word do not cross the area border or only one word - take all
+			j += k;
+		else //word crosses the area border - take all but last word
+			j = k;                                                                                                	
+		 //add trailing spaces, if any, to draw non-transparent background color and remove trailing word part or added spaces that won't fit
+		for (j += wcsspn(str + i + j, L" "); (sw = GetSubStringWidthGlyph(glyphs + i, j)) > rect->w; j--);
+		switch (a) {
+			case ALIGN_LEFT: dx = 0; break;
+			case ALIGN_MIDDLE: dx = (rect->w - sw) / 2; break;
+			case ALIGN_RIGHT: dx = rect->w - sw; break;
+		}
+		DrawSubStringGlyph(screen, rect->x + dx, rect->y + dy, str + i, j, color, fontsize);
+		i += j + wcsspn(str + i + j, L" "); //skip the rest of spaces to the next line start
+		dy += fontsize;
+	}
+	return dy;
+}
 
-uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, FontMetrics *font, align a) {
-	return DrawSubStringRect(screen, str, -1, rect, color, font, a);
+uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, TextColors *color, align a, uint_fast8_t fontsize) {
+//	return DrawSubStringRect(screen, str, -1, rect, color, font, a);
+	return DrawSubStringRectGlyph(screen, str, 0, rect, color->fg, a, fontsize);
 }
 
 uint_fast16_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, Color color, Color bgcolor) {
-	TextColors c = {color, bgcolor};
-	return DrawSubString(screen, str, -1, x, y - font16.h, &c, &font16);
+//	TextColors c = {color, bgcolor};
+//	return DrawSubString(screen, str, -1, x, y - font16.h, &c, &font16);
+	return DrawSubStringGlyph(screen, x, y, str, 0, color, 16);
 }
 
 uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t *format, ...){
@@ -200,18 +335,33 @@ uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t
 	va_start(va, format);
 	vswprintf(str, _MAX_LFN + 1, format, va);
 	va_end(va);
-	rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24, ALIGN_LEFT);
+	rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, ALIGN_LEFT, 30);
 	if (info)
-		rect.y += DrawStringRect(&bottomScreen, info, &rect, &(TextColors){RED, BLACK}, &font16, ALIGN_LEFT);
+		rect.y += DrawStringRect(&bottomScreen, info, &rect, &(TextColors){RED, BLACK}, ALIGN_LEFT, 30);
 	if (action) {
 		swprintf(str, _MAX_LFN + 1, lang(SF_PRESS_BUTTON_ACTION), lang(S_ANY_KEY), action);
-		rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, &font24, ALIGN_LEFT);
+		rect.y += DrawStringRect(&bottomScreen, str, &rect, &(TextColors){RED, BLACK}, ALIGN_LEFT, 30);
 	}
 	DisplayScreen(&bottomScreen);
 	if (action)
 		InputWait();
 
 	return rect.y;
+}
+
+void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, TextColors *textcolor, FontMetrics *font, uint32_t posmax, uint32_t pos) {
+	uint_fast16_t x;
+	wchar_t percent[5];
+	
+	if (!posmax) posmax = UINT32_MAX;
+	if (pos > posmax) pos = posmax;	
+	x = (rect->w - 2) * pos / posmax;
+	swprintf(percent, 5, L"%u%%", 100 * pos / posmax);
+	DrawRect(screen, rect, frame);
+	FillRect(screen, &(Rect){rect->x + 1, rect->y + 1, x, rect->h - 2}, done);
+	FillRect(screen, &(Rect){rect->x + 1 + x, rect->y + 1, rect->w - 2 - x, rect->h - 2}, back);
+//	DrawSubString(screen, percent, -1, rect->x + (rect->w - GetSubStringWidth(percent, -1, font)) / 2, rect->y + (rect->h - font->h) / 2, textcolor, font);
+	DrawSubStringRectGlyph(screen, percent, 0, rect, textcolor->fg, ALIGN_MIDDLE, 30);
 }
 
 void DrawSplash(Screen *screen, wchar_t *splash_file) {
