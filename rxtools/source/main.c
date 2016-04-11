@@ -41,7 +41,6 @@ static const wchar_t *const keyX16path = L"0:key_0x16.bin";
 static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
 static const wchar_t *const keyX25path = L"0:slot0x25KeyX.bin";
 static const wchar_t *const rxRootPath = L"0:rxTools/%ls";
-static const wchar_t *const fontPath = L"sys/font.bin";
 static const wchar_t *const menuPath = L"sys/gui.json";
 
 static const wchar_t *const jsonPattern = L"*.json";
@@ -104,8 +103,6 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	wchar_t path[_MAX_LFN + 1];
 	wchar_t *bcfntPath = L"0:rxTools/data/cbf_std.bcfnt";
 	size_t size;
-	void *fontBuf;
-	FIL f;
 	uint32_t pad;
 	bool themeFailed = false;
 
@@ -131,25 +128,12 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	readCfg();
 
-	swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath);
-	if (!FileOpen(&f, path, false) ||
-		((fontBuf = __builtin_alloca(f.fsize)) &&
-		FileRead2(&f, fontBuf, f.fsize) != f.fsize &&
-		(FileClose(&f) || true)
-	)) {
- 		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
-	} else {
-		FileClose(&f);
-		font16.addr = fontBuf;
-		font24 = (FontMetrics){12, 24, 24, font16.dwstart, font16.addr + font16.dw * font16.h * 0x10000 / (8 * sizeof(font24.addr[0]))};
-
-		if (!(swprintf(langDir, _MAX_LFN + 1, rxRootPath, L"lang") > 0 &&
-			(size = FileMaxSize(langDir, jsonPattern)) &&
-			langInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, langDir, jsonPattern) &&
-			langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET) &&
-			swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, cfgs[CFG_LANGUAGE].val.s, wcsrchr(jsonPattern, L'.'))
-		)) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
-	}
+	if (!(swprintf(langDir, _MAX_LFN + 1, rxRootPath, L"lang") > 0 &&
+		(size = FileMaxSize(langDir, jsonPattern)) &&
+		langInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, langDir, jsonPattern) &&
+		langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET) &&
+		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, cfgs[CFG_LANGUAGE].val.s, wcsrchr(jsonPattern, L'.'))
+	)) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 	
 	swprintf(path, _MAX_LFN + 1, rxRootPath, menuPath);
 	if (!(size = FileSize(path)) ||

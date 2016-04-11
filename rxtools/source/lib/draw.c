@@ -35,16 +35,117 @@ extern uint32_t _binary_font_ascii_bin_start[];
 FontMetrics font16 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //default font metrics
 FontMetrics font24 = {8, 16, 16, 0x2000, _binary_font_ascii_bin_start}; //use default in case unicode glyps won't be loaded
 
-uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, Glyph glyph, Color color, uint8_t fontsize) {
+static uint8_t *DrawTile(Screen *screen, uint8_t *in, uint_fast8_t iconsize, uint_fast8_t tilesize, uint_fast16_t ax, uint_fast16_t ay, uint_fast16_t dx, uint_fast16_t dy, uint_fast8_t cw, uint_fast8_t ch, Color color) {
+	for (size_t y = 0; y < iconsize; y += tilesize) {
+		if (tilesize == 1) {
+			uint_fast16_t py = y + dy;
+			if (py < ch) {
+				Pixel (*pScreen)[screen->h] = screen->buf2;
+				uint_fast8_t a = *in & 0x0F;
+				py = screen->h - ay - py;
+				uint_fast16_t px = dx;
+				if (px < cw && a) {
+					px += ax;
+					pScreen[px][py].r = (pScreen[px][py].r * (0x0F - a) + color.pixel.r * (a + 1)) >> 4;
+					pScreen[px][py].g = (pScreen[px][py].g * (0x0F - a) + color.pixel.g * (a + 1)) >> 4;
+					pScreen[px][py].b = (pScreen[px][py].b * (0x0F - a) + color.pixel.b * (a + 1)) >> 4;
+				}
+				if ((px = dx + 1) < cw && (a = *in >> 4)) {
+					px += ax;
+					pScreen[px][py].r = (pScreen[px][py].r * (0x0F - a) + color.pixel.r * (a + 1)) >> 4;
+					pScreen[px][py].g = (pScreen[px][py].g * (0x0F - a) + color.pixel.g * (a + 1)) >> 4;
+					pScreen[px][py].b = (pScreen[px][py].b * (0x0F - a) + color.pixel.b * (a + 1)) >> 4;
+				}
+			}
+			in++;
+		} else for (size_t x = 0; x < iconsize; x += tilesize)
+			in = DrawTile(screen, in, tilesize, tilesize / 2, ax, ay, dx + x, dy + y, cw, ch, color);
+	}
+	return in;
+}
+/*
+uint8_t *decodetile(uint8_t *in, uint8_t *out, int iconsize, int tilesize, int ax, int ay, int w) {
+	size_t x, y;
+	uint8_t a;
+	for (y = 0; y < iconsize; y += tilesize) {
+		if (tilesize == 1) {
+			a = *in++;
+			out[ax + (ay + y) * w] = a & 0x0F;
+			out[ax + (ay + y) * w + 1] = a >> 4;
+		} else {
+			for (x = 0; x < iconsize; x += tilesize)
+				in = decodetile(in, out, tilesize, tilesize / 2, ax + x, ay + y, w);
+		}
+	}
+	return in;
+}
+
+uint8_t *decodetile2(uint8_t *in, uint8_t *out, int iconsize, int tilesize, int ax, int ay, int w) {
+	size_t x, y;
+	uint_fast16_t a;
+	if (iconsize == 2){
+		a = *(uint16_t*)in;
+		a = (a & 0x0F0F) + (a >> 4 & 0x0F0F);
+		out[ax / 2 + ay * w / 2] = (a + (a >> 8)) >> 2 & 0x0F;
+		in += 2;
+	} else {
+		for (y = 0; y < iconsize; y += tilesize)
+			for (x = 0; x < iconsize; x += tilesize)
+				in = decodetile2(in, out, tilesize, tilesize / 2, ax + x, ay + y, w);
+	}
+	return in;
+}
+*/
+static uint8_t *DrawTile2(Screen *screen, uint8_t *in, uint_fast8_t iconsize, uint_fast8_t tilesize, uint_fast16_t ax, uint_fast16_t ay, uint_fast16_t dx, uint_fast16_t dy, uint_fast8_t cw, uint_fast8_t ch, Color color) {
+	if (iconsize == 2) {
+//		out[ax / 2 + ay * w / 2] = ;
+		if ((uint_fast16_t)(dy + 1) <= ch) {
+			Pixel (*pScreen)[screen->h] = screen->buf2;
+			uint_fast16_t a = *(uint16_t*)in;
+			a = (a & 0x0F0F) + (a >> 4 & 0x0F0F);
+			a = (a + (a >> 8)) >> 2 & 0x0F;
+			uint_fast16_t py = screen->h - ay - (dy + 1) / 2;
+			if ((uint_fast16_t)(dx + 1) <= cw && a) {
+				uint_fast16_t px = ax + (dx + 1) / 2;
+				pScreen[px][py].r = (pScreen[px][py].r * (0x0F - a) + color.pixel.r * (a + 1)) >> 4;
+				pScreen[px][py].g = (pScreen[px][py].g * (0x0F - a) + color.pixel.g * (a + 1)) >> 4;
+				pScreen[px][py].b = (pScreen[px][py].b * (0x0F - a) + color.pixel.b * (a + 1)) >> 4;
+			}
+		}
+		in+=2;
+	} else for (size_t y = 0; y < iconsize; y += tilesize)
+		for (size_t x = 0; x < iconsize; x += tilesize)
+			in = DrawTile2(screen, in, tilesize, tilesize / 2, ax, ay, dx + x, dy + y, cw, ch, color);
+	return in;
+}
+
+uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, Glyph glyph, Color color, uint_fast8_t fontsize) {
 	uint_fast16_t charx, chary;
 	tglp_header *tglp = finf->tglp_offset;
-	uint_fast16_t sheet_width = tglp->sheet_width;
+//	uint_fast16_t sheet_width = tglp->sheet_width;
 	uint_fast16_t glyphXoffs = glyphXoffs = glyph.code % tglp->number_of_columns * (tglp->cell_width + 1) + 1;
 	uint_fast16_t glyphYoffs = glyph.code % (tglp->number_of_columns * tglp->number_of_rows) / tglp->number_of_columns * (tglp->cell_height + 1) + 1;
-	uint_fast16_t height = tglp->cell_height;
-	glyph_width widths = *glyph.width;
-	fontsize = fontsize >= finf->height ? finf->height : (finf->height + 1) / 2;
-	if (fontsize < finf->height) {
+//	uint_fast16_t height = tglp->cell_height;
+//	glyph_width widths = *glyph.width;
+
+//	uint8_t sheet[tglp->sheet_height * tglp->sheet_width];
+	uint8_t *sheetsrc = GlyphSheet(glyph.code);
+/*	for (chary = 0; chary < tglp->sheet_height; chary += 8)
+		for (charx = 0; charx < tglp->sheet_width; charx += 8)
+			if (fontsize == finf->height)
+				sheetsrc = decodetile(sheetsrc, sheet, 8, 8, charx, chary, sheet_width);
+			else			
+				sheetsrc = decodetile2(sheetsrc, sheet, 8, 8, charx, chary, sheet_width);
+*/				
+	uint16_t tilex = glyphXoffs & 0xFFFFFFF8;
+	uint16_t tilexend = (glyphXoffs + glyph.width->glyph) & 0xFFFFFFF8;
+	glyphXoffs &= 0x00000007;
+	uint16_t tiley = glyphYoffs & 0xFFFFFFF8;
+	uint16_t tileyend = (glyphYoffs + finf->height) & 0xFFFFFFF8;
+	glyphYoffs &= 0x00000007;
+
+//	fontsize = fontsize >= finf->height ? finf->height : (finf->height + 1) / 2;
+/*	if (fontsize < finf->height) {
 		glyphXoffs >>= 1;
 		glyphYoffs >>= 1;
 		height = (height + 1) / 2;
@@ -53,25 +154,28 @@ uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, Glyph g
 		widths.character = (widths.character + 1) / 2;
 		sheet_width >>= 1;
 	}
-	uint8_t sheet[tglp->sheet_height * tglp->sheet_width];
-	uint8_t *sheetsrc = GlyphSheet(glyph.code);
-	for (chary = 0; chary < tglp->sheet_height; chary += 8)
-		for (charx = 0; charx < tglp->sheet_width; charx += 8)
-			if (fontsize == finf->height)
-				sheetsrc = decodetile(sheetsrc, sheet, 8, 8, charx, chary, sheet_width);
-			else			
-				sheetsrc = decodetile2(sheetsrc, sheet, 8, 8, charx, chary, sheet_width);
-	Pixel (*pScreen)[screen->h] = screen->buf2;
-
-	uint8_t fonta;
+*/
+	for (chary = tiley; chary <= tileyend; chary += 8)
+		for (charx = tilex; charx <= tilexend; charx += 8)
+			if (fontsize >= finf->height)
+				DrawTile(screen, sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), 8, 8, x + glyph.width->left, y, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, glyph.width->glyph, finf->height, color);
+//				decodetile(sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), sheet, 8, 8, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, tglp->sheet_width);
+			else
+				DrawTile2(screen, sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), 8, 8, x + (glyph.width->left + 1) / 2, y, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, glyph.width->glyph, finf->height, color);
+//				decodetile2(sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), sheet, 8, 8, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, tglp->sheet_width);
+/*
+*/
+///	Pixel (*pScreen)[screen->h] = screen->buf2;
+///	uint8_t fonta;
 //	Color bg;
-	for (charx = 0; charx < widths.glyph; charx++) {
-		for (chary = 0; chary < height; chary++) {
-			fonta = sheet[charx + glyphXoffs + (glyphYoffs + chary) * sheet_width];
-			if (fonta) {
-				pScreen[x + widths.left][screen->h - (y + chary)].r = (pScreen[x + widths.left][screen->h - (y + chary)].r * (0x0F - fonta) + color.pixel.r * (fonta + 1)) >> 4;
-				pScreen[x + widths.left][screen->h - (y + chary)].g = (pScreen[x + widths.left][screen->h - (y + chary)].g * (0x0F - fonta) + color.pixel.g * (fonta + 1)) >> 4;
-				pScreen[x + widths.left][screen->h - (y + chary)].b = (pScreen[x + widths.left][screen->h - (y + chary)].b * (0x0F - fonta) + color.pixel.b * (fonta + 1)) >> 4;
+///	for (charx = 0; charx < widths.glyph; charx++) {
+///		for (chary = 0; chary < height; chary++) {
+//			fonta = sheet[charx + glyphXoffs + (glyphYoffs + chary) * sheet_width];
+///			fonta = sheet[charx + chary * sheet_width];
+///			if (fonta) {
+///				pScreen[x + widths.left][screen->h - (y + chary)].r = (pScreen[x + widths.left][screen->h - (y + chary)].r * (0x0F - fonta) + color.pixel.r * (fonta + 1)) >> 4;
+///				pScreen[x + widths.left][screen->h - (y + chary)].g = (pScreen[x + widths.left][screen->h - (y + chary)].g * (0x0F - fonta) + color.pixel.g * (fonta + 1)) >> 4;
+///				pScreen[x + widths.left][screen->h - (y + chary)].b = (pScreen[x + widths.left][screen->h - (y + chary)].b * (0x0F - fonta) + color.pixel.b * (fonta + 1)) >> 4;
 
 /*				bg.pixel = pScreen[x + (glyph.width->left+1)/2][screen->h - (y - chary)];
 				bg.pixel.r = (bg.pixel.r*(0x0F-fonta) + color.pixel.r*(fonta+1)) >> 4;
@@ -79,7 +183,7 @@ uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, Glyph g
 				bg.pixel.b = (bg.pixel.b*(0x0F-fonta) + color.pixel.b*(fonta+1)) >> 4;
 				pScreen[x + (glyph.width->left+1)/2][screen->h - (y + chary)] = bg.pixel;
 */
-			}
+///			}
 
 /*			fonta = (sheet[charx + glyphXoffs + (glyphYoffs + chary) * tglp->sheet_width] + 1) >> 3;
 			if (fonta == 1) {
@@ -92,12 +196,14 @@ uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, Glyph g
 				pScreen[x + cw->left][screen->h - (y + chary)] = color.pixel;
 			}
 */
-		}
-		x++;
-	}
-	return widths.character;
+///		}
+///		x++;
+///	}
+	if (fontsize >= finf->height)
+		return glyph.width->character;
+	else
+		return (glyph.width->character + (glyph.width->glyph % 2) + (glyph.width->left % 2)) / 2;
 }
-
 /*
 uint_fast8_t DrawCharacterCFNT(Screen *screen, uint_fast16_t x, uint_fast16_t y, wchar_t c, Color color) {
 	return DrawGlyph(screen, x, y, GlyphCode(c), color);
@@ -110,11 +216,14 @@ uint16_t *char2glyph(uint16_t *glyphs, wchar_t *str, size_t count) {
 }
 */
 
-uint_fast16_t GetSubStringWidthGlyph(Glyph *glyphs, size_t max) {
+uint_fast16_t GetSubStringWidthGlyph(Glyph *glyphs, size_t max, uint_fast8_t fontsize) {
 	if (!glyphs)
 		return 0;
 	uint_fast16_t x = 0;
-	for (size_t i = max; i--; x += (glyphs++->width->character + 1) / 2);
+	if (fontsize >= finf->height)
+		for (size_t i = max; i--; x += glyphs++->width->character);
+	else for (size_t i = max; i--; glyphs++)
+		x += (glyphs->width->character + (glyphs->width->glyph % 2) + (glyphs->width->left % 2)) / 2;
 	return x;
 }
 
@@ -294,7 +403,7 @@ uint_fast16_t DrawSubStringRectGlyph(Screen *screen, const wchar_t *str, size_t 
 		k = 0;
 		j = wcsspn(str + i, L" "); //include leading spaces
 		j += wcscspn(str + i + j, L" ");
-		for (; (sw += GetSubStringWidthGlyph(glyphs + i + k, j)) < rect->w && i + j + k < max; ) {
+		for (; (sw += GetSubStringWidthGlyph(glyphs + i + k, j, fontsize)) < rect->w && i + j + k < max; ) {
 			k += j;
 			j = wcsspn(str + i + k, L" "); //next gap
 			j += wcscspn(str + i + k + j, L" "); //next word
@@ -304,7 +413,7 @@ uint_fast16_t DrawSubStringRectGlyph(Screen *screen, const wchar_t *str, size_t 
 		else //word crosses the area border - take all but last word
 			j = k;                                                                                                	
 		 //add trailing spaces, if any, to draw non-transparent background color and remove trailing word part or added spaces that won't fit
-		for (j += wcsspn(str + i + j, L" "); (sw = GetSubStringWidthGlyph(glyphs + i, j)) > rect->w; j--);
+		for (j += wcsspn(str + i + j, L" "); (sw = GetSubStringWidthGlyph(glyphs + i, j, fontsize)) > rect->w; j--);
 		switch (a) {
 			case ALIGN_LEFT: dx = 0; break;
 			case ALIGN_MIDDLE: dx = (rect->w - sw) / 2; break;
