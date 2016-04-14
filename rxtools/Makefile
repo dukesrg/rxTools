@@ -54,10 +54,10 @@ MBEDTLS_DIR := mbedtls/library
 MBEDTLS_CCOBJS := aes.o sha256.o md5.o
 MBEDTLS_OBJS := $(addprefix $(MBEDTLS_DIR)/, $(MBEDTLS_CCOBJS))
 
-OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o font_ascii.o lib/delay.o) $(MBEDTLS_OBJS)
+OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o lib/delay.o) $(MBEDTLS_OBJS)
 DEPS	:= $(subst $(BUILD)/,$(DEPS_DIR)/,$(CCOBJS))
 
-$(call DEPDIR,$(BUILD)/rxtools.elf $(BUILD)/font.bin $(OBJS) $(DEPS))
+$(call DEPDIR,$(BUILD)/rxtools.elf $(OBJS) $(DEPS))
 
 MAKEDEP	= @$(COMPILE.c) -MM $< > $(patsubst $(BUILD)/%.o,$(DEPS_DIR)/%.d,$@)
 
@@ -95,18 +95,6 @@ $(BUILD)/%.o: $(SOURCE)/%.s
 
 $(BUILD)/%.o: $(BUILD)/%.bin
 	$(call Q,OBJCOPY,$@)cd $(BUILD); $(OBJCOPY) -Ibinary -Oelf32-littlearm -Barmv5te $(subst $(BUILD)/,,$< $@)
-
-%_ascii.bin: %.bin
-	$(call Q,DD,$@)dd if=$< of=$@ count=8
-
-$(BUILD)/font.bin: $(BUILD)/font_16.bin $(BUILD)/font_24.bin
-	@cat $^ >$@
-
-$(BUILD)/font_16.bin: unifont-8.0.01.bmp
-	$(call Q,CONVERT,$@)convert -crop +32+64 -transpose +repage -crop 16 -append $< - | convert -flop - mono:$@;
-
-$(BUILD)/font_24.bin: intlfonts-1.2.1.bmp
-	$(call Q,CONVERT,$@)convert -crop +32 -transpose +repage -crop 24 -append $< - | convert -flop - mono:$@;
 
 $(foreach f,$(NEED_DIRS),$(eval $f : | $(dir $f)D))
 

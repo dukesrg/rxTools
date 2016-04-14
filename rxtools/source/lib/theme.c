@@ -28,28 +28,28 @@ themeStyle style = {
 	L"",
 	L"",
 	L"",
-	{WHITE, TRANSPARENT},
+	WHITE,
 	{0, 0, 0, 30},
 	0,
-	{WHITE, TRANSPARENT},
-	{BLACK, WHITE},
-	{GREY, TRANSPARENT},
-	{BLACK, GREY},
+	WHITE,
+	BLACK,
+	GREY,
+	BLACK,
 	{0, 24, 160, 0},
 	0,
-	{WHITE, TRANSPARENT},
+	WHITE,
 	{160, 24, 0, 0},
 	0,
-	{WHITE, TRANSPARENT},
+	WHITE,
 	{160, 24, 0, 16},
 	0,
-	{WHITE, TRANSPARENT},
+	WHITE,
 	{0, 96, 320, 0},
 	1,
 	L"",
 	L"",
 	L"",
-	{WHITE, TRANSPARENT},
+	WHITE,
 	{16, 132, 288, 32},
 	WHITE,
 	GREY,
@@ -71,42 +71,34 @@ enum {
 	TOP1,
 	TOP2,
 	BOTTOM,
-	CAPTIONFG,
-	CAPTIONBG,
+	CAPTIONCOLOR,
 	CAPTIONX,
 	CAPTIONY,
 	CAPTIONW,
 	CAPTIONH,
 	CAPTIONALIGN,
-	ITEMSCOLORFG,
-	ITEMSCOLORBG,
-	ITEMSSELECTEDFG,
-	ITEMSSELECTEDBG,
-	ITEMSDISABLEDFG,
-	ITEMSDISABLEDBG,
-	ITEMSUNSELECTEDFG,
-	ITEMSUNSELECTEDBG,
+	ITEMSCOLOR,
+	ITEMSSELECTED,
+	ITEMSDISABLED,
+	ITEMSUNSELECTED,
 	ITEMSX,
 	ITEMSY,
 	ITEMSW,
 	ITEMSH,
 	ITEMSALIGN,
-	DESCRIPTIONFG,
-	DESCRIPTIONBG,
+	DESCRIPTIONCOLOR,
 	DESCRIPTIONX,
 	DESCRIPTIONY,
 	DESCRIPTIONW,
 	DESCRIPTIONH,
 	DESCRIPTIONALIGN,
-	VALUEFG,
-	VALUEBG,
+	VALUECOLOR,
 	VALUEX,
 	VALUEY,
 	VALUEW,
 	VALUEH,
 	VALUEALIGN,
-	ACTIVITYFG,
-	ACTIVITYBG,
+	ACTIVITYCOLOR,
 	ACTIVITYX,
 	ACTIVITYY,
 	ACTIVITYW,
@@ -115,8 +107,7 @@ enum {
 	ACTIVITYTOP1,
 	ACTIVITYTOP2,
 	ACTIVITYBOTTOM,
-	GAUGETEXTFG,
-	GAUGETEXTBG,
+	GAUGETEXTCOLOR,
 	GAUGEX,
 	GAUGEY,
 	GAUGEW,
@@ -126,8 +117,6 @@ enum {
 	GAUGEBACK,
 	IDX_COUNT
 };
-
-static int colorParse(int s, char *key, int *idx, int coloridx);
 
 int themeParse(int s, objtype type, char *key, int *idx) {
 	if (s == themeJson.count || key == NULL)
@@ -173,7 +162,7 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 							idx[ACTIVITYBOTTOM] = s + ++j;
 							break;
 						case OBJ_GAUGE:
-							j += colorParse(s+j+1, key, idx, GAUGEBACK);
+							idx[GAUGEBACK] = s + ++j;
 							break;
 						default:
 							idx[BOTTOM] = s + ++j;
@@ -182,22 +171,22 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 				case 'c':
 					switch(type) {
 						case OBJ_CAPTION: //"color"
-							j += colorParse(s+j+1, key, idx, CAPTIONFG);
+							idx[CAPTIONCOLOR] = s + ++j;
 							break;
 						case OBJ_ITEMS:
-							j += colorParse(s+j+1, key, idx, ITEMSCOLORFG);
+							idx[ITEMSCOLOR] = s + ++j;
 							break;
 						case OBJ_DESCRIPTION:
-							j += colorParse(s+j+1, key, idx, DESCRIPTIONFG);
+							idx[DESCRIPTIONCOLOR] = s + ++j;
 							break;
 						case OBJ_VALUE:
-							j += colorParse(s+j+1, key, idx, VALUEFG);
+							idx[VALUECOLOR] = s + ++j;
 							break;
 						case OBJ_ACTIVITY:
-							j += colorParse(s+j+1, key, idx, ACTIVITYFG);
+							idx[ACTIVITYCOLOR] = s + ++j;
 							break;
 						case OBJ_GAUGE:
-							j += colorParse(s+j+1, key, idx, GAUGETEXTFG);
+							idx[GAUGETEXTCOLOR] = s + ++j;
 							break;
 						case OBJ_MENU: //"caption"
 							j += themeParse(s+j+1, OBJ_CAPTION, key, idx);
@@ -209,10 +198,10 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 				case 'd':
 					switch(type) {
 						case OBJ_ITEMS: //"disabled"
-							j += colorParse(s+j+1, key, idx, ITEMSDISABLEDFG);
+							idx[ITEMSDISABLED] = s + ++j;
 							break;
 						case OBJ_GAUGE: //"done"
-							j += colorParse(s+j+1, key, idx, GAUGEDONE);
+							idx[GAUGEDONE] = s + ++j;
 							break;
 						default: //"description"
 							j += themeParse(s+j+1, OBJ_DESCRIPTION, key, idx);
@@ -221,7 +210,7 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 				case 'f':
 					switch(type) {
 						case OBJ_GAUGE:
-							j += colorParse(s+j+1, key, idx, GAUGEFRAME);
+							idx[GAUGEFRAME] = s + ++j;
 							break;
 						default:
 							j += themeParse(s+j+1, type, key, idx);
@@ -240,10 +229,10 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 					j += themeParse(s+j+1, OBJ_ITEMS, key, idx);
 					break;
 				case 's': //"selected"
-					j += colorParse(s+j+1, key, idx, ITEMSSELECTEDFG);
+					idx[ITEMSSELECTED] = s + ++j;
 					break;
 				case 'u': //"unselected"
-					j += colorParse(s+j+1, key, idx, ITEMSUNSELECTEDFG);
+					idx[ITEMSUNSELECTED] = s + ++j;
 					break;
 /*				case 'h': //"hint"
 					j += colorParse(s+j+1, key, idx, DESCRIPTIONFG);
@@ -401,17 +390,6 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 	return 0;
 }
 
-static int colorParse(int s, char *key, int *idx, int coloridx) {
-	if (themeJson.tok[s].type == JSMN_STRING)
-		idx[coloridx] = s;
-	else if (themeJson.tok[s].type == JSMN_ARRAY && themeJson.tok[s].size > 0) {
-		idx[coloridx] = s + 1;
-		if (themeJson.tok[s].size > 1)
-			idx[coloridx + 1] = s + 2;
-	}
-	return themeParse(s, OBJ_NONE, key, idx);
-}
-
 static void setImg(wchar_t *path, int index) {
 	if (index > 0) {
 		wchar_t fn[_MAX_LFN + 1];
@@ -440,24 +418,15 @@ void themeStyleSet(char *key) {
 	setImg(style.activitytop1img, idx[ACTIVITYTOP1]);
 	setImg(style.activitytop2img, idx[ACTIVITYTOP2]);
 	setImg(style.activitybottomimg, idx[ACTIVITYBOTTOM]);
-	setColor(&style.captionColor.fg.color, idx[CAPTIONFG]);
-	setColor(&style.captionColor.bg.color, idx[CAPTIONBG]);
-	setColor(&style.itemsColor.fg.color, idx[ITEMSCOLORFG]);
-	setColor(&style.itemsColor.bg.color, idx[ITEMSCOLORBG]);
-	setColor(&style.itemsSelected.fg.color, idx[ITEMSSELECTEDFG]);
-	setColor(&style.itemsSelected.bg.color, idx[ITEMSSELECTEDBG]);
-	setColor(&style.itemsDisabled.fg.color, idx[ITEMSDISABLEDFG]);
-	setColor(&style.itemsDisabled.bg.color, idx[ITEMSDISABLEDBG]);
-	setColor(&style.itemsUnselected.fg.color, idx[ITEMSUNSELECTEDFG]);
-	setColor(&style.itemsUnselected.bg.color, idx[ITEMSUNSELECTEDBG]);
-	setColor(&style.descriptionColor.fg.color, idx[DESCRIPTIONFG]);
-	setColor(&style.descriptionColor.bg.color, idx[DESCRIPTIONBG]);
-	setColor(&style.valueColor.fg.color, idx[VALUEFG]);
-	setColor(&style.valueColor.bg.color, idx[VALUEBG]);
-	setColor(&style.activityColor.fg.color, idx[ACTIVITYFG]);
-	setColor(&style.activityColor.bg.color, idx[ACTIVITYBG]);
-	setColor(&style.gaugeTextColor.fg.color, idx[GAUGETEXTFG]);
-	setColor(&style.gaugeTextColor.bg.color, idx[GAUGETEXTBG]);
+	setColor(&style.captionColor.color, idx[CAPTIONCOLOR]);
+	setColor(&style.itemsColor.color, idx[ITEMSCOLOR]);
+	setColor(&style.itemsSelected.color, idx[ITEMSSELECTED]);
+	setColor(&style.itemsDisabled.color, idx[ITEMSDISABLED]);
+	setColor(&style.itemsUnselected.color, idx[ITEMSUNSELECTED]);
+	setColor(&style.descriptionColor.color, idx[DESCRIPTIONCOLOR]);
+	setColor(&style.valueColor.color, idx[VALUECOLOR]);
+	setColor(&style.activityColor.color, idx[ACTIVITYCOLOR]);
+	setColor(&style.gaugeTextColor.color, idx[GAUGETEXTCOLOR]);
 	setColor(&style.gaugeFrameColor.color, idx[GAUGEFRAME]);
 	setColor(&style.gaugeDoneColor.color, idx[GAUGEDONE]);
 	setColor(&style.gaugeBackColor.color, idx[GAUGEBACK]);

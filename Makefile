@@ -86,7 +86,6 @@ release-licenses:
 release-rxtools: all-target-rxtools
 	@mkdir -p release/$(SYS_PATH)
 	@cp rxtools/build/code.bin release/$(SYS_PATH)
-	@cp rxtools/build/font.bin release/$(SYS_PATH)
 	@cp rxtools/gui.json release/$(SYS_PATH)
 
 release-doc:

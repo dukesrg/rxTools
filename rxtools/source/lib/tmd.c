@@ -181,7 +181,7 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))
 				) {
-					progressInit(&bottomScreen, &(Rect){10,210,300,20}, RED, GREY, WHITE, &(TextColors){BLACK, TRANSPARENT}, &font16, fil.fsize);
+					progressInit(&bottomScreen, &(Rect){10,210,300,20}, RED, GREY, WHITE, BLACK, 16, fil.fsize);
 					memset(iv, 0, sizeof(iv));
 					getTitleKey2(Key, data->header.title_id, drive);
 					progressCallback(fil.fsize / 2);

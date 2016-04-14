@@ -94,7 +94,7 @@ void ConsoleShow(){
 //	swprintf(str, _MAX_LFN, L"/rxTools/Theme/%u/app.bin", cfgs[CFG_THEME].val.i);
 //	DrawSplash(&bottomTmpScreen, str);
 	if(!consoleInited) return;
-	int titley = 2 * font16.h;
+	int titley = 2 * 16;
 
 	//for(int y = ConsoleY; y < ConsoleH + ConsoleY + BorderWidth; y++){
 	//	for(int x = ConsoleX; x < ConsoleW + ConsoleX + BorderWidth; x++){
@@ -109,14 +109,13 @@ void ConsoleShow(){
 	//		}
 	//	}
 	//}
-	int titlespace = 2 * font16.h - 2 * BorderWidth;
-	TextColors c = {TextColor, ConsoleGetBackgroundColor()};
-	DrawStringRect(&bottomScreen, consoletitle, &(Rect){ConsoleX + BorderWidth + 2 * font16.sw, ConsoleY + (titlespace - font16.h) + BorderWidth, 0, 0}, &c, ALIGN_MIDDLE, 30);
+	int titlespace = 2 * 16 - 2 * BorderWidth;
+	DrawStringRect(&bottomScreen, consoletitle, &(Rect){ConsoleX + BorderWidth + 2 * 16, ConsoleY + (titlespace - 16) + BorderWidth, 0, 0}, TextColor, ALIGN_MIDDLE, 30);
 
 	for (int i = 0; i < CONSOLE_MAX_LINES; i++)
 		DrawString(&bottomScreen, console[i],
-			ConsoleX + font16.sw * Spacing,
-			i * font16.h + ConsoleY + 15 + font16.h * (Spacing - 1) + titley,
+			ConsoleX + 8 * Spacing,
+			i * 16 + ConsoleY + 15 + 16 * (Spacing - 1) + titley,
 			TextColor, ConsoleGetBackgroundColor());
 
 	DisplayScreen(&bottomScreen);

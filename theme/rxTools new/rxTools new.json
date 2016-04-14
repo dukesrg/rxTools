@@ -9,9 +9,9 @@
 			"y":40,
 			"width":176,
 			"color":"ff93a1ab",
-			"selected":["ffffffff","00000000"],
+			"selected":"ffffffff",
 			"disabled":"ff7f0000",
-			"unselected":["ffff0000","00000000"]
+			"unselected":"ffff0000"
 		},"description":{
 			"x":183,
 			"y":53,
@@ -21,6 +21,15 @@
 		},"value":{
 			"x":183,
 			"color":"ffffffff"
+		},"activity":{
+			"x":0,
+			"align":1,
+			"color":"ff93a1ab",
+			"bottomimg":"rxTools new/bottom.bgr"
+		},"gauge":{
+			"color":"ff93a1ab",
+			"frame":"ff00b6f6",
+			"done":"ff00b6f6"
 		},"topimg":["rxTools new/top.bgr","rxTools new/top.bgr"],
 		"bottomimg":"rxTools new/bot_descr.bgr",
 		"ITEM_1":{
@@ -112,7 +121,7 @@
 			},"ITEM_7-2":{
 				"items":{
 					"color":"ff007f00",
-					"selected":["ff00ff00","00000000"]
+					"selected":"ff00ff00"
 				}
 			},"ITEM_7-3":{
 				"bottomimg":"rxTools new/bottom.bgr"

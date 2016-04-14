@@ -9,9 +9,9 @@
 			"y":40,
 			"width":152,
 			"color":"ff008dc5",
-			"selected":["ff000000","ff008dc5"],
+			"selected":"ff000000",
 			"disabled":"ffff0000",
-			"unselected":["ffff0000","ff008dc5"]
+			"unselected":"ffff0000"
 		},"description":{
 			"x":176,
 			"y":48,
@@ -133,7 +133,7 @@
 			},"ITEM_7-2":{
 				"items":{
 					"color":"ff007f00",
-					"selected":["ff00ff00","ff008dc5"]
+					"selected":"ff00ff00"
 				}
 			},"ITEM_7-3":{
 				"bottomimg":"0/bottom.bin"

@@ -42,6 +42,7 @@ static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
 static const wchar_t *const keyX25path = L"0:slot0x25KeyX.bin";
 static const wchar_t *const rxRootPath = L"0:rxTools/%ls";
 static const wchar_t *const menuPath = L"sys/gui.json";
+static const wchar_t *const fontPath = L"data/cbf_std.bcfnt";
 
 static const wchar_t *const jsonPattern = L"*.json";
 
@@ -101,7 +102,6 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	wchar_t langDir[_MAX_LFN + 1];
 	wchar_t themeDir[_MAX_LFN + 1];
 	wchar_t path[_MAX_LFN + 1];
-	wchar_t *bcfntPath = L"0:rxTools/data/cbf_std.bcfnt";
 	size_t size;
 	uint32_t pad;
 	bool themeFailed = false;
@@ -121,7 +121,10 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		Shutdown(true);		
 	}
 
-	if (!((size = cfntPreload(bcfntPath)) && cfntLoad(__builtin_alloca(size), bcfntPath, size)))
+	if (!(swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
+		(size = cfntPreload(path)) &&
+		cfntLoad(__builtin_alloca(size), path, size)
+	))
 		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang("load"), lang("font"));
 
 	setConsole();
