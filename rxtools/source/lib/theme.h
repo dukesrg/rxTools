@@ -17,6 +17,7 @@
 
 #ifndef THEME_H
 
+#include <stdint.h>
 #include "json.h"
 #include "fs.h"
 #include "draw.h"
@@ -61,8 +62,8 @@ typedef struct {
 
 extern themeStyle style;
 
-bool themeInit(Json *json, const wchar_t *path, const wchar_t *pattern);
-int themeLoad(char *name, themeSeek seek);
+uint_fast8_t themeInit(Json *json, const wchar_t *path, const wchar_t *pattern);
+uint32_t themeLoad(char *name, themeSeek seek);
 void themeStyleSet(char *key);
 
 #endif

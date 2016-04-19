@@ -96,8 +96,8 @@ size_t cfntPreload(wchar_t *path) {
 	File f;
 	cfnt_header cfnt;
 
-	if (!(path && *path && FileOpen(&f, path, false) &&
-		(FileRead2(&f, &cfnt, sizeof(cfnt)) == sizeof(cfnt) || (FileClose(&f) && false)) &&
+	if (!(path && *path && FileOpen(&f, path, 0) &&
+		(FileRead2(&f, &cfnt, sizeof(cfnt)) == sizeof(cfnt) || (FileClose(&f) && 0)) &&
 		cfnt.magic == 'TNFC'
 	)) return 0;
 	FileClose(&f);
@@ -107,8 +107,8 @@ size_t cfntPreload(wchar_t *path) {
 finf_header *cfntLoad(void *buf, wchar_t *path, size_t size) {
 	File f;
 
-	if (buf && path && *path && FileOpen(&f, path, false) &&
-		(FileRead(&f, buf, size, sizeof(cfnt_header)) == size || (FileClose(&f) && false)) &&
+	if (buf && path && *path && FileOpen(&f, path, 0) &&
+		(FileRead(&f, buf, size, sizeof(cfnt_header)) == size || (FileClose(&f) && 0)) &&
 		((finf_header*)buf)->magic == 'FNIF'
 	) {
 		FileClose(&f);

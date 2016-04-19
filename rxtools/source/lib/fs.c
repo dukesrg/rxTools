@@ -20,10 +20,11 @@
 ////////////////////////////////////////////////////////////////Basic FileSystem Operations
 static FATFS fs[3];
 /**Init FileSystems.*/
-bool FSInit(void) {
-	if (f_mount(&fs[0], L"0:", 0) != FR_OK) return 0;		//SDCard
-	if (f_mount(&fs[1], L"1:", 1) != FR_OK) return 0;		//NAND
-	if (f_mount(&fs[2], L"2:", 0) != FR_OK) ; //return 0;	//EmuNAND, Sometimes it doesn't exist
+uint_fast8_t FSInit(void) {
+	if (f_mount(&fs[0], L"0:", 0) != FR_OK || //SDCard
+		f_mount(&fs[1], L"1:", 1) != FR_OK //NAND
+	) return 0;
+	f_mount(&fs[2], L"2:", 0); //EmuNAND, Sometimes it doesn't exist
 	return 1;
 }
 /**[Unused?]DeInit FileSystems.*/
@@ -33,11 +34,11 @@ void FSDeInit(void) {
 	f_mount(NULL, L"2:", 0);
 }
 
-bool FileOpen(File *Handle, const wchar_t *path, bool truncate) {
-	return f_open(Handle, path, FA_READ | FA_WRITE | (truncate ? FA_CREATE_ALWAYS : FA_OPEN_EXISTING)) == FR_OK && FileSeek(Handle, 0) && (f_sync(Handle) || true);
+uint_fast8_t FileOpen(File *Handle, const wchar_t *path, uint_fast8_t truncate) {
+	return f_open(Handle, path, FA_READ | FA_WRITE | (truncate ? FA_CREATE_ALWAYS : FA_OPEN_EXISTING)) == FR_OK && FileSeek(Handle, 0) && (f_sync(Handle) || 1);
 }
 
-bool FileSeek(File *Handle, size_t foffset) {
+uint_fast8_t FileSeek(File *Handle, size_t foffset) {
 	return f_tell(Handle) == foffset || f_lseek(Handle, foffset) == FR_OK;
 }
 
@@ -65,11 +66,11 @@ size_t FileGetSize(File *Handle) {
 	return f_size(Handle);
 }
 
-bool FileClose(File *Handle) {
+uint_fast8_t FileClose(File *Handle) {
 	return f_close(Handle) == FR_OK;
 }
 
-bool FileExists(const wchar_t *path) {
+uint_fast8_t FileExists(const wchar_t *path) {
 	return f_stat(path, NULL) == FR_OK;
 }
 

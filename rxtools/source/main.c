@@ -60,23 +60,23 @@ static void setConsole() {
 	ConsoleSetBorderWidth(3);
 }
 
-bool initKeyX(uint_fast8_t slot, const wchar_t *path) {
+uint_fast8_t initKeyX(uint_fast8_t slot, const wchar_t *path) {
 	uint8_t buf[AES_BLOCK_SIZE];
 	FIL f;
 
-	if (!FileOpen(&f, path, false) ||
+	if (!FileOpen(&f, path, 0) ||
 		(FileRead2(&f, buf, AES_BLOCK_SIZE) != AES_BLOCK_SIZE &&
-		(FileClose(&f) || true)
-	)) return false;
+		(FileClose(&f) || 1)
+	)) return 0;
 	FileClose(&f);
 	setup_aeskeyX(slot, buf);
-	return true;
+	return 1;
 }
 
 static _Noreturn void mainLoop() {
 	uint32_t pad;
 
-	while (true) {
+	while (1) {
 		pad = InputWait();
 		if (pad & keys[KEY_DDOWN].mask)
 			MenuNextSelection();
@@ -104,7 +104,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	wchar_t path[_MAX_LFN + 1];
 	size_t size;
 	uint32_t pad;
-	bool themeFailed = false;
+	uint_fast8_t themeFailed = 0;
 
 	// Enable TMIO IRQ
 	*(volatile uint32_t *)0x10001000 = 0x00010000;
@@ -118,7 +118,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 
 	if (!FSInit()) {
 		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang(S_MOUNT), lang(S_FILE_SYSTEM));
-		Shutdown(true);		
+		Shutdown(1);		
 	}
 
 	if (!(swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
@@ -144,8 +144,8 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 
 	if (getMpInfo() != MPINFO_KTR || (
-		(initKeyX(0x16, keyX16path) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX16path) && false)) &&
-		(initKeyX(0x1B, keyX1Bpath) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX1Bpath) && false))
+		(initKeyX(0x16, keyX16path) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX16path) && 0)) &&
+		(initKeyX(0x1B, keyX1Bpath) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX1Bpath) && 0))
 	)) {
 		swprintf(path, _MAX_LFN + 1, rxRootPath, L"");
 		f_mkdir(path);
@@ -159,7 +159,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		themeInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, themeDir, jsonPattern) &&
 		themeLoad(cfgs[CFG_THEME].val.s, THEME_SET) &&
 		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", themeDir, cfgs[CFG_THEME].val.s, wcsrchr(jsonPattern, L'.')) > 0) &&
-		(themeFailed = true)
+		(themeFailed = 1)
 	) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 
 	pad = GetInput();

@@ -189,11 +189,11 @@ static int itrans = 0;
 static Json langJson, *langJsonInit;
 static const wchar_t *langDir, *langPattern;
 
-bool langInit(Json *json, const wchar_t *path, const wchar_t *pattern) {
+uint_fast8_t langInit(Json *json, const wchar_t *path, const wchar_t *pattern) {
 	return json && json->js && json->tok && (langJsonInit = json)->tok && (langDir = path) && (langPattern = pattern);
 }
 
-int langLoad(char *code, langSeek seek) {
+uint32_t langLoad(char *code, langSeek seek) {
 	DIR dir;
 	FILINFO fno;
 	wchar_t *fn, *pathfn;

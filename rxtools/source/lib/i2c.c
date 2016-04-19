@@ -65,7 +65,7 @@ inline void i2cWaitBusy(uint8_t bus_id) {
     while (*i2cGetCntReg(bus_id) & 0x80);
 }
 
-inline bool i2cGetResult(uint8_t bus_id) {
+inline uint_fast8_t i2cGetResult(uint8_t bus_id) {
     i2cWaitBusy(bus_id);
     return (*i2cGetCntReg(bus_id) >> 4) & 1;
 }
@@ -78,14 +78,14 @@ void i2cStop(uint8_t bus_id, uint8_t arg0) {
 
 //-----------------------------------------------------------------------------
 
-bool i2cSelectDevice(uint8_t bus_id, uint8_t dev_reg) {
+uint_fast8_t i2cSelectDevice(uint8_t bus_id, uint8_t dev_reg) {
     i2cWaitBusy(bus_id);
     *i2cGetDataReg(bus_id) = dev_reg;
     *i2cGetCntReg(bus_id) = 0xC2;
     return i2cGetResult(bus_id);
 }
 
-bool i2cSelectRegister(uint8_t bus_id, uint8_t reg) {
+uint_fast8_t i2cSelectRegister(uint8_t bus_id, uint8_t reg) {
     i2cWaitBusy(bus_id);
     *i2cGetDataReg(bus_id) = reg;
     *i2cGetCntReg(bus_id) = 0xC0;
@@ -113,7 +113,7 @@ uint8_t i2cReadRegister(uint8_t dev_id, uint8_t reg) {
     return 0xff;
 }
 
-bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size) {
+uint_fast8_t i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size) {
     uint8_t bus_id = i2cGetDeviceBusId(dev_id);
     uint8_t dev_addr = i2cGetDeviceRegAddr(dev_id);
 
@@ -126,7 +126,7 @@ bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t
         *i2cGetCntReg(bus_id) = 0xC5;
         i2cWaitBusy(bus_id);
         if (++j >= 8)
-            return false;
+            return 0;
     }
 
     if (buf_size != 1) {
@@ -142,10 +142,10 @@ bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t
     *i2cGetCntReg(bus_id) = 0xE1;
     i2cWaitBusy(bus_id);
     *buffer = *i2cGetDataReg(bus_id);
-    return true;
+    return 1;
 }
 
-bool i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data) {
+uint_fast8_t i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data) {
     uint8_t bus_id = i2cGetDeviceBusId(dev_id);
     uint8_t dev_addr = i2cGetDeviceRegAddr(dev_id);
 
@@ -156,11 +156,11 @@ bool i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data) {
             *i2cGetCntReg(bus_id) = 0xC1;
             i2cStop(bus_id, 0);
             if (i2cGetResult(bus_id))
-                return true;
+                return 1;
         }
         *i2cGetCntReg(bus_id) = 0xC5;
         i2cWaitBusy(bus_id);
     }
 
-    return false;
+    return 0;
 }

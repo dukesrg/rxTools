@@ -18,7 +18,6 @@
 #ifndef I2C_H
 #define I2C_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -42,16 +41,16 @@ volatile uint8_t* const i2cGetDataReg(uint8_t bus_id);
 volatile uint8_t* const i2cGetCntReg(uint8_t bus_id);
 
 void i2cWaitBusy(uint8_t bus_id);
-bool i2cGetResult(uint8_t bus_id);
+uint_fast8_t i2cGetResult(uint8_t bus_id);
 uint8_t i2cGetData(uint8_t bus_id);
 void i2cStop(uint8_t bus_id, uint8_t arg0);
 
-bool i2cSelectDevice(uint8_t bus_id, uint8_t dev_reg);
-bool i2cSelectRegister(uint8_t bus_id, uint8_t reg);
+uint_fast8_t i2cSelectDevice(uint8_t bus_id, uint8_t dev_reg);
+uint_fast8_t i2cSelectRegister(uint8_t bus_id, uint8_t reg);
 
 uint8_t i2cReadRegister(uint8_t dev_id, uint8_t reg);
-bool i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data);
+uint_fast8_t i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data);
 
-bool i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size);
+uint_fast8_t i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size);
 
 #endif

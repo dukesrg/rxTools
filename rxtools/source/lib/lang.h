@@ -18,7 +18,6 @@
 #ifndef LANG_H
 #define LANG_H
 
-#include <stdbool.h>
 #include <wchar.h>
 #include "configuration.h"
 #include "json.h"
@@ -171,8 +170,8 @@ typedef enum {
 	LANG_PREV
 } langSeek;
 
-bool langInit(Json *json, const wchar_t *path, const wchar_t *pattern);
-int langLoad(char *code, langSeek seek);
+uint_fast8_t langInit(Json *json, const wchar_t *path, const wchar_t *pattern);
+uint32_t langLoad(char *code, langSeek seek);
 wchar_t *lang(const char *key);
 wchar_t *langn(const char *key, int keylen);
 

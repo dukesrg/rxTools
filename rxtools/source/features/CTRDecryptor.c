@@ -90,7 +90,7 @@ void ProcessExeFS(PartitionInfo *info){ //We expect Exefs to take just a block. 
 int ProcessCTR(wchar_t *path){
 	PartitionInfo myInfo;
 	File myFile;
-	if(FileOpen(&myFile, path, false)){
+	if(FileOpen(&myFile, path, 0)){
 		ConsoleInit();
 		ConsoleSetTitle(strings[STR_DECRYPT], strings[STR_CTR]);
 		uint32_t ncch_base;
@@ -183,7 +183,7 @@ int ExploreFolders(wchar_t* folder){
 
 		if(myInfo->fattrib & AM_DIR){
 			nfiles += ExploreFolders(path);
-		}else if(true){
+		}else if(1){
 			if(ProcessCTR(path) == 0){
 				nfiles++;
 			}

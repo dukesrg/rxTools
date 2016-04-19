@@ -18,15 +18,16 @@
 #ifndef JSON_H
 #define JSON_H
 
+#include <stdint.h>
 #include "jsmn/jsmn.h"
 
 typedef struct {
 	char *js;
 	size_t len;
 	jsmntok_t *tok;
-	int count;
+	uint32_t count;
 } Json;
 
-int jsonLoad(Json *json, const wchar_t *path);
+uint32_t jsonLoad(Json *json, const wchar_t *path);
 
 #endif

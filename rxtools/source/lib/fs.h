@@ -18,22 +18,21 @@
 #ifndef FS_H
 #define FS_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "fatfs/ff.h"
 #include "nand.h"
 #define File FIL
 ////////////////////////////////////////////////////////////////Basic FileSystem Operations
-bool FSInit(void);
+uint_fast8_t FSInit(void);
 void FSDeInit(void);
-bool FileOpen(File *Handle, const wchar_t *path, bool truncate);
+uint_fast8_t FileOpen(File *Handle, const wchar_t *path, uint_fast8_t truncate);
 size_t FileRead(File *Handle, void *buf, size_t size, size_t foffset);
 size_t FileWrite(File *Handle, void *buf, size_t size, size_t foffset);
 size_t FileGetSize(File *Handle);
-bool FileClose(File *Handle);
-bool FileExists(const wchar_t *path);
-bool FileSeek(File *Handle, size_t foffset);
+uint_fast8_t FileClose(File *Handle);
+uint_fast8_t FileExists(const wchar_t *path);
+uint_fast8_t FileSeek(File *Handle, size_t foffset);
 size_t FileRead2(File *Handle, void *buf, size_t size);
 size_t FileSize(const wchar_t *path);
 size_t FileMaxSize(const wchar_t *path, const wchar_t *pattern);

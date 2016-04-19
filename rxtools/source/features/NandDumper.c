@@ -50,7 +50,7 @@ int NandSwitch(){
 	print(strings[STR_BLANK_BUTTON_ACTION], strings[STR_BUTTON_B], strings[STR_CANCEL]);
 
 	ConsoleShow();
-	while (true) {
+	while (1) {
         uint32_t pad_state = InputWait();
 		if(pad_state & keys[KEY_X].mask) return SYS_NAND;
 		if(pad_state & keys[KEY_Y].mask) return EMU_NAND;
@@ -228,7 +228,7 @@ void DumpNANDSystemTitles(){
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_B], strings[STR_CANCEL]);
 	ConsoleShow();
-	while (true) {
+	while (1) {
         uint32_t pad_state = InputWait();
 		if(pad_state & keys[KEY_A].mask){
 			CTRDecryptor();

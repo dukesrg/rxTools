@@ -1,7 +1,6 @@
 #ifndef TMD_H
 #define TMD_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <wchar.h>
 
@@ -95,8 +94,8 @@ typedef struct {
 } tmd_data;
 
 //bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive);
-bool tmdLoadHeader(tmd_data *data, wchar_t *path);
-bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index, uint_fast8_t drive);
+uint_fast8_t tmdLoadHeader(tmd_data *data, wchar_t *path);
+uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index, uint_fast8_t drive);
 size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
 uint32_t tmdLoadRecent(tmd_data *data, wchar_t *path);
 size_t tmdPreloadHeader(tmd_data *data, wchar_t *path);

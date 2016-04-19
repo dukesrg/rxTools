@@ -7,7 +7,6 @@
 /* storage control module to the FatFs module with a defined API.        */
 /*-----------------------------------------------------------------------*/
 
-#include <stdbool.h>
 #include "diskio.h"     /* FatFs lower layer API */
 #include <tmio/tmio.h>
 #include <nand.h>
@@ -21,8 +20,8 @@ enum {
 	DRV_NUM
 };
 
-static bool initedTmio = false;
-static bool initedCrypto = false;
+static uint_fast8_t initedTmio = 0;
+static uint_fast8_t initedCrypto = 0;
 
 /*-----------------------------------------------------------------------*/
 /* Inidialize a Drive                                                    */
@@ -34,14 +33,14 @@ DSTATUS disk_initialize (
 {
 	uint32_t res;
 
-	if (initedTmio == false) {
+	if (!initedTmio) {
 		tmio_init();
-		initedTmio = true;
+		initedTmio = 1;
 	}
 
-	if ((pdrv == DRV_EMU || pdrv == DRV_NAND) && initedCrypto == false) {
+	if ((pdrv == DRV_EMU || pdrv == DRV_NAND) && !initedCrypto) {
 		FSNandInitCrypto();
-		initedCrypto = true;
+		initedCrypto = 1;
 	}
 
 	switch (pdrv) {
@@ -73,7 +72,7 @@ DSTATUS disk_status (
 {
 	enum tmio_dev_id d;
 
-	if ((pdrv == DRV_EMU || pdrv == DRV_NAND) && initedCrypto == false)
+	if ((pdrv == DRV_EMU || pdrv == DRV_NAND) && !initedCrypto)
 		return STA_NOINIT;
 
 	switch (pdrv) {

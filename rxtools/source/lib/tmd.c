@@ -151,7 +151,7 @@ static bool checkFileHash(wchar_t *path, uint8_t *checkhash) {
 	return !memcmp(hash, checkhash, sizeof(hash));
 }
 */
-bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index, uint_fast8_t drive) { //validates loaded tmd content chunk records
+uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index, uint_fast8_t drive) { //validates loaded tmd content chunk records
 	FIL fil;
 	size_t size;
 	wchar_t apppath[_MAX_LFN + 1];
@@ -167,7 +167,7 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index
 	if (!data->content_chunk &&
 		(data->content_chunk = __builtin_alloca(content_count * sizeof(tmd_content_chunk))) &&
 		!tmdPreloadChunk(data, path, content_index)
-	) return false;
+	) return 0;
 
 	for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
 		for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
@@ -176,10 +176,10 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index
 				mbedtls_sha256_starts(&ctx, 0);
 				swprintf(apppath, _MAX_LFN + 1, L"%.*ls/%08lx%s", wcsrchr(path, L'/') - path, path, __builtin_bswap32(data->content_chunk[chunk_index].content_id), APP_EXT);
 				size = __builtin_bswap32(data->content_chunk[chunk_index].content_size_lo);
-				if (FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))) {
+				if (FileOpen(&fil, apppath, 0) && (FileGetSize(&fil) == size || (FileClose(&fil) && 0))) {
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) mbedtls_sha256_update(&ctx, buf, size);
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
-					FileOpen(&fil, apppath, false) && (FileGetSize(&fil) == size || (FileClose(&fil) && false))
+					FileOpen(&fil, apppath, 0) && (FileGetSize(&fil) == size || (FileClose(&fil) && 0))
 				) {
 					progressInit(&bottomScreen, &(Rect){10,210,300,20}, RED, GREY, WHITE, BLACK, 16, fil.fsize);
 					memset(iv, 0, sizeof(iv));
@@ -192,15 +192,15 @@ bool tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index
 					progressCallback((fil.fsize + fil.fptr) / 2);
 					}                    
 				} else
-					return false;
+					return 0;
 				FileClose(&fil);
 				mbedtls_sha256_finish(&ctx, hash);
 				if (memcmp(hash, data->content_chunk[chunk_index].content_hash, sizeof(hash)))
-					return false;
+					return 0;
 			}
 		}
 	}
-	return true;
+	return 1;
 }
 
 size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_index) { //calculates loaded tmd content chunk size of content_index type
@@ -210,7 +210,7 @@ size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_inde
 	uint_fast16_t content_count;
 	uint32_t content_size = 0;
 	
-	if (!FileOpen(&fil, path, false) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return false;
+	if (!FileOpen(&fil, path, 0) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return 0;
 	offset += sizeof(data->header) + sizeof(data->content_info);
 	content_count = __builtin_bswap16(data->header.content_count);
 	size = content_count * sizeof(tmd_content_chunk);
@@ -227,7 +227,7 @@ size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_inde
 	return content_size;
 }
 
-bool tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd header
+uint_fast8_t tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd header
 	File fil;
 	size_t offset, size;
 	tmd_data data_tmp;
@@ -235,28 +235,28 @@ bool tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load tmd head
 	uint_fast16_t content_count;
 	uint8_t hash[32];
 	
-	if (!FileOpen(&fil, path, false) || (
+	if (!FileOpen(&fil, path, 0) || (
 		(FileRead2(&fil, &data_tmp.sig_type, sizeof(data_tmp.sig_type)) != sizeof(data_tmp.sig_type) ||
 		(offset = tmdHeaderOffset(data_tmp.sig_type)) == 0 ||
 		!FileSeek(&fil, offset) ||
 		FileRead2(&fil, &data_tmp.header, sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) != sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) &&
-		(FileClose(&fil) || true)
-	)) return false;
+		(FileClose(&fil) || 1)
+	)) return 0;
 	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
-	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return FileClose(&fil) && false;
+	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return FileClose(&fil) && 0;
 	size = (content_count = __builtin_bswap16(data_tmp.header.content_count)) * sizeof(tmd_content_chunk);
 	content_chunk_tmp = __builtin_alloca(size);
-	if (FileRead2(&fil, content_chunk_tmp, size) != size) return FileClose(&fil) && false;
+	if (FileRead2(&fil, content_chunk_tmp, size) != size) return FileClose(&fil) && 0;
 	FileClose(&fil);
 	for (uint_fast16_t info_index = 0, chunk_index = 0, chunk_count; chunk_index < content_count; info_index++, chunk_index += chunk_count) {
 		if (info_index >= sizeof(data_tmp.content_info)/sizeof(tmd_content_info) ||
 			(chunk_count = __builtin_bswap16(data_tmp.content_info[info_index].content_command_count)) == 0
-		) return false;
+		) return 0;
 		mbedtls_sha256((uint8_t*)&content_chunk_tmp[chunk_index], chunk_count * sizeof(tmd_content_chunk), hash, 0);
-		if (memcmp(hash, data_tmp.content_info[chunk_index].content_chunk_hash, sizeof(hash))) return false;
+		if (memcmp(hash, data_tmp.content_info[chunk_index].content_chunk_hash, sizeof(hash))) return 0;
 	}
 	*data = data_tmp;
-	return true;
+	return 1;
 }
 
 size_t tmdPreloadHeader(tmd_data *data, wchar_t *path) { //loads tmd header, validatas content info hash and returns content chunks size on success
@@ -265,12 +265,12 @@ size_t tmdPreloadHeader(tmd_data *data, wchar_t *path) { //loads tmd header, val
 	tmd_data data_tmp;
 	uint8_t hash[32];
 	
-	if (!FileOpen(&fil, path, false) || (
+	if (!FileOpen(&fil, path, 0) || (
 		(FileRead2(&fil, &data_tmp.sig_type, sizeof(data_tmp.sig_type)) != sizeof(data_tmp.sig_type) ||
 		(offset = tmdHeaderOffset(data_tmp.sig_type)) == 0 ||
 		!FileSeek(&fil, offset) ||
 		FileRead2(&fil, &data_tmp.header, sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) != sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) &&
-		(FileClose(&fil) || true)
+		(FileClose(&fil) || 1)
 	)) return 0;
 	FileClose(&fil);
 	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
@@ -286,7 +286,7 @@ size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_inde
 	uint_fast16_t content_count, chunk_count;
 	uint8_t hash[32];
 	
-	if (FileOpen(&fil, path, false) && (offset = tmdHeaderOffset(data->sig_type))) {
+	if (FileOpen(&fil, path, 0) && (offset = tmdHeaderOffset(data->sig_type))) {
 		size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
 		if (!data->content_chunk)
 			data->content_chunk = __builtin_alloca(size);

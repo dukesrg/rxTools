@@ -274,9 +274,9 @@ void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color bac
 
 void DrawSplash(Screen *screen, wchar_t *splash_file) {
 	File Splash;
-	if (!FileOpen(&Splash, splash_file, false) ||
+	if (!FileOpen(&Splash, splash_file, 0) ||
 		(FileRead2(&Splash, (void*)(screen->buf2), Splash.fsize) != Splash.fsize &&
-		(FileClose(&Splash) || true)
+		(FileClose(&Splash) || 1)
 	))
 		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), splash_file);
 	else

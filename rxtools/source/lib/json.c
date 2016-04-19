@@ -18,13 +18,13 @@
 #include "fs.h"
 #include "json.h"
 
-int jsonLoad(Json *json, const wchar_t *path) {
+uint32_t jsonLoad(Json *json, const wchar_t *path) {
 	jsmn_parser p;
 	File f;
 
-	if (!FileOpen(&f, path, false) || f.fsize > json->len || (
+	if (!FileOpen(&f, path, 0) || f.fsize > json->len || (
 		FileRead2(&f, json->js, f.fsize) != f.fsize &&
-		(FileClose(&f) || true)
+		(FileClose(&f) || 1)
 	)) return json->count = 0;
 	FileClose(&f);
 	jsmn_init(&p);

@@ -16,7 +16,6 @@
  */
 
 #include <inttypes.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include "downgradeapp.h"
@@ -82,7 +81,7 @@ int FindApp(AppInfo *info)
 
 	wchar_t path[_MAX_LFN];
 	unsigned short latest_ver = 0, cur_ver = 0;
-	bool is_v0 = false;
+	uint_fast8_t is_v0 = 0;
 
 	while (f_readdir(curDir, myInfo) == FR_OK)
 	{
@@ -142,7 +141,7 @@ int FindApp(AppInfo *info)
 				{
 					FileClose(&tmp);
 					latest_ver = cur_ver;
-					if (cur_ver == 0) is_v0 = true;
+					if (cur_ver == 0) is_v0 = 1;
 
 					/* Save TMD and content paths */
 					swprintf(info->tmd, _MAX_LFN, L"%ls/%ls", folder, myInfo->fname);
@@ -455,7 +454,7 @@ void downgradeMSET()
 	WaitForButton(keys[KEY_A].mask);
 }
 
-void manageFBI(bool restore)
+void manageFBI(uint_fast8_t restore)
 {
 	unsigned int titleid_low[6] = { 0x00020300, 0x00021300, 0x00022300, 0x00026300, 0x00027300, 0x00028300 }; //JPN, USA, EUR, CHN, KOR, TWN
 	wchar_t *backup_path = L"rxTools/h&s_backup";
@@ -480,7 +479,7 @@ void manageFBI(bool restore)
 	unsigned char CntDataSum[32] = {0};
 
 	unsigned short checkLoop;
-	bool noHalt = true;
+	uint_fast8_t noHalt = 1;
 
 	AppInfo info;
 
@@ -510,12 +509,12 @@ void manageFBI(bool restore)
 			uint32_t pad_state = InputWait();
 			if (pad_state & keys[KEY_Y].mask)
 			{
-				noHalt = true;
+				noHalt = 1;
 				checkLoop = 1;
 			}
 			else if (pad_state & keys[KEY_B].mask)
 			{
-				noHalt = false;
+				noHalt = 0;
 				checkLoop = 1;
 
 				CheckRegion(info.drive);
@@ -764,11 +763,11 @@ out:
 void installFBI()
 {
 	/* Injects FBI TMD and content file to the Health & Safety App */
-	manageFBI(false);
+	manageFBI(0);
 }
 
 void restoreHS()
 {
 	/* Restores original Health & Safety TMD and content file to the NAND */
-	manageFBI(true);
+	manageFBI(1);
 }

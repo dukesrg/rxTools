@@ -19,7 +19,6 @@
 #define HID_H
 
 #include <stdint.h>
-#include <stdbool.h>
 
 enum {
 	KEY_A,
@@ -68,6 +67,6 @@ extern const Key keys[KEY_COUNT];
 uint32_t InputWait();
 uint32_t GetInput();
 void WaitForButton(uint32_t mask);
-void Shutdown(bool reboot);
+void Shutdown(uint_fast8_t reboot);
 
 #endif

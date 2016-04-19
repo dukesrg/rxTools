@@ -162,7 +162,7 @@ void AdvFileManagerFileAction(wchar_t *filePath)
 	f_stat(filePath, myInfo);
 
 	int actions_idx = 0;
-	while (true)
+	while (1)
 	{
 		//DRAW GUI
 		ConsoleInit();
@@ -242,7 +242,7 @@ void AdvFileManagerMain(){
 	Screen screentmp = bottomScreen;	
 	screentmp.addr = (void*)0x27000000;
 
-	while (true)
+	while (1)
 	{
 		//Background
 //		wchar_t str[_MAX_LFN];

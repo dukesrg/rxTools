@@ -118,18 +118,18 @@ enum {
 	IDX_COUNT
 };
 
-int themeParse(int s, objtype type, char *key, int *idx) {
+uint32_t themeParse(uint32_t s, objtype type, char *key, uint32_t *idx) {
 	if (s == themeJson.count || key == NULL)
 		return 0;
 	if (themeJson.tok[s].type == JSMN_PRIMITIVE || themeJson.tok[s].type == JSMN_STRING)
 		return 1;
-	else if (themeJson.tok[s].type == JSMN_OBJECT) {
-		int i, j = 0, k;
-		bool isTarget = false;
-		for (i = 0; i < themeJson.tok[s].size; i++) {
+	uint32_t j = 0;
+	if (themeJson.tok[s].type == JSMN_OBJECT) {
+		uint_fast8_t isTarget = 0;
+		for (size_t i = 0; i < themeJson.tok[s].size; i++) {
 			j++;
 			if (themeJson.tok[s+j+1].type == JSMN_OBJECT && strncmp(key, themeJson.js + themeJson.tok[s+j].start, themeJson.tok[s+j].end - themeJson.tok[s+j].start) == 0)
-				isTarget = true;
+				isTarget = 1;
 
 			switch (themeJson.js[themeJson.tok[s+j].start]) {
 				case 'a':
@@ -367,30 +367,29 @@ int themeParse(int s, objtype type, char *key, int *idx) {
 						themeParse(s+j+1, type, key, idx);
 						return 0;
 					} else {
-						int localidx[IDX_COUNT] = {0};
+						uint32_t k, localidx[IDX_COUNT] = {0};
 						if ((k = themeParse(s+j+1, type, key, localidx)) == 0 || themeJson.js[themeJson.tok[s+j].start] == 'm') {
 						//object is in target chain - set inherited indexes and terminate or apply root 'menu' for unset parameters
-							for (int l = 0; l < IDX_COUNT; l++)
+							for (size_t l = 0; l < IDX_COUNT; l++)
 								if (idx[l] == 0)
 									idx[l] = localidx[l];
 							if (k == 0)
 								return 0;
 						}
+						j += k;
 					}
-					j += k;
 			}
 		}
 		return j + 1;
 	} else if (themeJson.tok[s].type == JSMN_ARRAY) {
-		int i, j = 0;
-		for (i = 0; i < themeJson.tok[s].size; i++)
+		for (size_t i = 0; i < themeJson.tok[s].size; i++)
 			j += themeParse(s+j+1, type, key, idx);
 		return j + 1;
 	}
 	return 0;
 }
 
-static void setImg(wchar_t *path, int index) {
+static void setImg(wchar_t *path, uint32_t index) {
 	if (index > 0) {
 		wchar_t fn[_MAX_LFN + 1];
 		fn[mbstowcs(fn, themeJson.js + themeJson.tok[index].start, themeJson.tok[index].end - themeJson.tok[index].start)] = 0;
@@ -398,19 +397,19 @@ static void setImg(wchar_t *path, int index) {
 	}
 }
 
-static void setColor(uint32_t *color, int index) {
+static void setColor(uint32_t *color, uint32_t index) {
 	if (index > 0)
 		*color = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 16);
 }
 
-static void setInt(uint_fast16_t *val, int index) {
+static void setInt(uint_fast16_t *val, uint32_t index) {
 	if (index > 0)
 		*val = strtoul(themeJson.js + themeJson.tok[index].start, NULL, 0);
 }
 
 void themeStyleSet(char *key) {
 	style = styleDefault;
-	int idx[IDX_COUNT] = {0};
+	uint32_t idx[IDX_COUNT] = {0};
 	themeParse(0, OBJ_NONE, key, idx);
 	setImg(style.top1img, idx[TOP1]);
 	setImg(style.top2img, idx[TOP2]);
@@ -461,12 +460,12 @@ void themeStyleSet(char *key) {
 	setInt(&style.gaugeRect.h, idx[GAUGEH]);
 }
 
-bool themeInit(Json *json, const wchar_t *path, const wchar_t *pattern) {
+uint_fast8_t themeInit(Json *json, const wchar_t *path, const wchar_t *pattern) {
 	styleDefault = style;
 	return json && json->js && json->tok && (themeJsonInit = json)->tok && (themeDir = path) && (themePattern = pattern);
 }
 
-int themeLoad(char *name, themeSeek seek) {
+uint32_t themeLoad(char *name, themeSeek seek) {
 	DIR dir;
 	FILINFO fno;
 	wchar_t *fn, *pathfn;

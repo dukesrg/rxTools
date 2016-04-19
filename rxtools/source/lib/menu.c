@@ -202,7 +202,7 @@ static const system_region *const getRegion(uint_fast8_t drive) {
 
 	if (drive < DRIVE_COUNT) {
 		swprintf(str, _MAX_LFN + 1, L"%u:rw/sys/SecureInfo_A", drive);
-		if (FileOpen(&fp, str, false) || (str[wcslen(str) - 1] = L'B' && FileOpen(&fp, str, false))) {
+		if (FileOpen(&fp, str, 0) || (str[wcslen(str) - 1] = L'B' && FileOpen(&fp, str, 0))) {
 			if (!FileRead(&fp, &regionid, 1, 0x100) || regionid >= REGION_COUNT)
 				regionid = REGION_COUNT - 1;
 			FileClose(&fp);
@@ -211,7 +211,7 @@ static const system_region *const getRegion(uint_fast8_t drive) {
 	return &regions[regionid];
 }
 
-static bool getStrVal(wchar_t *s, int i) {
+static uint_fast8_t getStrVal(wchar_t *s, int i) {
 	return i > 0 && swprintf(s, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) > 0;
 }
 
@@ -276,7 +276,7 @@ static const char *const runResolve(int key, int params) {
 
 #define BUF_SIZE 0x10000
 
-static bool runFunc(int func, int params, int activity, int gauge) {
+static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 	File fp;
 	FILINFO fno;
 	UINT size;
@@ -290,7 +290,7 @@ static bool runFunc(int func, int params, int activity, int gauge) {
 	if (activity)
 		statusInit(getIntVal(gauge), langn(menuJson.js + menuJson.tok[activity].start, menuJson.tok[activity].end - menuJson.tok[activity].start));
 	if (!func)
-		return true;
+		return 1;
 	funckey = menuJson.js + menuJson.tok[func].start + 4;
 	funcsize = menuJson.tok[func].end - menuJson.tok[func].start - 4;
 	if (!memcmp(funckey - 4, "RUN_", 4)) {
@@ -321,7 +321,7 @@ static bool runFunc(int func, int params, int activity, int gauge) {
 				}
 				writeCfg();
 				MenuRefresh();
-				return true;
+				return 1;
 			}
 		}
 	} else if (!memcmp(funckey - 4, "CHK_", 4)) {
@@ -333,11 +333,11 @@ static bool runFunc(int func, int params, int activity, int gauge) {
 						return getStrVal(str, params) && f_stat(str, NULL) == FR_OK;
 					case JSMN_ARRAY:
 						fno.lfname = 0;
-						if (menuJson.tok[params].size == 0 || !getStrVal(str, params + 1) || f_stat(str, &fno) != FR_OK) return false;
-						if (menuJson.tok[params].size == 1) return true;
-						if (fno.fsize != getIntVal(params + 2)) return false;
-						if (menuJson.tok[params].size == 2) return true;
-						if (!FileOpen(&fp, str, false) || ((FileGetSize(&fp)) != fno.fsize && (FileClose(&fp) || true))) return false;
+						if (menuJson.tok[params].size == 0 || !getStrVal(str, params + 1) || f_stat(str, &fno) != FR_OK) return 0;
+						if (menuJson.tok[params].size == 1) return 1;
+						if (fno.fsize != getIntVal(params + 2)) return 0;
+						if (menuJson.tok[params].size == 2) return 1;
+						if (!FileOpen(&fp, str, 0) || ((FileGetSize(&fp)) != fno.fsize && (FileClose(&fp) || 1))) return 0;
 						buf = __builtin_alloca(BUF_SIZE);
 						mbedtls_md5_init(&ctx);
 						mbedtls_md5_starts(&ctx);
@@ -366,7 +366,7 @@ static bool runFunc(int func, int params, int activity, int gauge) {
 				if (tmdPreloadHeader(&tmd, str) &&
 					(__builtin_bswap32(tmd.header.title_id_lo) & 0x0000F000) == getRegion(drive)->title_id_lo &&
 					tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive)
-				) return true;
+				) return 1;
 			}
 		} else if (!memcmp(funckey, "CFG", funcsize)) {
 			if ((params = getConfig(params)) >= 0) {
@@ -374,7 +374,7 @@ static bool runFunc(int func, int params, int activity, int gauge) {
 					case CFG_TYPE_STRING:
 					case CFG_TYPE_INT:
 					case CFG_TYPE_BOOLEAN:
-					return true;
+					return 1;
 				}
 			}
 /*		} else if (!memcmp(funckey, "MSET", funcsize)) {
@@ -408,7 +408,7 @@ static bool runFunc(int func, int params, int activity, int gauge) {
 			}
 */		}
 	}
-	return false;
+	return 0;
 }
 
 int menuNavigate(int pos, menunav nav) {
@@ -633,7 +633,7 @@ int menuLoad(Json *json, wchar_t *path) {
 int menuTry(int targetposition, int currentposition) {
 	int i, foundposition = 0;
 	uint_fast16_t y;
-	bool enabled;
+	uint_fast8_t enabled;
 	wchar_t str[_MAX_LFN + 1];
 
 	menuParse(0, OBJ_NONE, 0, 0, targetposition, &foundposition);
