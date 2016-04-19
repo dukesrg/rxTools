@@ -34,23 +34,23 @@
 #define I2C_DEV_GYRO 10
 #define I2C_DEV_IR   13
 
-const uint8_t i2cGetDeviceBusId(uint8_t device_id);
-const uint8_t i2cGetDeviceRegAddr(uint8_t device_id);
+const uint_fast8_t i2cGetDeviceBusId(uint_fast8_t device_id);
+const uint_fast8_t i2cGetDeviceRegAddr(uint_fast8_t device_id);
 
-volatile uint8_t* const i2cGetDataReg(uint8_t bus_id);
-volatile uint8_t* const i2cGetCntReg(uint8_t bus_id);
+volatile uint8_t* const i2cGetDataReg(uint_fast8_t bus_id);
+volatile uint8_t* const i2cGetCntReg(uint_fast8_t bus_id);
 
-void i2cWaitBusy(uint8_t bus_id);
-uint_fast8_t i2cGetResult(uint8_t bus_id);
-uint8_t i2cGetData(uint8_t bus_id);
-void i2cStop(uint8_t bus_id, uint8_t arg0);
+void i2cWaitBusy(uint_fast8_t bus_id);
+uint_fast8_t i2cGetResult(uint_fast8_t bus_id);
+uint_fast8_t i2cGetData(uint_fast8_t bus_id);
+void i2cStop(uint_fast8_t bus_id, uint_fast8_t arg0);
 
-uint_fast8_t i2cSelectDevice(uint8_t bus_id, uint8_t dev_reg);
-uint_fast8_t i2cSelectRegister(uint8_t bus_id, uint8_t reg);
+uint_fast8_t i2cSelectDevice(uint_fast8_t bus_id, uint_fast8_t dev_reg);
+uint_fast8_t i2cSelectRegister(uint_fast8_t bus_id, uint_fast8_t reg);
 
-uint8_t i2cReadRegister(uint8_t dev_id, uint8_t reg);
-uint_fast8_t i2cWriteRegister(uint8_t dev_id, uint8_t reg, uint8_t data);
+uint_fast8_t i2cReadRegister(uint_fast8_t dev_id, uint_fast8_t reg);
+uint_fast8_t i2cWriteRegister(uint_fast8_t dev_id, uint_fast8_t reg, uint_fast8_t data);
 
-uint_fast8_t i2cReadRegisterBuffer(unsigned int dev_id, int reg, uint8_t* buffer, size_t buf_size);
+uint_fast8_t i2cReadRegisterBuffer(uint_fast8_t dev_id, uint_fast8_t reg, uint8_t* buffer, size_t buf_size);
 
 #endif
