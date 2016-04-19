@@ -13,9 +13,22 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-.PHONY: clean all
-all: $(patsubst %.png,%.bin,$(wildcard *.png))
-%.bin: %.png
-	@convert -rotate 90 $< bgr:$@;
-clean:
-	@rm -rf *.bin
+ifeq ($(strip $(RXTOOLSMK)),)
+$(error "Please run `make` at the top directory")
+endif
+
+.PHONY: all clean
+sp :=
+sp +=
+THEMES := $(subst .json+,.json ,$(subst $(sp),+,$(wildcard *.json)))
+IMAGES := $(subst .png+,.png ,$(foreach d,$(THEMES),$(subst $(sp),+,$(wildcard $(subst +,\ ,$(basename $d)/*.png)))))
+
+all: $(IMAGES:.png=.bgr)
+
+%.bgr:
+	$(call Q,CONVERT,$@)convert -rotate 90 $(subst +,\ ,$(addsuffix .png,$(basename $@))) $(subst +,\ ,$@);
+
+clean: $(IMAGES:.png=.rmbgr)
+
+%.rmbgr:
+	@rm -f $(subst +,\ ,$(addsuffix .bgr,$(basename $@)))

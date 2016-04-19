@@ -36,6 +36,9 @@ BRAHFLAGS = name=$(CODE_FILE) filepath=$(SYS_PATH)/ \
 			APP_DESCRIPTION='Roxas75 3DS Toolkit & Custom Firmware' \
 			APP_AUTHOR='Patois, et al.' \
 			ICON=$(abspath icon.png)
+sp :=
+sp +=
+THEMES := $(subst .json+,.json ,$(subst $(sp),+,$(wildcard theme/*.json)))
 
 .PHONY: all-target-patches all-target-theme all-target-mset all-target-brahma	\
 	reboot/reboot.bin clean distclean release	\
@@ -103,10 +106,12 @@ release-patches: reboot/reboot.bin all-target-patches
 	@cp rxmode/build/ctr/agb_firm.elf release/$(PATCHES_PATH)/0004013800000202.elf
 	@cp rxmode/build/ktr/native_firm.elf release/$(PATCHES_PATH)/0004013820000002.elf
 
-release-theme: all-target-theme
-	mkdir -p release/rxTools/theme/0
-	@mv theme/*.bin release/rxTools/theme/0
-	@cp theme/theme.json theme/LANG.txt tools/themetool.sh tools/themetool.bat release/rxTools/theme/0
+release-theme: all-target-theme $(THEMES)
+
+%.json:
+	mkdir -p $(subst +,\ ,$(addprefix release/rxTools/,$(basename $@)))
+	mv $(subst +,\ ,$(addsuffix /*.bgr,$(basename $@))) $(subst +,\ ,$(addprefix release/rxTools/,$(basename $@)))
+	cp $(subst +,\ ,$@) release/rxTools/theme
 
 release-tools:
 	@mkdir -p release/Tools/fbi_injection release/Tools/scripts
