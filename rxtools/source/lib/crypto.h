@@ -61,10 +61,10 @@ typedef union {
 
 void add_ctr(aes_ctr *ctr, uint32_t carry);
 
-void setup_aeskeyX(uint8_t keyslot, void* keyx);
+void setup_aeskeyX(uint_fast8_t keyslot, void* keyx);
 void decrypt(void* key, void* inbuf, void* outbuf, size_t size);
-void setup_aeskey(uint32_t keyno, int value, void* key);
-void use_aeskey(uint32_t keyno);
+void setup_aeskey(uint_fast8_t keyno, int value, void* key);
+void use_aeskey(uint_fast8_t keyno);
 void set_ctr(int mode, aes_ctr *iv);
 void aes_decrypt(void* inbuf, void* outbuf, size_t size, uint32_t mode);
 void _decrypt(uint32_t value, void* inbuf, void* outbuf, size_t blocks);

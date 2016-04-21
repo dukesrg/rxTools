@@ -83,6 +83,8 @@ static uint8_t *DrawTile2(Screen *screen, uint8_t *in, uint_fast8_t iconsize, ui
 }
 
 static uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, Glyph glyph, Color color, uint_fast8_t fontsize) {
+	if (!finf)
+		return 0;
 	uint_fast16_t charx, chary;
 	tglp_header *tglp = finf->tglp_offset;
 	uint_fast16_t glyphXoffs = glyphXoffs = glyph.code % tglp->number_of_columns * (tglp->cell_width + 1) + 1;
@@ -184,6 +186,8 @@ void FillRect(Screen *screen, Rect *rect, Color color) {
 }
 
 uint_fast16_t DrawSubStringRect(Screen *screen, const wchar_t *str, size_t max, Rect *rect, Color color, align a, uint_fast8_t fontsize) {
+	if (!finf)
+		return 0;
 	uint_fast16_t dx = 0, dy = 0;
 	size_t len = wcslen(str);
 	if (!max || max > len)

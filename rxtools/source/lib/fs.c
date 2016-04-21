@@ -62,6 +62,13 @@ size_t FileWrite(File *Handle, void *buf, size_t size, size_t foffset) {
 	return bytes_written;
 }
 
+size_t FileWrite2(File *Handle, void *buf, size_t size) {
+	UINT bytes_written = 0;
+	f_write(Handle, buf, size, &bytes_written);
+	f_sync(Handle);
+	return bytes_written;
+}
+
 size_t FileGetSize(File *Handle) {
 	return f_size(Handle);
 }

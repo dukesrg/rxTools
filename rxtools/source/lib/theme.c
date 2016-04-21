@@ -53,7 +53,7 @@ themeStyle style = {
 	{16, 132, 288, 32},
 	WHITE,
 	GREY,
-	TRANSPARENT
+	BLACK
 };
 
 typedef enum {

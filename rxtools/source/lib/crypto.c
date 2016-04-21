@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include "crypto.h"
 
-void setup_aeskeyX(uint8_t keyslot, void* keyx)
+void setup_aeskeyX(uint_fast8_t keyslot, void* keyx)
 {
     uint32_t * _keyx = (uint32_t*)keyx;
     *REG_AESKEYCNT = (*REG_AESKEYCNT >> 6 << 6) | keyslot| 0x80;
@@ -37,7 +37,7 @@ void decrypt(void* key, void* inbuf, void* outbuf, size_t size)
     aes_decrypt(inbuf, outbuf, size / AES_BLOCK_SIZE, AES_CTR_MODE);
 }
 
-void setup_aeskey(uint32_t keyno, int value, void* key)
+void setup_aeskey(uint_fast8_t keyno, int value, void* key)
 {
     volatile uint32_t* aes_regs[] =
     {
@@ -78,7 +78,7 @@ void setup_aeskey(uint32_t keyno, int value, void* key)
     }
 }
 
-void use_aeskey(uint32_t keyno)
+void use_aeskey(uint_fast8_t keyno)
 {
     if (keyno > 0x3F)
         return;

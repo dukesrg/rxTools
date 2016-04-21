@@ -106,7 +106,7 @@ int ProcessCTR(wchar_t *path){
 		print(L"%s\n", NCCH.productcode);
 		if(NCCH.cryptomethod){
 			print(strings[STR_CRYPTO_TYPE], strings[STR_KEY7]);
-		}else if(!(NCCH.flags7 | NCCHFLAG_NOCRYPTO)){
+		}else if(!(NCCH.flags7 & NCCHFLAG_NOCRYPTO)){
 			print(strings[STR_CRYPTO_TYPE], strings[STR_SECURE]);
 		}else{
 			print(strings[STR_CRYPTO_TYPE], strings[STR_NONE]);

@@ -26,7 +26,6 @@
 #include "console.h"
 #include "draw.h"
 #include "hid.h"
-#include "screenshot.h"
 #include "firm.h"
 #include "configuration.h"
 #include "log.h"
@@ -37,6 +36,12 @@
 #include "strings.h"
 #include "cfnt.h"
 
+#include "ncch.h"
+#include "romfs.h"
+#include "progress.h"
+
+#define BUF_SIZE 0x10000
+
 static const wchar_t *const keyX16path = L"0:key_0x16.bin";
 static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
 static const wchar_t *const keyX25path = L"0:slot0x25KeyX.bin";
@@ -45,9 +50,6 @@ static const wchar_t *const menuPath = L"sys/gui.json";
 static const wchar_t *const fontPath = L"data/cbf_std.bcfnt";
 
 static const wchar_t *const jsonPattern = L"*.json";
-
-#define JSON_SIZE	0x2000
-#define JSON_TOKENS	(JSON_SIZE >> 3) //should be enough
 
 static void setConsole() {
 	ConsoleSetXY(15, 20);
@@ -58,6 +60,124 @@ static void setConsole() {
 	ConsoleSetSpecialColor(BLUE);
 	ConsoleSetSpacing(2);
 	ConsoleSetBorderWidth(3);
+}
+
+static inline size_t lz11Dec(uint8_t **dst, uint8_t *src) {
+	uint8_t *origsrc = src;
+	uint8_t flags = *src++;
+	for (size_t i = 8; i--; flags <<= 1) {
+		if (flags & 0x80) {
+			uint32_t len = *src >> 4;
+			switch (len) {
+				case 1:
+					len = (*src++ << 12 & 0xF000) + 0x100;
+				case 0:
+					len += *src++ << 4;
+					len += (*src >> 4) + 0x10;
+				default:
+					len++;
+			}
+			uint32_t disp = *src++ << 8 & 0xF00;
+			disp |= *src++;
+			memcpy(*dst, *dst + ~disp, len);
+			*dst += len;
+		} else {
+			*(*dst)++ = *src++;
+		}
+	}
+	return src - origsrc;
+}
+
+static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
+	File fd;
+	ctr_ncchheader NCCH;
+	uint32_t size;
+	if (!(FileOpen(&fd, src, 0) && (
+		(FileRead2(&fd, &NCCH, sizeof(NCCH)) == sizeof(NCCH) &&
+		NCCH.magic == 'HCCN' &&
+		FileSeek(&fd, NCCH.romfsoffset * NCCH_MEDIA_UNIT_SIZE) &&
+		(size = NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE)) ||
+		(FileClose(&fd) && 0)
+	))) return 0;
+
+	uint8_t romfs[size];
+	statusInit(size * 2, lang("Extracting font"));	
+	
+	uint32_t bytesread;
+	uint8_t *buf = romfs;
+	if (NCCH.cryptomethod || !(NCCH.flags7 & NCCHFLAG_NOCRYPTO)) {
+		aes_ctr CTR;
+		uint_fast8_t keyslot = NCCH.cryptomethod ? 0x25 : 0x2C;
+		ncch_get_counter(&NCCH, &CTR, NCCHTYPE_ROMFS);
+		while ((bytesread = FileRead2(&fd, buf, BUF_SIZE))) {
+			setup_aeskey(keyslot, AES_BIG_INPUT | AES_NORMAL_INPUT, NCCH.signature);
+			use_aeskey(keyslot);
+			for (size_t i = 0; i < bytesread; i += AES_BLOCK_SIZE) {
+				set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &CTR);
+				aes_decrypt(buf + i, buf + i, 1, AES_CTR_MODE);
+				add_ctr(&CTR, 1);
+			}
+			progressCallback((buf += bytesread) - romfs);
+		}
+	} else {
+		while ((bytesread = FileRead2(&fd, buf, BUF_SIZE)))
+			progressCallback((buf += bytesread) - romfs);
+	}
+	FileClose(&fd);
+
+	ivfc_header *IVFC = (ivfc_header*)romfs;
+	if (IVFC->magic != 'CFVI')
+		return 0;
+	
+	romfs_header *header = (romfs_header*)((void*)IVFC + IVFC->l2_offset_lo);
+	file_metadata *fmeta = (file_metadata*)((void*)header + header->file_metadata_offset);
+
+	uint32_t progress = size;
+	wchar_t path[_MAX_LFN + 1];
+	wchar_t *lzext;
+	wcscpy(path, dst);
+	dst = path + wcslen(path);
+	uint8_t *fontdata = (void*)header + header->file_data_offset + fmeta->file_data_offset;
+	size_t writebytes;
+	for (size_t i = 0; i <= fmeta->name_length; dst[i] = fmeta->name[i], i++);
+	size = fmeta->file_data_length_lo;
+	if ((lzext = wcsstr(path, L".lz"))) {
+		*lzext = 0;		
+		if (!FileOpen(&fd, path, 1))
+			return 0;
+		struct {
+			uint32_t size;
+			uint8_t data[0];
+		} *lz11 = (void*)fontdata;
+		uint8_t *savedbuf;
+		savedbuf = buf = fontdata = __builtin_alloca((lz11->size >> 8) + 7);
+		size -= sizeof(lz11->size);
+		size_t decoded = 0;
+		progressSetMax(progress + size);
+		do {
+			while ((decoded += lz11Dec(&buf, lz11->data + decoded)) < size && buf - savedbuf < BUF_SIZE);
+			if (decoded < size)
+				writebytes = buf - savedbuf - (buf - savedbuf) % BUF_SIZE;
+			else 
+				writebytes = (lz11->size >> 8) + fontdata - savedbuf;
+			savedbuf += FileWrite2(&fd, savedbuf, writebytes);
+			progressCallback(progress + decoded);
+		} while (decoded < size);
+	} else { //in case font file in RomFS is not packed
+		if (!FileOpen(&fd, path, 1))
+			return 0;
+		buf = fontdata;
+		progressSetMax(progress + size);
+		while (size) {
+			writebytes = FileWrite2(&fd, buf, size > BUF_SIZE ? BUF_SIZE : size);
+			size -= writebytes;
+			buf += writebytes;
+			progressCallback(progress + buf - fontdata);
+		}
+	}
+	
+	FileClose(&fd);
+	return 1;
 }
 
 uint_fast8_t initKeyX(uint_fast8_t slot, const wchar_t *path) {
@@ -121,11 +241,17 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 		Shutdown(1);		
 	}
 
-	if (!(swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
+	if (!(finf || (swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
 		(size = cfntPreload(path)) &&
 		cfntLoad(__builtin_alloca(size), path, size)
-	))
-		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang("load"), lang("font"));
+	))) {
+		*(wcsrchr(path, L'/') + 1) = 0;
+		if (extractFont(path, L"1:title/0004009b/00014002/content/00000000.app") &&
+			swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
+			(size = cfntPreload(path)) &&
+			cfntLoad(__builtin_alloca(size), path, size)
+		);
+	}
 
 	setConsole();
 

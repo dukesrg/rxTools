@@ -1,6 +1,7 @@
 #include <stdarg.h>
 #include "fs.h"
 #include "progress.h"
+#include "screenshot.h"
 #include "theme.h"
 
 static Screen *progress_screen;
@@ -25,6 +26,12 @@ void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color bac
 	progressCallback(0);
 }
 
+void progressSetMax(uint32_t posmax) {
+	if (posmax != progress_posmax) {
+		progress_posmax = posmax;
+	}
+}
+
 void progressCallback(uint32_t pos) {
 	static uint32_t oldpos;
 	if (pos != oldpos || !pos) {
@@ -33,6 +40,7 @@ void progressCallback(uint32_t pos) {
 		DisplayScreen(&top1Screen);
 //		DisplayScreen(&top2Screen);
 	}
+	TryScreenShot();
 }
 
 void statusInit(uint_fast16_t gaugemax, wchar_t *format, ...) {

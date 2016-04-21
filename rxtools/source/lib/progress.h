@@ -6,6 +6,7 @@
 
 void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax);
 void progressCallback(uint32_t pos);
+void progressSetMax(uint32_t posmax);
 void statusInit(uint_fast16_t gaugemax, wchar_t *format, ...);
 
 #endif
