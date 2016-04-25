@@ -50,7 +50,7 @@ themeStyle style = {
 	L"",
 	L"",
 	WHITE,
-	{16, 132, 288, 32},
+	{16, 160, 288, 32},
 	WHITE,
 	GREY,
 	BLACK

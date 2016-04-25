@@ -168,16 +168,17 @@ void DumpNandPartitions(){
 }
 
 void GenerateNandXorpads(){
+	const char *filename = "0:rxTools/nand.fat16.xorpad";
+	aes_ctr CTR;
 
-	PadInfo myInfo = { .keyslot = getMpInfo() == MPINFO_KTR ? 0x5 : 0x4, .setKeyY = 0, .size_mb = getMpInfo() == MPINFO_KTR ? 1055 : 758, .filename = "rxTools/nand.fat16.xorpad" };
-	GetNANDCTR(&myInfo.CTR);
-	add_ctr(&myInfo.CTR, 0xB93000);
+	GetNANDCTR(&CTR);
+	add_ctr(&CTR, 0xB93000);
 
 	ConsoleInit();
 	ConsoleSetTitle(strings[STR_GENERATE], strings[STR_NAND_XORPAD]);
-	print(strings[STR_DUMPING], strings[STR_NAND_XORPAD], myInfo.filename);
+	print(strings[STR_DUMPING], strings[STR_NAND_XORPAD], filename);
 	ConsoleShow();
-	CreatePad(&myInfo, 0);
+	CreatePad(getMpInfo() == MPINFO_KTR ? 0x5 : 0x4, &CTR, NULL, getMpInfo() == MPINFO_KTR ? 1055 : 758, filename, 0);
 
 	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
 	ConsoleShow();

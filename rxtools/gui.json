@@ -45,21 +45,29 @@
 				"description":"Decrypt the private key of a game.",
 				"function":"FUNC_DEC_TKF"
 			},"ITEM_2-4":{
-				"caption":"Generate Xorpads",
-				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles.",
-				"function":"FUNC_GEN_T_PAD"
-			},"ITEM_2-5":{
 				"caption":"EmuNAND partitions",
 				"description":"Dump and decrypt all EmuNAND partitions (except the TWL partition for now).",
 				"function":"FUNC_DEC_PAR",
 				"parameters":2
-			},"ITEM_2-6":{
+			},"ITEM_2-5":{
 				"caption":"SysNAND partitions",
 				"description":"Dump and decrypt all SysNAND partitions (except the TWL partition for now).",
 				"function":"FUNC_DEC_PAR",
 				"parameters":1
+			},"ITEM_2-6":{
+				"caption":"Generate SD XORpad",
+				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles from SDinfo.bin.",
+				"enabled":"CHK_FILE",
+				"function":"GEN_XORPAD",
+				"parameters":"0:SDinfo.bin"
 			},"ITEM_2-7":{
-				"caption":"Generate fat16 Xorpad",
+				"caption":"Generate NCCH XORpad",
+				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles from ncchinfo.bin.",
+				"enabled":"CHK_FILE",
+				"function":"GEN_XORPAD",
+				"parameters":"0:ncchinfo.bin"
+			},"ITEM_2-8":{
+				"caption":"Generate fat16 XORpad",
 				"description":"Generate XORpad needed to decrypt main NAND partition.",
 				"function":"FUN_GEN_PAR_PAD"
 			}

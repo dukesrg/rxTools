@@ -10,6 +10,7 @@ Launch specific function ("func" object)
 |RUN_PASTA|Boot into Pasta mode||
 |RUN_SHUTDOWN|Shutdown console|0 - turn off, 1 - reboot|
 |RUN_CFG_NEXT|Toggle configuration option to the next value|configuration key|
+|GEN_XORPAD|Generate title XORpads|name of a source file in ncchinfo.bin or SDinfo.bin format|
 
 ###Status check functions
 Check menu option state ("enabled" object)

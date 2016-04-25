@@ -117,11 +117,11 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 				aes_decrypt(buf + i, buf + i, 1, AES_CTR_MODE);
 				add_ctr(&CTR, 1);
 			}
-			progressCallback((buf += bytesread) - romfs);
+			progressSetPos((buf += bytesread) - romfs);
 		}
 	} else {
 		while ((bytesread = FileRead2(&fd, buf, BUF_SIZE)))
-			progressCallback((buf += bytesread) - romfs);
+			progressSetPos((buf += bytesread) - romfs);
 	}
 	FileClose(&fd);
 
@@ -133,6 +133,7 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 	file_metadata *fmeta = (file_metadata*)((void*)header + header->file_metadata_offset);
 
 	uint32_t progress = size;
+	progressPinOffset();
 	wchar_t path[_MAX_LFN + 1];
 	wchar_t *lzext;
 	wcscpy(path, dst);
@@ -161,7 +162,7 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 			else 
 				writebytes = (lz11->size >> 8) + fontdata - savedbuf;
 			savedbuf += FileWrite2(&fd, savedbuf, writebytes);
-			progressCallback(progress + decoded);
+			progressSetPos(decoded);
 		} while (decoded < size);
 	} else { //in case font file in RomFS is not packed
 		if (!FileOpen(&fd, path, 1))
@@ -172,7 +173,7 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 			writebytes = FileWrite2(&fd, buf, size > BUF_SIZE ? BUF_SIZE : size);
 			size -= writebytes;
 			buf += writebytes;
-			progressCallback(progress + buf - fontdata);
+			progressSetPos(buf - fontdata);
 		}
 	}
 	

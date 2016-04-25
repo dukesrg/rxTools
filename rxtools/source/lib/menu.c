@@ -407,6 +407,11 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 				}
 			}
 */		}
+	} else if (!memcmp(funckey - 4, "GEN_", 4)) {
+		if (!memcmp(funckey, "XORPAD", funcsize)) {
+			if (params > 0)
+				return getStrVal(str, params) && PadGen(str);
+		}
 	}
 	return 0;
 }

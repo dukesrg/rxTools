@@ -21,6 +21,11 @@ STR("rxMode SysNAND", S_RXTOOLS_SYSNAND)
 STR("rxMode EmuNAND", S_RXTOOLS_EMUNAND)
 STR("Pasta mode", S_PASTA_MODE)
 
+STR("Generating %ls", SF_GENERATING)
+STR("SD XORpad", S_SD_XORPAD)
+STR("NCCH XORpad", S_NCCH_XORPAD)
+STR("FAT16 XORpad", S_FAT16_XORPAD)
+
 //STR("Error reading %ls!", SF_ERROR_READING)
 STR("Failed to %ls %ls!", SF_FAILED_TO)
 STR("mount", S_MOUNT) //don't need a translation

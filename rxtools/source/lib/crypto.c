@@ -39,6 +39,7 @@ void decrypt(void* key, void* inbuf, void* outbuf, size_t size)
 
 void setup_aeskey(uint_fast8_t keyno, int value, void* key)
 {
+	if (!key) return;
     volatile uint32_t* aes_regs[] =
     {
         (volatile uint32_t*)0x19009060,

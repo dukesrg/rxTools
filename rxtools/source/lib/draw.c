@@ -260,19 +260,29 @@ uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t
 	return rect.y;
 }
 
-void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax, uint32_t pos) {
+void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax, uint32_t pos, uint32_t timeleft) {
+	static uint_fast16_t oldx = -1;
 	uint_fast16_t x;
-	wchar_t percent[5];
+	uint_fast8_t h, m, s;
+//	wchar_t percent[5];
+	wchar_t estimated[9];
 	
 	if (!posmax) posmax = UINT32_MAX;
 	if (pos > posmax) pos = posmax;	
-	x = (rect->w - 2) * pos / posmax;
-	swprintf(percent, 5, L"%u%%", 100 * pos / posmax);
+	if ((x = (rect->w - 2) * pos / posmax) == oldx) return;
+	oldx = x;
 	DrawRect(screen, rect, frame);
 	FillRect(screen, &(Rect){rect->x + 1, rect->y + 1, x, rect->h - 2}, done);
 	FillRect(screen, &(Rect){rect->x + 1 + x, rect->y + 1, rect->w - 2 - x, rect->h - 2}, back);
-//	DrawSubString(screen, percent, -1, rect->x + (rect->w - GetSubStringWidth(percent, -1, font)) / 2, rect->y + (rect->h - font->h) / 2, textcolor, font);
-	DrawSubStringRect(screen, percent, 0, rect, textcolor, ALIGN_MIDDLE, fontsize);
+//	swprintf(percent, 5, L"%u%%", 100 * pos / posmax);
+//	DrawSubStringRect(screen, percent, 0, rect, textcolor, ALIGN_MIDDLE, fontsize);
+	if (pos) {
+		h = timeleft / 3600;
+		m = (timeleft - h * 3600) / 60;
+		s = timeleft % 60;
+		swprintf(estimated, 9, L"%u:%02u:%02u", h, m, s);
+		DrawSubStringRect(screen, h ? estimated : estimated + 2, 0, rect, textcolor, ALIGN_MIDDLE, fontsize);
+	}
 	screen->updated = 1;
 }
 

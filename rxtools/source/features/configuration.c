@@ -347,20 +347,20 @@ static int InstallData() {
 	if (r)
 		return r;
 
-	progressCallback(++p);
+	progressSetPos(++p);
 
 	if (getMpInfo() == MPINFO_CTR) {
 		r = processFirm(TID_CTR_AGB_FIRM);
 		if (r)
 			return r;
 
-		progressCallback(++p);
+		progressSetPos(++p);
 
 		r = processFirm(TID_CTR_TWL_FIRM);
 		if (r != FR_OK)
 			return r;
 
-		progressCallback(++p);
+		progressSetPos(++p);
 	}
 
 	return 0;

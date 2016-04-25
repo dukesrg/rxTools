@@ -88,7 +88,7 @@ void DisplayScreen(Screen *screen);
 uint_fast16_t DrawString(Screen *screen, const wchar_t *str, uint32_t x, uint32_t y, Color color, Color bgcolor);
 uint_fast16_t DrawStringRect(Screen *screen, const wchar_t *str, Rect *rect, Color color, align a, uint_fast8_t fontsize);
 uint_fast16_t DrawSubString(Screen *screen, uint_fast16_t x, uint_fast16_t y, const wchar_t *str, size_t count, Color color, uint_fast8_t fontsize);
-void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax, uint32_t pos);
+void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax, uint32_t pos, uint32_t timeleft);
 void DrawSplash(Screen *screen, wchar_t *splash_file);
 void fadeOut();
 uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t *format, ...);

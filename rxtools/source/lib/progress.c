@@ -3,6 +3,7 @@
 #include "progress.h"
 #include "screenshot.h"
 #include "theme.h"
+#include "timer.h"
 
 static Screen *progress_screen;
 static Rect progress_rect;
@@ -12,6 +13,8 @@ static Color progress_back;
 static uint_fast8_t progress_fontsize;
 static Color progress_textcolor;
 static uint32_t progress_posmax;
+static uint32_t progress_pos;
+static uint32_t progress_offset;
 
 void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax) {
 	progress_screen = screen;
@@ -23,7 +26,10 @@ void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color bac
 	progress_fontsize = fontsize;
 	progress_posmax = posmax;
 	
-	progressCallback(0);
+	progress_offset = 0;
+	progress_pos = -1;
+	progressSetPos(0);
+	timerStart();
 }
 
 void progressSetMax(uint32_t posmax) {
@@ -32,18 +38,31 @@ void progressSetMax(uint32_t posmax) {
 	}
 }
 
-void progressCallback(uint32_t pos) {
-	static uint32_t oldpos;
-	if (pos != oldpos || !pos) {
-		DrawProgress(progress_screen, &progress_rect, progress_frame, progress_done, progress_back, progress_textcolor, progress_fontsize, progress_posmax, oldpos = pos);
+void progressPinOffset() {
+	progress_offset = progress_pos;
+}
+
+void progressSetPos(uint32_t pos) {
+	uint32_t timeleft = 0;
+	if ((pos += progress_offset) >= progress_posmax) {
+		pos = progress_posmax;
+		timerStop();
+	}
+	if (pos != progress_pos || !pos) {
+		if ((progress_pos = pos)) {
+			timeleft = timerGet();
+			timeleft = progress_posmax * timeleft / progress_pos - timeleft;
+		}
+		DrawProgress(progress_screen, &progress_rect, progress_frame, progress_done, progress_back, progress_textcolor, progress_fontsize, progress_posmax, progress_pos, timeleft);
 		DisplayScreen(&bottomScreen);
 		DisplayScreen(&top1Screen);
 //		DisplayScreen(&top2Screen);
 	}
 	TryScreenShot();
+
 }
 
-void statusInit(uint_fast16_t gaugemax, wchar_t *format, ...) {
+void statusInit(uint32_t gaugemax, wchar_t *format, ...) {
 	if (*style.activitytop1img) {
 		DrawSplash(&top1Screen, style.activitytop1img);
 //		if (*style.activitytop2img)

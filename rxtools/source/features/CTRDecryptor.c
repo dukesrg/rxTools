@@ -35,8 +35,7 @@
 char str[100];
 
 uint32_t DecryptPartition(PartitionInfo* info){
-	if(info->keyY != NULL)
-		setup_aeskey(info->keyslot, AES_BIG_INPUT|AES_NORMAL_INPUT, info->keyY);
+	setup_aeskey(info->keyslot, AES_BIG_INPUT|AES_NORMAL_INPUT, info->keyY);
 	use_aeskey(info->keyslot);
 
 	aes_ctr ctr __attribute__((aligned(32))) = *info->ctr;

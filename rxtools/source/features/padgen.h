@@ -20,7 +20,7 @@
 
 #include "crypto.h"
 
-#define MAXENTRIES 1024
+#define MAX_PAD_ENTRIES 1024
 
 typedef struct {
     aes_ctr   CTR;
@@ -30,7 +30,7 @@ typedef struct {
 
 typedef struct {
     uint32_t n_entries;
-    SdInfoEntry entries[MAXENTRIES];
+    SdInfoEntry entries[MAX_PAD_ENTRIES];
 } __attribute__((packed, aligned(16))) SdInfo;
 
 typedef struct {
@@ -47,21 +47,10 @@ typedef struct {
     uint32_t ncch_info_version;
     uint32_t n_entries;
     uint8_t  reserved[4];
-    NcchInfoEntry entries[MAXENTRIES];
+    NcchInfoEntry entries[MAX_PAD_ENTRIES];
 } __attribute__((packed, aligned(16))) NcchInfo;
 
-typedef struct {
-    uint32_t  keyslot;
-    uint32_t  setKeyY;
-    aes_ctr   CTR;
-    uint8_t   keyY[16];
-    uint32_t  size_mb;
-    char filename[180];
-} __attribute__((packed, aligned(16))) PadInfo;
-
-uint32_t CreatePad(PadInfo *info, int index);
-uint32_t NcchPadgen();
-uint32_t SdPadgen();
-void PadGen();
+uint_fast8_t CreatePad(uint_fast8_t keyslot, aes_ctr *CTR, uint8_t *keyY, uint32_t size_mb, const char *filename, int index);
+uint_fast8_t PadGen(wchar_t *filename);
 
 #endif
