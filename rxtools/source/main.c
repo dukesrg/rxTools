@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <wchar.h>
 #include "menu.h"
-#include "crypto.h"
+#include "aes.h"
 #include "fs.h"
 #include "console.h"
 #include "draw.h"
@@ -40,7 +40,7 @@
 #include "romfs.h"
 #include "progress.h"
 
-#define BUF_SIZE 0x10000
+#define BUF_SIZE 0xF0000 //1MB-64KB since maximum AES cycle length is 64k-1 blocks = 1MB-16B, 64KB is for SD//NAND buffer flush optimisation.
 
 static const wchar_t *const keyX16path = L"0:key_0x16.bin";
 static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
@@ -106,17 +106,11 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 	uint32_t bytesread;
 	uint8_t *buf = romfs;
 	if (NCCH.cryptomethod || !(NCCH.flags7 & NCCHFLAG_NOCRYPTO)) {
-		aes_ctr CTR;
-		uint_fast8_t keyslot = NCCH.cryptomethod ? 0x25 : 0x2C;
-		ncch_get_counter(&NCCH, &CTR, NCCHTYPE_ROMFS);
+		aes_ctr ctr;
+		ncch_get_counter(&NCCH, &ctr, NCCHTYPE_ROMFS);
 		while ((bytesread = FileRead2(&fd, buf, BUF_SIZE))) {
-			setup_aeskey(keyslot, AES_BIG_INPUT | AES_NORMAL_INPUT, NCCH.signature);
-			use_aeskey(keyslot);
-			for (size_t i = 0; i < bytesread; i += AES_BLOCK_SIZE) {
-				set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &CTR);
-				aes_decrypt(buf + i, buf + i, 1, AES_CTR_MODE);
-				add_ctr(&CTR, 1);
-			}
+			aes_set_key(&(aes_key){(aes_key_data*)NCCH.signature, AES_CNT_INPUT_BE_NORMAL, NCCH.cryptomethod ? 0x25 : 0x2C, KEYY}); //weird but its working only inside the loop
+			aes(buf, buf, bytesread, &ctr, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 			progressSetPos((buf += bytesread) - romfs);
 		}
 	} else {

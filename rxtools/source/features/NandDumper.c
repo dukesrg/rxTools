@@ -27,10 +27,12 @@
 #include "fs.h"
 #include "screenshot.h"
 #include "padgen.h"
-#include "crypto.h"
+#include "aes.h"
 #include "mpcore.h"
 #include "ncch.h"
 #include "CTRDecryptor.h"
+#include "progress.h"
+#include "strings.h"
 
 #define NAND_SECTOR_SIZE 0x200
 #define BUF1 (void*)0x21000000
@@ -169,20 +171,13 @@ void DumpNandPartitions(){
 
 void GenerateNandXorpads(){
 	const char *filename = "0:rxTools/nand.fat16.xorpad";
-	aes_ctr CTR;
+	size_t size = getMpInfo() == MPINFO_KTR ? 1055 : 758;
+	aes_ctr ctr;
 
-	GetNANDCTR(&CTR);
-	add_ctr(&CTR, 0xB93000);
-
-	ConsoleInit();
-	ConsoleSetTitle(strings[STR_GENERATE], strings[STR_NAND_XORPAD]);
-	print(strings[STR_DUMPING], strings[STR_NAND_XORPAD], filename);
-	ConsoleShow();
-	CreatePad(getMpInfo() == MPINFO_KTR ? 0x5 : 0x4, &CTR, NULL, getMpInfo() == MPINFO_KTR ? 1055 : 758, filename, 0);
-
-	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
-	ConsoleShow();
-	WaitForButton(keys[KEY_A].mask);
+	statusInit(size, lang(SF_GENERATING), lang(S_FAT16_XORPAD));
+	GetNANDCTR(&ctr);
+	aes_add_ctr(&ctr, 0xB93000);
+	CreatePad(&ctr, &(aes_key){NULL, 0, getMpInfo() == MPINFO_KTR ? 0x5 : 0x4, 0}, size, filename, 0);
 }
 
 void DumpNANDSystemTitles(){

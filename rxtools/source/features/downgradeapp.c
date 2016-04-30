@@ -26,11 +26,10 @@
 #include "lang.h"
 #include "hid.h"
 #include "ncch.h"
-#include "crypto.h"
 #include "TitleKeyDecrypt.h"
 #include "NandDumper.h"
-#include "mbedtls/aes.h"
-#include "mbedtls/sha256.h"
+#include "crypto.h"
+#include "sha.h"
 
 #define bswap_16(a) ((((a) << 8) & 0xff00) | (((a) >> 8) & 0xff))
 #define bswap_32(a) ((((a) << 24) & 0xff000000) | (((a) << 8) & 0xff0000) | (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
@@ -400,14 +399,16 @@ void downgradeMSET()
 									FileRead(&dg, buf, dgsize, 0);
 
 									/* Downgrade pack decryption */
-									uint8_t iv[0x10] = {0};
 									uint8_t Key[0x10] = {0};
 
 									getTitleKey(&Key[0], info.tidHi, info.tidLo, info.drive);
 
-									mbedtls_aes_context aes_ctxt;
-									mbedtls_aes_setkey_dec(&aes_ctxt, Key, 0x80);
-									mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, dgsize, iv, buf, buf);
+									setup_aeskeyN(0x2C, Key);
+									use_aeskey(0x2C);
+									aes_ctr_old ctr;
+									set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
+									ctr = *(aes_ctr_old*)(buf + dgsize - AES_BLOCK_SIZE);
+									aes_decrypt(buf, buf, (dgsize + AES_BLOCK_SIZE - 1)/AES_BLOCK_SIZE, AES_CBC_DECRYPT_MODE);
 
 									FileWrite(&dg, buf, dgsize, 0);
 									FileClose(&dg);
@@ -652,11 +653,11 @@ void manageFBI(uint_fast8_t restore)
 							memcpy(TmdCntDataSum, buf + 0xB14, 32);
 
 							/* Verify the Content Info Record hash */
-							mbedtls_sha256(buf + 0x204, 0x900, CntInfoRecSum, 0);
+							sha(CntInfoRecSum, buf + 0x204, 0x900, SHA_256_MODE);
 							if (memcmp(CntInfoRecSum, TmdCntInfoRecSum, 32) == 0)
 							{
 								/* Verify the Content Chunk Record hash */
-								mbedtls_sha256(buf + 0xB04, 0x30, CntChnkRecSum, 0);
+								sha(CntChnkRecSum, buf + 0xB04, 0x30, SHA_256_MODE);
 								if (memcmp(CntChnkRecSum, TmdCntChnkRecSum, 32) == 0)
 								{
 									/* Open the SD content file */
@@ -669,7 +670,7 @@ void manageFBI(uint_fast8_t restore)
 											FileClose(&tmp);
 
 											/* Verify the Content Data hash */
-											mbedtls_sha256(buf + 0x1000, sd_cntsize, CntDataSum, 0);
+											sha(CntDataSum, buf + 0x1000, sd_cntsize, SHA_256_MODE);
 											if (memcmp(CntDataSum, TmdCntDataSum, 32) == 0)
 											{
 												/* Now we are ready to rock 'n roll */

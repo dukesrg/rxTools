@@ -25,7 +25,7 @@
 #include "draw.h"
 #include "hid.h"
 #include "ncch.h"
-#include "crypto.h"
+#include "aes.h"
 #include "lang.h"
 #include "menu.h"
 
@@ -38,7 +38,7 @@ uint32_t DecryptPartition(PartitionInfo* info){
 	setup_aeskey(info->keyslot, AES_BIG_INPUT|AES_NORMAL_INPUT, info->keyY);
 	use_aeskey(info->keyslot);
 
-	aes_ctr ctr __attribute__((aligned(32))) = *info->ctr;
+	aes_ctr_old ctr __attribute__((aligned(32))) = *info->ctr;
 
 	uint32_t size_bytes = info->size;
 	for (uint32_t i = 0; i < size_bytes; i += BLOCK_SIZE) {
@@ -57,7 +57,7 @@ void ProcessExeFS(PartitionInfo *info){ //We expect Exefs to take just a block. 
 		DecryptPartition(info);
 	}else if(info->keyslot == 0x25){  //The new keyX is a bit tricky, 'couse only .code is encrypted with it
 		PartitionInfo myInfo = *info;
-		aes_ctr OriginalCTR = *myInfo.ctr;
+		aes_ctr_old OriginalCTR = *myInfo.ctr;
 		myInfo.keyslot = 0x2C;
 		myInfo.size = 0x200;
 		DecryptPartition(&myInfo);
@@ -115,21 +115,21 @@ int ProcessCTR(wchar_t *path){
 			return 3;
 		}
 
-		aes_ctr CTR;
+		aes_ctr ctr;
 		if(NCCH.extendedheadersize){
 			print(strings[STR_DECRYPTING], strings[STR_EXHEADER]);
 			ConsoleShow();
-			ncch_get_counter(&NCCH, &CTR, NCCHTYPE_EXHEADER);
+			ncch_get_counter(&NCCH, &ctr, NCCHTYPE_EXHEADER);
 			FileRead(&myFile, BUFFER_ADDR, sizeof(ctr_ncchexheader), ncch_base + sizeof(ctr_ncchheader));
-			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, &CTR, sizeof(ctr_ncchexheader), 0x2C};
+			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, (aes_ctr_old*)&ctr.data, sizeof(ctr_ncchexheader), 0x2C};
 			DecryptPartition(&myInfo);
 			FileWrite(&myFile, BUFFER_ADDR, sizeof(ctr_ncchexheader), sizeof(ctr_ncchheader));
 		}
 		if(NCCH.exefssize){
 			print(strings[STR_DECRYPTING], strings[STR_EXEFS]);
 			ConsoleShow();
-			ncch_get_counter(&NCCH, &CTR, NCCHTYPE_EXEFS);
-			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, &CTR, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, NCCH.cryptomethod ? 0x25 : 0x2C};
+			ncch_get_counter(&NCCH, &ctr, NCCHTYPE_EXEFS);
+			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, (aes_ctr_old*)&ctr.data, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, NCCH.cryptomethod ? 0x25 : 0x2C};
 			FileRead(&myFile, BUFFER_ADDR, myInfo.size, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
 			ProcessExeFS(&myInfo); //Explanation at function definition
 			FileWrite(&myFile, BUFFER_ADDR, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
@@ -137,8 +137,8 @@ int ProcessCTR(wchar_t *path){
 		if(NCCH.romfssize){
 			print(strings[STR_DECRYPTING], strings[STR_ROMFS]);
 			ConsoleShow();
-			ncch_get_counter(&NCCH, &CTR, NCCHTYPE_ROMFS);
-			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, &CTR, 0, NCCH.cryptomethod ? 0x25 : 0x2C};
+			ncch_get_counter(&NCCH, &ctr, NCCHTYPE_ROMFS);
+			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, (aes_ctr_old*)&ctr.data, 0, NCCH.cryptomethod ? 0x25 : 0x2C};
 			for(int i = 0; i < (NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE + BLOCK_SIZE - 1) / BLOCK_SIZE; i++){
 				print(L"%3d%%\b\b\b\b",
 					(int)((i*BLOCK_SIZE)/(NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE / 100)));

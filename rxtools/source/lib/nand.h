@@ -19,7 +19,7 @@
 #define NAND_H
 
 #include <stdint.h>
-#include "crypto.h"
+#include "aes.h"
 
 typedef enum {
 	TWLN = 0x00012E00,

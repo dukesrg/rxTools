@@ -19,6 +19,7 @@
 #define TITLE_KEY_DECRYPT_H
 
 #include <stdint.h>
+#include <aes.h>
 
 typedef struct {
 	uint8_t issuer[64];
@@ -49,6 +50,6 @@ void DecryptTitleKeys();
 void DecryptTitleKeyFile(void);
 int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive);
 int getTitleKeyWithCetk(uint8_t dst[16], const wchar_t *path);
-int getTitleKey2(uint8_t *TitleKey, uint64_t tid, uint_fast8_t drive);
+int getTitleKey2(aes_key *TitleKey, uint64_t tid, uint_fast8_t drive);
 
 #endif

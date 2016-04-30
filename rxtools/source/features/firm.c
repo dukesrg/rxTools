@@ -26,7 +26,6 @@
 #include "hid.h"
 #include "lang.h"
 #include "console.h"
-#include "mbedtls/aes.h"
 #include "fs.h"
 #include "ncch.h"
 #include "draw.h"
@@ -36,6 +35,9 @@
 #include "TitleKeyDecrypt.h"
 #include "configuration.h"
 #include "lang.h"
+#include "crypto.h"
+#include "aes.h"
+#include "progress.h"
 
 const wchar_t *firmPathFmt= L"" FIRM_PATH_FMT;
 const wchar_t *firmPatchPathFmt = L"" FIRM_PATCH_PATH_FMT;
@@ -78,7 +80,7 @@ static int loadFirm(wchar_t *path, UINT *fsz)
 
 	f_close(&fd);
 
-	return ((FirmHdr *)FIRM_ADDR)->magic == 0x4D524946 ? 0 : -1;
+	return ((FirmHdr *)FIRM_ADDR)->magic == 'MRIF' ? 0 : -1;
 }
 
 static int decryptFirmKtrArm9(void *p)
@@ -116,11 +118,14 @@ static int decryptFirmKtrArm9(void *p)
 uint8_t* decryptFirmTitleNcch(uint8_t* title, size_t *size)
 {
 	ctr_ncchheader NCCH = *((ctr_ncchheader*)title);
-	aes_ctr CTR;
+	aes_ctr ctr;
 	if (NCCH.magic != 'HCCN') return NULL;
-	ncch_get_counter(&NCCH, &CTR, NCCHTYPE_EXEFS);
-	PartitionInfo INFO = {title + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE, NCCH.signature, &CTR, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, 0x2C};
-	DecryptPartition(&INFO);
+	ncch_get_counter(&NCCH, &ctr, NCCHTYPE_EXEFS);
+	PartitionInfo INFO = {title + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE, NCCH.signature, (aes_ctr_old*)&ctr.data, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, 0x2C};
+//	DecryptPartition(&INFO);
+
+	aes_set_key(&(aes_key){(aes_key_data*)NCCH.signature, AES_CNT_INPUT_BE_NORMAL, 0x2C, KEYY});
+	aes(title + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE, title + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, &ctr, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 
 	if (size != NULL)
 		*size = INFO.size - sizeof(ctr_ncchheader);
@@ -130,17 +135,23 @@ uint8_t* decryptFirmTitleNcch(uint8_t* title, size_t *size)
 	if (getMpInfo() == MPINFO_KTR)
 	    if (decryptFirmKtrArm9(firm))
 			return NULL;
-
 	return firm;
 }
 
 uint8_t *decryptFirmTitle(uint8_t *title, size_t size, size_t *firmSize, uint8_t key[16])
 {
-	mbedtls_aes_context aes_ctxt;
+/*
+	aes_ctr_old ctr __attribute__((aligned(32))) = {0};
+	setup_aeskeyN(0x2C, key);
+	use_aeskey(0x2C);
+	set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
+	ctr = *(aes_ctr_old*)(title + size - AES_BLOCK_SIZE);
+	aes_decrypt(title, title, (size + AES_BLOCK_SIZE - 1)/AES_BLOCK_SIZE, AES_CBC_DECRYPT_MODE);
+*/
+	aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
+	aes_set_key(&(aes_key){(aes_key_data*)key, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY});
+	aes(title, title, size, &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 
-	uint8_t iv[16] = { 0 };
-	mbedtls_aes_setkey_dec(&aes_ctxt, &key[0], 0x80);
-	mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, size, iv, title, title);
 	return decryptFirmTitleNcch(title, firmSize);
 }
 

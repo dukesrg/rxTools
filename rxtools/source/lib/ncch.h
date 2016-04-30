@@ -19,6 +19,7 @@
 #define NCCH_H
 
 #include <stdint.h>
+#include "aes.h"
 #include "crypto.h"
 
 #define NCCH_MEDIA_UNIT_SIZE 0x200

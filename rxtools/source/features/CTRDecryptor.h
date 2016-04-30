@@ -25,7 +25,7 @@
 typedef struct {
 	uint8_t* buffer;
 	uint8_t* keyY;
-	aes_ctr *ctr;
+	aes_ctr_old *ctr;
 	size_t size;
 	uint32_t keyslot;
 } PartitionInfo;  //This basic struct can be useful anytime, even if i'll add nand decryption/exploring

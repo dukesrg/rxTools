@@ -20,16 +20,17 @@
 #include "hid.h"
 #include "lang.h"
 #include "padgen.h"
-#include "crypto.h"
+#include "aes.h"
 #include "progress.h"
 #include "strings.h"
 
-#define BUF_SIZE 0x10000
+#define BUF_SIZE 0x100000
 #define MOVABLE_SEED_SIZE 0x120
 
 static uint_fast8_t NcchPadgen(NcchInfo *info) {
-	uint_fast8_t keyslot;
 	uint32_t size = 0;
+	aes_ctr ctr = {.mode = AES_CNT_INPUT_BE_NORMAL};
+	aes_key key = {.mode = AES_CNT_INPUT_BE_NORMAL, .type = KEYY};
 	size_t i;
 	
 	if (!info->n_entries ||
@@ -41,15 +42,16 @@ static uint_fast8_t NcchPadgen(NcchInfo *info) {
 	statusInit(size, lang(SF_GENERATING), lang(S_NCCH_XORPAD));
 	for (i = info->n_entries; i--;) {
 		if (info->entries[i].uses7xCrypto >> 8 == 0xDEC0DE) // magic value to manually specify keyslot
-			keyslot = info->entries[i].uses7xCrypto & 0x3F;
+			key.slot = info->entries[i].uses7xCrypto & 0x3F;
 		else if (info->entries[i].uses7xCrypto == 0xA) // won't work on an Old 3DS
-			keyslot = 0x18;
+			key.slot = 0x18;
 		else if (info->entries[i].uses7xCrypto)
-			keyslot = 0x25;
+			key.slot = 0x25;
 		else
-			keyslot = 0x2C;
-			
-		if (!CreatePad(keyslot, &info->entries[i].CTR, info->entries[i].keyY, info->entries[i].size_mb, info->entries[i].filename, i))
+			key.slot = 0x2C;
+		key.data = (aes_key_data*)info->entries[i].keyY;
+		ctr.data = *(aes_ctr_data*)&info->entries[i].CTR;
+		if (!CreatePad(&ctr, &key, info->entries[i].size_mb, info->entries[i].filename, i))
 			return 0;
 	}
 
@@ -72,6 +74,7 @@ static uint_fast8_t SdPadgen(SdInfo *info) {
 	} movable_seed = {0};
 	uint32_t size = 0;
 	size_t i;
+	aes_key Key = {(aes_key_data*)&movable_seed.data[0x110], AES_CNT_INPUT_BE_NORMAL, 0x34, KEYY};
 
 	if (!info->n_entries ||
 		info->n_entries > MAX_PAD_ENTRIES
@@ -86,15 +89,15 @@ static uint_fast8_t SdPadgen(SdInfo *info) {
 				(FileClose(&pf) || 1)
 			) return 0;
 			FileClose(&pf);
-			setup_aeskey(0x34, AES_BIG_INPUT | AES_NORMAL_INPUT, &movable_seed.data[0x110]);
-			use_aeskey(0x34);
+			aes_set_key(&Key);
 			break;
 		}
 	}
+	Key.data = NULL;
 	for (i = info->n_entries; i--; size += info->entries[i].size_mb);
 	statusInit(size, lang(SF_GENERATING), lang(S_SD_XORPAD));
 	for (i = info->n_entries; i--;) {
-		if (!CreatePad(0x34, &info->entries[i].CTR, NULL, info->entries[i].size_mb, info->entries[i].filename, i))
+		if (!CreatePad(&(aes_ctr){*(aes_ctr_data*)&info->entries[i].CTR, AES_CNT_INPUT_BE_NORMAL}, &Key, info->entries[i].size_mb, info->entries[i].filename, i))
 			return 0;
 	}
 
@@ -117,8 +120,7 @@ uint_fast8_t PadGen(wchar_t *filename) {
 	return info.ncch.padding == 0xFFFFFFFF ? NcchPadgen(&info.ncch) : SdPadgen(&info.sd);
 }
 
-uint_fast8_t CreatePad(uint_fast8_t keyslot, aes_ctr *CTR, uint8_t *keyY, uint32_t size_mb, const char *filename, int index) {
-	static const uint8_t zero_buf[AES_BLOCK_SIZE] __attribute__((aligned(AES_BLOCK_SIZE))) = {0};
+uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size_mb, const char *filename, int index) {
 	File pf;
 	uint8_t buf[BUF_SIZE];
 	uint32_t size = size_mb << 20;
@@ -128,21 +130,25 @@ uint_fast8_t CreatePad(uint_fast8_t keyslot, aes_ctr *CTR, uint8_t *keyY, uint32
 		!FileOpen(&pf, wcsncmp(fname, L"sdmc:/", 6) == 0 ? fname + 6 : fname, 1)
 	) return 0;
 
-	setup_aeskey(keyslot, AES_BIG_INPUT | AES_NORMAL_INPUT, keyY);
-	use_aeskey(keyslot);
-	aes_ctr ctr __attribute__((aligned(32))) = *CTR;
-
+	aes_set_key(key);
 	for (size_t i = 0; i < size; i += BUF_SIZE) {
 		size_t j;
-		for (j = 0; j < BUF_SIZE && i + j < size; j += AES_BLOCK_SIZE) {
-			set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
-			aes_decrypt((void*)zero_buf, buf + j, 1, AES_CTR_MODE);
-			add_ctr(&ctr, 1);
-		}
+		j = size - i < BUF_SIZE ? size - i : BUF_SIZE;
+		aes(buf, NULL, j, ctr, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 		FileWrite2(&pf, &buf, j);
 		progressSetPos((i + j) >> 20); //progress in MB
 		if (GetInput() & keys[KEY_B].mask) return 0;
 	}
+/*
+	while (size) {
+		size_t j = size > BUF_SIZE ? BUF_SIZE : size;
+		aes(buf, NULL, j, &ctr, AES_CTR_DECRYPT_MODE);
+		FileWrite2(&pf, &buf, j);
+		size -= j;
+		progressSetPos(size_mb - (size >> 20)); //progress in MB
+		if (GetInput() & keys[KEY_B].mask) return 0;
+	}
+*/
 	progressPinOffset();
 	FileClose(&pf);
 	return 1;

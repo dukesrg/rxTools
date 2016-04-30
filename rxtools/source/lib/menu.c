@@ -35,9 +35,10 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "json.h"
 #include "theme.h"
 #include "tmd.h"
-#include "mbedtls/md5.h"
 #include "strings.h"
 #include "progress.h"
+#include "aes.h"
+#include "sha.h"
 
 static Json menuJson;
 static int menuPosition = 0;
@@ -281,11 +282,11 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 	FILINFO fno;
 	UINT size;
 	int i, funcsize;
-	uint32_t hash[4];
-	uint8_t *checkhash = (uint8_t*)&hash[0], filehash[16], *buf;
 	wchar_t str[_MAX_LFN + 1];
+	size_t hashsize;
+	uint32_t *hash;
+	uint8_t *buf, *filehash, *checkhash;
 	char *funckey;
-	mbedtls_md5_context ctx;
 
 	if (activity)
 		statusInit(getIntVal(gauge), langn(menuJson.js + menuJson.tok[activity].start, menuJson.tok[activity].end - menuJson.tok[activity].start));
@@ -337,21 +338,26 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 						if (menuJson.tok[params].size == 1) return 1;
 						if (fno.fsize != getIntVal(params + 2)) return 0;
 						if (menuJson.tok[params].size == 2) return 1;
-						if (!FileOpen(&fp, str, 0) || ((FileGetSize(&fp)) != fno.fsize && (FileClose(&fp) || 1))) return 0;
-						buf = __builtin_alloca(BUF_SIZE);
-						mbedtls_md5_init(&ctx);
-						mbedtls_md5_starts(&ctx);
-						while ((size = FileRead2(&fp, buf, BUF_SIZE)))
-							mbedtls_md5_update(&ctx, buf, size);
+						if (!FileOpen(&fp, str, 0) || ((FileGetSize(&fp)) != fno.fsize && (FileClose(&fp) || 1)) ||
+							(hashsize = (menuJson.tok[params + 3].end - menuJson.tok[params + 3].start) / 2) < SHA_1_SIZE
+						) return 0;
+
+						sha_start(hashsize == SHA_256_SIZE ? SHA_256_MODE : hashsize == SHA_224_SIZE ? SHA_224_MODE : SHA_1_MODE, NULL);
+						hash = (uint32_t*)__builtin_alloca(hashsize);
+						buf = (uint8_t*)__builtin_alloca(hashsize);
+						filehash = (uint8_t*)__builtin_alloca(hashsize);
+						checkhash = (uint8_t*)hash;
+
+						while ((size = FileRead2(&fp, buf, BUF_SIZE))) sha_update(buf, size);
 						FileClose(&fp);
-						mbedtls_md5_finish(&ctx, filehash);
+						sha_finish(filehash);
+
 						char tmp[9];
-						for (i = 0; i < 4; i++) {
+						for (i = 0; i < hashsize/sizeof(uint32_t); i++) {
 							strncpy(tmp, menuJson.js + menuJson.tok[params + 3].start + 8 * i, 8);
 							hash[i] = __builtin_bswap32(strtoul(tmp, NULL, 16));
-//							sscanf(menuJson.js + menuJson.tok[params + 3].start + 8 * i, "%08lx", &hash[i]); //lib code increases binary too much
 						}
-						return !memcmp(checkhash, filehash, sizeof(filehash));
+						return !memcmp(checkhash, filehash, hashsize);
 					default:
 						break;
 				}
@@ -411,6 +417,8 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 		if (!memcmp(funckey, "XORPAD", funcsize)) {
 			if (params > 0)
 				return getStrVal(str, params) && PadGen(str);
+		} else if (!memcmp(funckey, "FAT16XORPAD", funcsize)) {
+			GenerateNandXorpads();
 		}
 	}
 	return 0;

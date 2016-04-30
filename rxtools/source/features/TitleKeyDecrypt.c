@@ -60,7 +60,7 @@ int DecryptTitleKey(uint8_t *titleid, uint8_t *key, uint32_t index) {
 		uint8_t key[blockSize];
 		uint32_t pad;
 	} *keyYList = NULL;
-	aes_ctr ctr __attribute__((aligned(32))) = {0};
+	aes_ctr_old ctr __attribute__((aligned(32))) = {0};
 	uint8_t keyY[blockSize] __attribute__((aligned(32)));
 	uint8_t titleId[8] __attribute__((aligned(32)));
 	uintptr_t p;
@@ -93,7 +93,7 @@ int DecryptTitleKey2(uint64_t titleid, uint8_t *key, uint_fast8_t index) {
 		uint8_t key[blockSize];
 		uint32_t pad;
 	} *keyYList = NULL;
-	aes_ctr ctr = {0};
+	aes_ctr_old ctr = {0};
 	uint8_t keyY[blockSize];
 	uintptr_t p;
 
@@ -356,7 +356,7 @@ int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive) {
 	return 1;
 }
 
-int getTitleKey2(uint8_t *TitleKey, uint64_t tid, uint_fast8_t drive) {
+int getTitleKey2(aes_key *TitleKey, uint64_t tid, uint_fast8_t drive) {
 	File tick;
 	uint32_t tick_size = 0x200;     //Chunk size
 
@@ -380,7 +380,7 @@ int getTitleKey2(uint8_t *TitleKey, uint64_t tid, uint_fast8_t drive) {
 					memcpy(Key, buf + j + 0x7F, 16);
 					if (titleid == tid) {
 						if (!(r = DecryptTitleKey2(titleid, Key, kindex)))
-							memcpy(TitleKey, Key, 16);
+							memcpy(TitleKey->data, Key, 16);
 						FileClose(&tick);
 						return r;
 					}

@@ -23,7 +23,7 @@
 #define MAX_PAD_ENTRIES 1024
 
 typedef struct {
-    aes_ctr   CTR;
+    aes_ctr_old CTR;
     uint32_t  size_mb;
     char filename[180];
 } __attribute__((packed)) SdInfoEntry;
@@ -34,7 +34,7 @@ typedef struct {
 } __attribute__((packed, aligned(16))) SdInfo;
 
 typedef struct {
-    aes_ctr   CTR;
+    aes_ctr_old CTR;
     uint8_t   keyY[16];
     uint32_t  size_mb;
     uint8_t   reserved[8];
@@ -50,7 +50,7 @@ typedef struct {
     NcchInfoEntry entries[MAX_PAD_ENTRIES];
 } __attribute__((packed, aligned(16))) NcchInfo;
 
-uint_fast8_t CreatePad(uint_fast8_t keyslot, aes_ctr *CTR, uint8_t *keyY, uint32_t size_mb, const char *filename, int index);
+uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size_mb, const char *filename, int index);
 uint_fast8_t PadGen(wchar_t *filename);
 
 #endif

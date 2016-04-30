@@ -60,6 +60,31 @@ static uint8_t *DrawTile(Screen *screen, uint8_t *in, uint_fast8_t iconsize, uin
 	return in;
 }
 
+static uint8_t *DrawTileLA(Screen *screen, uint8_t *in, uint_fast8_t iconsize, uint_fast8_t tilesize, uint_fast16_t ax, uint_fast16_t ay, uint_fast16_t dx, uint_fast16_t dy, uint_fast8_t cw, uint_fast8_t ch, Color color) {
+	if (!tilesize) {
+		uint_fast16_t py = dy; //y + dy;
+		if (py < ch) {
+			Pixel (*pScreen)[screen->h] = screen->buf2;
+			uint_fast8_t a = *in;// & 0x0F;
+			py = screen->h - ay - py;
+			uint_fast16_t px = dx;
+			if (px < cw && a) {
+				px += ax;
+				pScreen[px][py].r = (pScreen[px][py].r * (0x0F - a) + color.pixel.r * (a + 1)) >> 4;
+				pScreen[px][py].g = (pScreen[px][py].g * (0x0F - a) + color.pixel.g * (a + 1)) >> 4;
+				pScreen[px][py].b = (pScreen[px][py].b * (0x0F - a) + color.pixel.b * (a + 1)) >> 4;
+			}
+		}
+		in++;
+	} else {
+		for (size_t y = 0; y < iconsize; y += tilesize) {
+			for (size_t x = 0; x < iconsize; x += tilesize)
+				in = DrawTile(screen, in, tilesize, tilesize / 2, ax, ay, dx + x, dy + y, cw, ch, color);
+		}
+	}
+	return in;
+}
+
 static uint8_t *DrawTile2(Screen *screen, uint8_t *in, uint_fast8_t iconsize, uint_fast8_t tilesize, uint_fast16_t ax, uint_fast16_t ay, uint_fast16_t dx, uint_fast16_t dy, uint_fast8_t cw, uint_fast8_t ch, Color color) {
 	if (iconsize == 2) {
 		if ((uint_fast16_t)(dy + 1) <= ch) {
@@ -99,10 +124,14 @@ static uint_fast8_t DrawGlyph(Screen *screen, uint_fast16_t x, uint_fast16_t y, 
 	glyphYoffs &= 0x00000007;
 	for (chary = tiley; chary <= tileyend; chary += 8)
 		for (charx = tilex; charx <= tilexend; charx += 8)
-			if (fontsize >= finf->height)
-				DrawTile(screen, sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), 8, 8, x + glyph.width->left, y, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, glyph.width->glyph, finf->height, color);
-			else
+			if (fontsize >= finf->height) {
+				if (tglp->sheet_image_format == FORMAT_A4)
+					DrawTile(screen, sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), 8, 8, x + glyph.width->left, y, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, glyph.width->glyph, finf->height, color);
+				else if (tglp->sheet_image_format == FORMAT_LA4)
+					DrawTileLA(screen, sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), 8, 8, x + glyph.width->left, y, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, glyph.width->glyph, finf->height, color);
+			} else {
 				DrawTile2(screen, sheetsrc + 4 * (charx + chary * tglp->sheet_width / 8), 8, 8, x + (glyph.width->left + 1) / 2, y, charx - tilex - glyphXoffs, chary - tiley - glyphYoffs, glyph.width->glyph, finf->height, color);
+			}
 
 	if (fontsize >= finf->height)
 		return glyph.width->character;

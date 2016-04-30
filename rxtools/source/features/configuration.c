@@ -31,7 +31,6 @@
 #include "mpcore.h"
 #include "ncch.h"
 #include "crypto.h"
-#include "mbedtls/aes.h"
 #include "firm.h"
 #include "downgradeapp.h"
 #include "menu.h"

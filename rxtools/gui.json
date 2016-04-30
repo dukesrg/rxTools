@@ -67,9 +67,9 @@
 				"function":"GEN_XORPAD",
 				"parameters":"0:ncchinfo.bin"
 			},"ITEM_2-8":{
-				"caption":"Generate fat16 XORpad",
+				"caption":"Generate FAT16 XORpad",
 				"description":"Generate XORpad needed to decrypt main NAND partition.",
-				"function":"FUN_GEN_PAR_PAD"
+				"function":"GEN_FAT16XORPAD"
 			}
 		},"ITEM_3":{
 			"caption":"Dump",
@@ -411,7 +411,7 @@
 					"caption":"slot0x25KeyX.bin",
 					"description":"Required for 6.x save game encryption on console firmware version below 7.0",
 					"enabled":"CHK_FILE",
-					"parameters":["0:slot0x25KeyX.bin",16,"817FD1BFFBA60F79CF8CDF19CAF28923"]
+					"parameters":["0:slot0x25KeyX.bin",16,"4231f2b435ec7a456c0acc5fafcd4cb949f83bc0"]
 				},"ITEM_7-2-2":{
 					"caption":"key_0x16.bin",
 					"description":"Required for New 3DS firmware 9.5",
@@ -421,12 +421,12 @@
 					"caption":"key_0x16.bin",
 					"description":"Required for New 3DS firmware 9.6",
 					"enabled":"CHK_FILE",
-					"parameters":["0:key_0x16.bin",16,"60746412AEB3B9626FCC074321E21366"]
+					"parameters":["0:key_0x16.bin",16,"c75d5c7633845f693a2d4426860dec997f57c39b"]
 				},"ITEM_7-2-4":{
 					"caption":"key_0x1B.bin",
 					"description":"Required for New 3DS firmware 9.6",
 					"enabled":"CHK_FILE",
-					"parameters":["0:key_0x1B.bin",16,"79CD40405D0F5417AE73A064318CBF0D"]
+					"parameters":["0:key_0x1B.bin",16,"1e96be527ac64e6f6929b38760b1a4873d051b96"]
 				}
 			},"ITEM_7-3":{
 				"caption":"EmuNAND",

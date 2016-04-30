@@ -2,14 +2,14 @@
 #include "tmd.h"
 #include "fs.h"
 #include "TitleKeyDecrypt.h"
-#include "mbedtls/aes.h"
-#include "mbedtls/sha256.h"
 
+#include "aes.h"
 #include "draw.h"
 #include "progress.h"
+#include "sha.h"
 #include "theme.h"
 
-#define BUF_SIZE 0x10000
+#define BUF_SIZE 0x100000
 #define APP_EXT ".app"
 #define CONTENT_VERSION_UNSET 0xFFFF
 
@@ -155,11 +155,7 @@ uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t conte
 	FIL fil;
 	size_t size;
 	wchar_t apppath[_MAX_LFN + 1];
-	mbedtls_sha256_context ctx;
-	uint8_t hash[32];
-	uint8_t iv[0x10] = {0};
-	uint8_t Key[0x10] = {0};
-	mbedtls_aes_context aes_ctxt;
+	uint8_t hash[SHA_256_SIZE];
 	uint8_t *buf = __builtin_alloca(BUF_SIZE);
 	uint_fast16_t content_count;
 
@@ -172,29 +168,29 @@ uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t conte
 	for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
 		for (uint_fast16_t chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count); chunk_count > 0; chunk_index++, chunk_count--) {
 			if (content_index == CONTENT_INDEX_ALL || content_index == data->content_chunk[chunk_index].content_index) {
-				mbedtls_sha256_init(&ctx);
-				mbedtls_sha256_starts(&ctx, 0);
+				sha_start(SHA_256_MODE, NULL);
 				swprintf(apppath, _MAX_LFN + 1, L"%.*ls/%08lx%s", wcsrchr(path, L'/') - path, path, __builtin_bswap32(data->content_chunk[chunk_index].content_id), APP_EXT);
 				size = __builtin_bswap32(data->content_chunk[chunk_index].content_size_lo);
 				if (FileOpen(&fil, apppath, 0) && (FileGetSize(&fil) == size || (FileClose(&fil) && 0))) {
-					while ((size = FileRead2(&fil, buf, BUF_SIZE))) mbedtls_sha256_update(&ctx, buf, size);
+					while ((size = FileRead2(&fil, buf, BUF_SIZE))) sha_update(buf, size);
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, 0) && (FileGetSize(&fil) == size || (FileClose(&fil) && 0))
 				) {
 					progressInit(&bottomScreen, &(Rect){10,210,300,20}, RED, GREY, WHITE, BLACK, 16, fil.fsize);
-					memset(iv, 0, sizeof(iv));
-					getTitleKey2(Key, data->header.title_id, drive);
+					aes_key Key = {&(aes_key_data){{0}}, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
+					getTitleKey2(&Key, data->header.title_id, drive);
 					progressSetPos(fil.fsize / 2);
-					mbedtls_aes_setkey_dec(&aes_ctxt, Key, 0x80);
+					aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
+					aes_set_key(&Key);
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) {
-						mbedtls_aes_crypt_cbc(&aes_ctxt, MBEDTLS_AES_DECRYPT, size, iv, buf, buf);
-						mbedtls_sha256_update(&ctx, buf, size);
-					progressSetPos((fil.fsize + fil.fptr) / 2);
+						aes(buf, buf, size, &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+						sha_update(buf, size);
+						progressSetPos((fil.fsize + fil.fptr) / 2);
 					}                    
 				} else
 					return 0;
 				FileClose(&fil);
-				mbedtls_sha256_finish(&ctx, hash);
+				sha_finish(hash);
 				if (memcmp(hash, data->content_chunk[chunk_index].content_hash, sizeof(hash)))
 					return 0;
 			}
@@ -233,7 +229,7 @@ uint_fast8_t tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load 
 	tmd_data data_tmp;
 	tmd_content_chunk *content_chunk_tmp;
 	uint_fast16_t content_count;
-	uint8_t hash[32];
+	uint8_t hash[SHA_256_SIZE];
 	
 	if (!FileOpen(&fil, path, 0) || (
 		(FileRead2(&fil, &data_tmp.sig_type, sizeof(data_tmp.sig_type)) != sizeof(data_tmp.sig_type) ||
@@ -242,7 +238,7 @@ uint_fast8_t tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load 
 		FileRead2(&fil, &data_tmp.header, sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) != sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) &&
 		(FileClose(&fil) || 1)
 	)) return 0;
-	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
+	sha(hash, &data_tmp.content_info, sizeof(data_tmp.content_info), SHA_256_MODE);
 	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return FileClose(&fil) && 0;
 	size = (content_count = __builtin_bswap16(data_tmp.header.content_count)) * sizeof(tmd_content_chunk);
 	content_chunk_tmp = __builtin_alloca(size);
@@ -252,7 +248,7 @@ uint_fast8_t tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load 
 		if (info_index >= sizeof(data_tmp.content_info)/sizeof(tmd_content_info) ||
 			(chunk_count = __builtin_bswap16(data_tmp.content_info[info_index].content_command_count)) == 0
 		) return 0;
-		mbedtls_sha256((uint8_t*)&content_chunk_tmp[chunk_index], chunk_count * sizeof(tmd_content_chunk), hash, 0);
+		sha(hash, &content_chunk_tmp[chunk_index], chunk_count * sizeof(tmd_content_chunk), SHA_256_MODE);
 		if (memcmp(hash, data_tmp.content_info[chunk_index].content_chunk_hash, sizeof(hash))) return 0;
 	}
 	*data = data_tmp;
@@ -273,7 +269,7 @@ size_t tmdPreloadHeader(tmd_data *data, wchar_t *path) { //loads tmd header, val
 		(FileClose(&fil) || 1)
 	)) return 0;
 	FileClose(&fil);
-	mbedtls_sha256((uint8_t*)&data_tmp.content_info, sizeof(data_tmp.content_info), hash, 0);
+	sha(hash, &data_tmp.content_info, sizeof(data_tmp.content_info), SHA_256_MODE);
 	if (memcmp(hash, data_tmp.header.content_info_hash, sizeof(hash))) return 0;
 	*data = data_tmp;
 	data->content_chunk = NULL;
@@ -284,7 +280,7 @@ size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_inde
 	FIL fil;
 	size_t offset, size = 0;
 	uint_fast16_t content_count, chunk_count;
-	uint8_t hash[32];
+	uint8_t hash[SHA_256_SIZE];
 	
 	if (FileOpen(&fil, path, 0) && (offset = tmdHeaderOffset(data->sig_type))) {
 		size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
@@ -294,7 +290,7 @@ size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_inde
 			size = 0;
 			for (uint_fast16_t info_index = 0, chunk_index = 0; chunk_index < content_count; info_index++) {
 				chunk_count = __builtin_bswap16(data->content_info[info_index].content_command_count);
-				mbedtls_sha256((uint8_t*)&data->content_chunk[chunk_index], chunk_count * sizeof(tmd_content_chunk), hash, 0);
+				sha(hash, &data->content_chunk[chunk_index], chunk_count * sizeof(tmd_content_chunk), SHA_256_MODE);
 				if (memcmp(hash, data->content_info[chunk_index].content_chunk_hash, sizeof(hash))) {
 					size = 0;
 					break;

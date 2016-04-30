@@ -28,7 +28,7 @@
 typedef struct {
 	uint8_t keyX[AES_BLOCK_SIZE];
 	uint8_t keyY[AES_BLOCK_SIZE];
-	aes_ctr ctr;
+	aes_ctr_old ctr;
 	char size[8];
 	uint8_t pad[8];
 	uint8_t control[AES_BLOCK_SIZE];

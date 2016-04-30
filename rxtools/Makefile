@@ -27,7 +27,7 @@ include $(RXTOOLSMK)
 
 LD := $(CC)
 
-INCDIR += -Isource -Isource/features -Isource/lib -Imbedtls/include
+INCDIR += -Isource -Isource/features -Isource/lib
 CPPDEFS	:= -DSYS_PATH=\"$(SYS_PATH)\" -DPATCHES_PATH=\"$(PATCHES_PATH)\"
 CPPFLAGS := $(INCDIR) $(CPPDEFS)
 
@@ -49,13 +49,9 @@ CCOBJS := $(addprefix $(BUILD)/,main.o features/CTRDecryptor.o	\
 	lib/console.o lib/crypto.o lib/draw.o lib/fs.o lib/hid.o lib/lang.o	\
 	lib/log.o lib/i2c.o lib/jsmn/jsmn.o lib/menu.o lib/nand.o lib/ncch.o	\
 	features/reboot.o lib/json.o lib/theme.o lib/tmd.o lib/progress.o lib/cfnt.o	\
-	lib/timer.o)
+	lib/timer.o lib/aes.o lib/sha.o)
 
-MBEDTLS_DIR := mbedtls/library
-MBEDTLS_CCOBJS := aes.o sha256.o md5.o
-MBEDTLS_OBJS := $(addprefix $(MBEDTLS_DIR)/, $(MBEDTLS_CCOBJS))
-
-OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o lib/delay.o) $(MBEDTLS_OBJS)
+OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o lib/delay.o)
 DEPS	:= $(subst $(BUILD)/,$(DEPS_DIR)/,$(CCOBJS))
 
 $(call DEPDIR,$(BUILD)/rxtools.elf $(OBJS) $(DEPS))
@@ -73,15 +69,6 @@ $(BUILD)/code.bin: $(BUILD)/rxtools.bin $(BUILD)/CakeHax/D
 
 $(BUILD)/rxtools.elf: $(OBJS)
 	$(call Q,LINK,$@)$(LINK.o) $^ $(OUTPUT_OPTION)
-
-$(MBEDTLS_DIR)/aes.o: $(MBEDTLS_DIR)/aes.c
-	$(call Q,CC,$@)$(COMPILE.c) $< $(OUTPUT_OPTION)
-
-$(MBEDTLS_DIR)/sha256.o: $(MBEDTLS_DIR)/sha256.c
-	$(call Q,CC,$@)$(COMPILE.c) $< $(OUTPUT_OPTION)
-
-$(MBEDTLS_DIR)/md5.o: $(MBEDTLS_DIR)/md5.c
-	$(call Q,CC,$@)$(COMPILE.c) $< $(OUTPUT_OPTION)
 
 $(BUILD)/%.o: $(SOURCE)/%.c
 	$(call Q,CC,$@)$(COMPILE.c) $< $(OUTPUT_OPTION)
