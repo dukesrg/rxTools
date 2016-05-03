@@ -18,12 +18,12 @@
 #ifndef PADGEN_H
 #define PADGEN_H
 
-#include "crypto.h"
+#include "aes.h"
 
 #define MAX_PAD_ENTRIES 1024
 
 typedef struct {
-    aes_ctr_old CTR;
+    aes_ctr_data CTR;
     uint32_t  size_mb;
     char filename[180];
 } __attribute__((packed)) SdInfoEntry;
@@ -34,8 +34,8 @@ typedef struct {
 } __attribute__((packed, aligned(16))) SdInfo;
 
 typedef struct {
-    aes_ctr_old CTR;
-    uint8_t   keyY[16];
+    aes_ctr_data CTR;
+    aes_key_data keyY;
     uint32_t  size_mb;
     uint8_t   reserved[8];
     uint32_t  uses7xCrypto;

@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include "fs.h"
+#include "hid.h"
 #include "progress.h"
 #include "screenshot.h"
 #include "theme.h"
@@ -42,7 +43,7 @@ void progressPinOffset() {
 	progress_offset = progress_pos;
 }
 
-void progressSetPos(uint32_t pos) {
+uint_fast8_t progressSetPos(uint32_t pos) {
 	uint32_t timeleft = 0;
 	if ((pos += progress_offset) >= progress_posmax) {
 		pos = progress_posmax;
@@ -59,7 +60,7 @@ void progressSetPos(uint32_t pos) {
 //		DisplayScreen(&top2Screen);
 	}
 	TryScreenShot();
-
+	return (GetInput() & keys[KEY_B].mask) == 0;
 }
 
 void statusInit(uint32_t gaugemax, wchar_t *format, ...) {

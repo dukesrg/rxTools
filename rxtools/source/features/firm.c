@@ -31,7 +31,6 @@
 #include "draw.h"
 #include "menu.h"
 #include "fileexplorer.h"
-#include "CTRDecryptor.h"
 #include "TitleKeyDecrypt.h"
 #include "configuration.h"
 #include "lang.h"
@@ -83,71 +82,72 @@ static int loadFirm(wchar_t *path, UINT *fsz)
 	return ((FirmHdr *)FIRM_ADDR)->magic == 'MRIF' ? 0 : -1;
 }
 
-static int decryptFirmKtrArm9(void *p)
-{
-	uint8_t key[AES_BLOCK_SIZE];
-	PartitionInfo info;
+static int decryptFirmKtrArm9(void *p) {
+//	uint8_t key[AES_BLOCK_SIZE];
+	aes_key *key;
+//	PartitionInfo info;
 	Arm9Hdr *hdr;
 	FirmSeg *seg, *btm;
 
 	seg = ((FirmHdr *)p)->segs;
 	for (btm = seg + FIRM_SEG_NUM; seg->isArm11; seg++)
-		 if (seg == btm)
-			 return -1;
+		if (seg == btm)
+			return 0;
 
 	hdr = (void *)(p + seg->offset);
 
-	info.ctr = &hdr->ctr;
-	info.buffer = (uint8_t *)hdr + 0x800;
-	info.keyY = hdr->keyY;
-	info.size = atoi(hdr->size);
+//	info.ctr = &hdr->ctr;
+//	info.buffer = (uint8_t *)hdr + 0x800;
+//	info.keyY = hdr->keyY;
+//	info.size = atoi(hdr->size);
 
-	use_aeskey(0x11);
+//	use_aeskey(0x11);
+	aes_set_key(&(aes_key){NULL, 0, 0x11, 0});
 	if (hdr->ext.pad[0] == 0xFFFFFFFF) {
-		info.keyslot = 0x15;
-		aes_decrypt(hdr->keyX, key, 1, AES_ECB_DECRYPT_MODE);
-		setup_aeskeyX(info.keyslot, key);
+//		info.keyslot = 0x15;
+//		aes_decrypt(hdr->keyX, key, 1, AES_ECB_DECRYPT_MODE);
+//		setup_aeskeyX(info.keyslot, key);
+		key = &(aes_key){&(aes_key_data){{0}}, AES_CNT_INPUT_BE_NORMAL, 0x15, KEYX};
+		aes((void*)key->data, (void*)&hdr->keyX, sizeof(aes_key_data), NULL, AES_ECB_DECRYPT_MODE);
+		aes_set_key(key);
+		key->data = &hdr->keyY;
+		key->type = KEYY;
 	} else {
-		info.keyslot = 0x16;
-		aes_decrypt(hdr->ext.s.keyX_0x16, key, 1, AES_ECB_DECRYPT_MODE);
+//		info.keyslot = 0x16;
+//		aes_decrypt(hdr->ext.s.keyX_0x16, key, 1, AES_ECB_DECRYPT_MODE);
+		key = &(aes_key){&hdr->keyY, AES_CNT_INPUT_BE_NORMAL, 0x16, KEYY};
+//		aes(key->data, hdr->ext.s.keyX_0x16, sizeof(aes_key_data), NULL, AES_ECB_DECRYPT_MODE);
 	}
 
-	return DecryptPartition(&info);
+	aes_set_key(key);
+//	return DecryptPartition(&info);
+	aes_ctr ctr = {hdr->ctr, AES_CNT_INPUT_BE_NORMAL};
+	aes((uint8_t *)hdr + 0x800, (uint8_t *)hdr + 0x800, strtoul(hdr->size, NULL, 10), &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+
+	return 1;
 }
 
-uint8_t* decryptFirmTitleNcch(uint8_t* title, size_t *size)
-{
-	ctr_ncchheader NCCH = *((ctr_ncchheader*)title);
+uint8_t *decryptFirmTitleNcch(uint8_t* title, size_t *size) {
+	ctr_ncchheader *NCCH = ((ctr_ncchheader*)title);
+	if (NCCH->magic != 'HCCN') return NULL;
 	aes_ctr ctr;
-	if (NCCH.magic != 'HCCN') return NULL;
-	ncch_get_counter(&NCCH, &ctr, NCCHTYPE_EXEFS);
-	PartitionInfo INFO = {title + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE, NCCH.signature, (aes_ctr_old*)&ctr.data, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, 0x2C};
-//	DecryptPartition(&INFO);
+	ncch_get_counter(NCCH, &ctr, NCCHTYPE_EXEFS);
 
-	aes_set_key(&(aes_key){(aes_key_data*)NCCH.signature, AES_CNT_INPUT_BE_NORMAL, 0x2C, KEYY});
-	aes(title + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE, title + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, &ctr, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+	aes_set_key(&(aes_key){(aes_key_data*)NCCH->signature, AES_CNT_INPUT_BE_NORMAL, 0x2C, KEYY});
+	aes(title + NCCH->exefsoffset * NCCH_MEDIA_UNIT_SIZE, title + NCCH->exefsoffset * NCCH_MEDIA_UNIT_SIZE, NCCH->exefssize * NCCH_MEDIA_UNIT_SIZE, &ctr, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 
 	if (size != NULL)
-		*size = INFO.size - sizeof(ctr_ncchheader);
+		*size = NCCH->exefssize * NCCH_MEDIA_UNIT_SIZE - sizeof(ctr_ncchheader);
 
-	uint8_t* firm = (uint8_t*)(INFO.buffer + sizeof(ctr_ncchheader));
+	uint8_t *firm = (uint8_t*)(title + NCCH->exefsoffset * NCCH_MEDIA_UNIT_SIZE + sizeof(FirmHdr));
 
-	if (getMpInfo() == MPINFO_KTR)
-	    if (decryptFirmKtrArm9(firm))
-			return NULL;
+	if (getMpInfo() == MPINFO_KTR && !decryptFirmKtrArm9(firm))
+		return NULL;
 	return firm;
 }
 
 uint8_t *decryptFirmTitle(uint8_t *title, size_t size, size_t *firmSize, uint8_t key[16])
 {
-/*
-	aes_ctr_old ctr __attribute__((aligned(32))) = {0};
-	setup_aeskeyN(0x2C, key);
-	use_aeskey(0x2C);
-	set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
-	ctr = *(aes_ctr_old*)(title + size - AES_BLOCK_SIZE);
-	aes_decrypt(title, title, (size + AES_BLOCK_SIZE - 1)/AES_BLOCK_SIZE, AES_CBC_DECRYPT_MODE);
-*/
 	aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
 	aes_set_key(&(aes_key){(aes_key_data*)key, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY});
 	aes(title, title, size, &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);

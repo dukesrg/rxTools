@@ -20,17 +20,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "crypto.h"
+#include "aes.h"
+#include "fs.h"
 
-typedef struct {
-	uint8_t* buffer;
-	uint8_t* keyY;
-	aes_ctr_old *ctr;
-	size_t size;
-	uint32_t keyslot;
-} PartitionInfo;  //This basic struct can be useful anytime, even if i'll add nand decryption/exploring
-
-uint32_t DecryptPartition(PartitionInfo* info);
+uint_fast8_t decryptFile(File *outfile, File *infile, size_t size, size_t offset, aes_ctr *ctr, aes_key *key, uint32_t mode);
 void CTRDecryptor();
 
 #endif

@@ -19,9 +19,9 @@
 
 typedef union {
 	struct {
-		uint64_t partitionid;
-		uint32_t type;
 		uint32_t offset;
+		uint32_t type;
+		uint64_t partitionid;
 	};
 	aes_ctr_data data;
 } __attribute__((packed)) ncchcounter;
@@ -51,11 +51,11 @@ void ncch_get_counter(ctr_ncchheader *header, aes_ctr *counter, ctr_ncchtype typ
 }
 */
 void ncch_get_counter(ctr_ncchheader *header, aes_ctr *counter, ctr_ncchtype type) {
-	counter->mode = AES_CNT_INPUT_BE_NORMAL; //todo: switch to reverse LE
+	counter->mode = AES_CNT_INPUT_LE_REVERSE;
 	switch (header->version) {
 		case 0:
 		case 2:
-			counter->data = ((ncchcounter){{__builtin_bswap64(header->partitionid), type, 0}}).data;
+			counter->data = ((ncchcounter){{0, type, header->partitionid}}).data;
 			break;
 		case 1:
 			switch (type) {
@@ -69,7 +69,7 @@ void ncch_get_counter(ctr_ncchheader *header, aes_ctr *counter, ctr_ncchtype typ
 					((ncchcounter*)&counter->data)->offset = header->romfsoffset * NCCH_MEDIA_UNIT_SIZE;
 					break;
 			}
-			counter->data = ((ncchcounter){{header->partitionid, 0, __builtin_bswap32(((ncchcounter*)counter)->offset)}}).data;
+			counter->data = ((ncchcounter){{((ncchcounter*)counter)->offset, 0, __builtin_bswap64(header->partitionid)}}).data;
 		break;
 	}
 }

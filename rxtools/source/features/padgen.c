@@ -23,14 +23,14 @@
 #include "aes.h"
 #include "progress.h"
 #include "strings.h"
+#include "CTRDecryptor.h"
 
-#define BUF_SIZE 0x100000
 #define MOVABLE_SEED_SIZE 0x120
 
 static uint_fast8_t NcchPadgen(NcchInfo *info) {
 	uint32_t size = 0;
-	aes_ctr ctr = {.mode = AES_CNT_INPUT_BE_NORMAL};
-	aes_key key = {.mode = AES_CNT_INPUT_BE_NORMAL, .type = KEYY};
+	aes_ctr ctr = {(aes_ctr_data){{0}}, AES_CNT_INPUT_BE_NORMAL};
+	aes_key key = {NULL, AES_CNT_INPUT_BE_NORMAL, 0, KEYY};
 	size_t i;
 	
 	if (!info->n_entries ||
@@ -49,7 +49,7 @@ static uint_fast8_t NcchPadgen(NcchInfo *info) {
 			key.slot = 0x25;
 		else
 			key.slot = 0x2C;
-		key.data = (aes_key_data*)info->entries[i].keyY;
+		key.data = (aes_key_data*)&info->entries[i].keyY;
 		ctr.data = *(aes_ctr_data*)&info->entries[i].CTR;
 		if (!CreatePad(&ctr, &key, info->entries[i].size_mb, info->entries[i].filename, i))
 			return 0;
@@ -96,10 +96,9 @@ static uint_fast8_t SdPadgen(SdInfo *info) {
 	Key.data = NULL;
 	for (i = info->n_entries; i--; size += info->entries[i].size_mb);
 	statusInit(size, lang(SF_GENERATING), lang(S_SD_XORPAD));
-	for (i = info->n_entries; i--;) {
+	for (i = info->n_entries; i--;)
 		if (!CreatePad(&(aes_ctr){*(aes_ctr_data*)&info->entries[i].CTR, AES_CNT_INPUT_BE_NORMAL}, &Key, info->entries[i].size_mb, info->entries[i].filename, i))
 			return 0;
-	}
 
 	return 1;
 }
@@ -122,8 +121,7 @@ uint_fast8_t PadGen(wchar_t *filename) {
 
 uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size_mb, const char *filename, int index) {
 	File pf;
-	uint8_t buf[BUF_SIZE];
-	uint32_t size = size_mb << 20;
+	size_t size = size_mb << 20;
 	wchar_t fname[sizeof(((SdInfoEntry*)0)->filename)];
 
 	if (mbstowcs(fname, filename, sizeof(((SdInfoEntry*)0)->filename)) == (size_t)-1 ||
@@ -131,25 +129,12 @@ uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size_mb, const char 
 	) return 0;
 
 	aes_set_key(key);
-	for (size_t i = 0; i < size; i += BUF_SIZE) {
-		size_t j;
-		j = size - i < BUF_SIZE ? size - i : BUF_SIZE;
-		aes(buf, NULL, j, ctr, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
-		FileWrite2(&pf, &buf, j);
-		progressSetPos((i + j) >> 20); //progress in MB
-		if (GetInput() & keys[KEY_B].mask) return 0;
+
+	if (!decryptFile(&pf, NULL, size, 0, ctr, key, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL)) {
+		FileClose(&pf);
+		return 0;
 	}
-/*
-	while (size) {
-		size_t j = size > BUF_SIZE ? BUF_SIZE : size;
-		aes(buf, NULL, j, &ctr, AES_CTR_DECRYPT_MODE);
-		FileWrite2(&pf, &buf, j);
-		size -= j;
-		progressSetPos(size_mb - (size >> 20)); //progress in MB
-		if (GetInput() & keys[KEY_B].mask) return 0;
-	}
-*/
-	progressPinOffset();
+
 	FileClose(&pf);
 	return 1;
 }

@@ -28,66 +28,45 @@
 #include "aes.h"
 #include "lang.h"
 #include "menu.h"
+#include "progress.h"
+#include "strings.h"
 
-#define BUFFER_ADDR ((uint8_t*)0x21000000)
-#define BLOCK_SIZE  (8*1024*1024)
+#define BUF_SIZE 0x100000
 
-char str[100];
+typedef struct {
+	char name[8];
+	uint32_t offset;
+	uint32_t size;
+} __attribute__((packed)) exefs_file_header;
 
-uint32_t DecryptPartition(PartitionInfo* info){
-	setup_aeskey(info->keyslot, AES_BIG_INPUT|AES_NORMAL_INPUT, info->keyY);
-	use_aeskey(info->keyslot);
+typedef struct {
+	exefs_file_header file[10];
+	uint8_t reserved1[0x20];
+	uint8_t hash[10][0x20];
+} __attribute__((packed)) exefs_header;
 
-	aes_ctr_old ctr __attribute__((aligned(32))) = *info->ctr;
+uint_fast8_t decryptFile(File *outfile, File *infile, size_t size, size_t offset, aes_ctr *ctr, aes_key *key, uint32_t mode) {
+	uint8_t outbuf[BUF_SIZE];
+	uint8_t *inbuf = infile ? outbuf : NULL;
+	size_t size_mb = size >> 20;
 
-	uint32_t size_bytes = info->size;
-	for (uint32_t i = 0; i < size_bytes; i += BLOCK_SIZE) {
-		for (uint32_t j = 0; (j < BLOCK_SIZE) && (i+j < size_bytes); j+= 16) {
-			set_ctr(AES_BIG_INPUT|AES_NORMAL_INPUT, &ctr);
-			aes_decrypt((void*)info->buffer+j, (void*)info->buffer+j, 1, AES_CTR_MODE);
-			add_ctr(&ctr, 1);
-			TryScreenShot(); //Putting it here allows us to take screenshots at any decryption point, since everyting loops in this
-		}
+	aes_set_key(key);
+	while (size) {
+		size_t blocksize = size < BUF_SIZE ? size : BUF_SIZE;
+		if (infile)
+			FileRead(infile, inbuf, blocksize, offset);
+		aes(outbuf, inbuf, blocksize, ctr, mode);
+		FileWrite(outfile, outbuf, blocksize, offset);
+		size -= blocksize;
+		offset += blocksize;
+		if (!progressSetPos(size_mb - (size >> 20))) //progress in MB, return if canceled
+			return 0;
 	}
-	return 0;
+	progressPinOffset();
+	return 1;
 }
 
-void ProcessExeFS(PartitionInfo *info){ //We expect Exefs to take just a block. Why? No exefs right now reached 8MB.
-	if(info->keyslot == 0x2C){
-		DecryptPartition(info);
-	}else if(info->keyslot == 0x25){  //The new keyX is a bit tricky, 'couse only .code is encrypted with it
-		PartitionInfo myInfo = *info;
-		aes_ctr_old OriginalCTR = *myInfo.ctr;
-		myInfo.keyslot = 0x2C;
-		myInfo.size = 0x200;
-		DecryptPartition(&myInfo);
-		add_ctr(myInfo.ctr, 0x200 / 16);
-		if(myInfo.buffer[0] == '.' && myInfo.buffer[1] == 'c' && myInfo.buffer[2] == 'o' && myInfo.buffer[3] == 'd' && myInfo.buffer[4] == 'e'){
-			//The 7.xKey encrypted .code partition
-			uint32_t codeSize = *((unsigned int*)(myInfo.buffer + 0x0C));
-			uint32_t nextSection = *((unsigned int*)(myInfo.buffer + 0x18)) + 0x200;
-			myInfo.buffer += 0x200;
-			myInfo.size = codeSize;
-			myInfo.keyslot = 0x25;
-			DecryptPartition(&myInfo);
-			//The rest is normally encrypted
-			myInfo = *info;
-			myInfo.buffer += nextSection;
-			myInfo.size -= nextSection;
-			myInfo.keyslot = 0x2C;
-			*myInfo.ctr = OriginalCTR;
-			add_ctr(myInfo.ctr, nextSection/16);
-			DecryptPartition(&myInfo);
-		}else{
-			myInfo.size = info->size-0x200;
-			myInfo.buffer += 0x200;
-			DecryptPartition(&myInfo);
-		}
-	}
-}
-
-int ProcessCTR(wchar_t *path){
-	PartitionInfo myInfo;
+uint_fast8_t ProcessCTR(wchar_t *path){
 	File myFile;
 	if(FileOpen(&myFile, path, 0)){
 		ConsoleInit();
@@ -95,59 +74,52 @@ int ProcessCTR(wchar_t *path){
 		uint32_t ncch_base;
 		ctr_ncchheader NCCH;
 		FileRead(&myFile, &NCCH, sizeof(NCCH), ncch_base = 0);
-		if (NCCH.magic == 'DSCN') //NCSD
+		if (NCCH.magic == 'DSCN')
 			FileRead(&myFile, &NCCH, sizeof(NCCH), ncch_base = 0x4000);
-		if (NCCH.magic != 'HCCN') { //NCCH
+		if (NCCH.magic != 'HCCN') {
 			FileClose(&myFile);
-			return 2;
+			return 0;
+		}
+		if (!NCCH.cryptomethod && NCCH.flags7 & NCCHFLAG_NOCRYPTO) {
+			FileClose(&myFile);
+			return 0;
 		}
 
-		print(L"%s\n", NCCH.productcode);
-		if(NCCH.cryptomethod){
-			print(strings[STR_CRYPTO_TYPE], strings[STR_KEY7]);
-		}else if(!(NCCH.flags7 & NCCHFLAG_NOCRYPTO)){
-			print(strings[STR_CRYPTO_TYPE], strings[STR_SECURE]);
-		}else{
-			print(strings[STR_CRYPTO_TYPE], strings[STR_NONE]);
-			print(strings[STR_COMPLETED]);
-			FileClose(&myFile);
-			ConsoleShow();
-			return 3;
-		}
-
+		statusInit((NCCH.extendedheadersize + (NCCH.exefssize + NCCH.romfssize) * 0x200) >> 20, lang(SF_DECRYPTING), NCCH.productcode);
 		aes_ctr ctr;
-		if(NCCH.extendedheadersize){
-			print(strings[STR_DECRYPTING], strings[STR_EXHEADER]);
-			ConsoleShow();
+		aes_key key = {(aes_key_data*)NCCH.signature, AES_CNT_INPUT_BE_NORMAL, 0x2C, KEYY};
+		if (NCCH.extendedheadersize) {
 			ncch_get_counter(&NCCH, &ctr, NCCHTYPE_EXHEADER);
-			FileRead(&myFile, BUFFER_ADDR, sizeof(ctr_ncchexheader), ncch_base + sizeof(ctr_ncchheader));
-			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, (aes_ctr_old*)&ctr.data, sizeof(ctr_ncchexheader), 0x2C};
-			DecryptPartition(&myInfo);
-			FileWrite(&myFile, BUFFER_ADDR, sizeof(ctr_ncchexheader), sizeof(ctr_ncchheader));
+			if (!decryptFile(&myFile, &myFile, sizeof(ctr_ncchexheader), ncch_base + sizeof(ctr_ncchheader), &ctr, &key, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL))
+				return 0;
 		}
-		if(NCCH.exefssize){
-			print(strings[STR_DECRYPTING], strings[STR_EXEFS]);
-			ConsoleShow();
+		if (NCCH.exefssize) {
 			ncch_get_counter(&NCCH, &ctr, NCCHTYPE_EXEFS);
-			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, (aes_ctr_old*)&ctr.data, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, NCCH.cryptomethod ? 0x25 : 0x2C};
-			FileRead(&myFile, BUFFER_ADDR, myInfo.size, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
-			ProcessExeFS(&myInfo); //Explanation at function definition
-			FileWrite(&myFile, BUFFER_ADDR, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
-		}
-		if(NCCH.romfssize){
-			print(strings[STR_DECRYPTING], strings[STR_ROMFS]);
-			ConsoleShow();
-			ncch_get_counter(&NCCH, &ctr, NCCHTYPE_ROMFS);
-			myInfo = (PartitionInfo){BUFFER_ADDR, NCCH.signature, (aes_ctr_old*)&ctr.data, 0, NCCH.cryptomethod ? 0x25 : 0x2C};
-			for(int i = 0; i < (NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE + BLOCK_SIZE - 1) / BLOCK_SIZE; i++){
-				print(L"%3d%%\b\b\b\b",
-					(int)((i*BLOCK_SIZE)/(NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE / 100)));
-				myInfo.size = FileRead(&myFile, BUFFER_ADDR, i*BLOCK_SIZE <= (NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE) ? BLOCK_SIZE : (NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE) % BLOCK_SIZE, ncch_base + NCCH.romfsoffset * NCCH_MEDIA_UNIT_SIZE + i*BLOCK_SIZE);
-				DecryptPartition(&myInfo);
-				add_ctr(myInfo.ctr, myInfo.size/16);
-				FileWrite(&myFile, BUFFER_ADDR, myInfo.size, ncch_base + NCCH.romfsoffset * NCCH_MEDIA_UNIT_SIZE + i*BLOCK_SIZE);
+			size_t offset = 0;
+			if (NCCH.cryptomethod) {
+				exefs_header exefshdr;
+				FileRead(&myFile, &exefshdr, sizeof(exefshdr), ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
+				aes(&exefshdr, &exefshdr, sizeof(exefshdr), &ctr, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+				FileWrite(&myFile, &exefshdr, sizeof(exefshdr), ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE);
+				offset += sizeof(exefshdr);
+				if (!memcmp(exefshdr.file[0].name, ".code", 5)) {
+					key.slot = 0x25;
+					if (!decryptFile(&myFile, &myFile, exefshdr.file[0].size, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE + sizeof(exefshdr) + exefshdr.file[0].offset, &ctr, &key, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL))
+						return 0;
+					aes_add_ctr(&ctr, (exefshdr.file[1].offset - exefshdr.file[0].offset - exefshdr.file[0].size) / AES_BLOCK_SIZE);
+					key.slot = 0x2C;
+					offset += exefshdr.file[1].offset;
+				}
 			}
-			print(L"\n");
+			if (!decryptFile(&myFile, &myFile, NCCH.exefssize * NCCH_MEDIA_UNIT_SIZE - offset, ncch_base + NCCH.exefsoffset * NCCH_MEDIA_UNIT_SIZE + offset, &ctr, &key, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL))
+				return 0;
+		}
+		if (NCCH.romfssize) {
+			ncch_get_counter(&NCCH, &ctr, NCCHTYPE_ROMFS);
+			if (NCCH.cryptomethod)
+				key.slot = 0x25;
+			if (!decryptFile(&myFile, &myFile, NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE, ncch_base + NCCH.romfsoffset * NCCH_MEDIA_UNIT_SIZE, &ctr, &key, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL))
+				return 0;
 		}
 		NCCH.flags7 |= NCCHFLAG_NOCRYPTO; //Disable encryption
 		NCCH.cryptomethod = 0;  //Disable 7.XKey usage
@@ -155,11 +127,9 @@ int ProcessCTR(wchar_t *path){
 			FileWrite(&myFile, ((uint8_t*)&NCCH) + sizeof(NCCH.signature), sizeof(NCCH) - sizeof(NCCH.signature), 0x1100);
 		FileWrite(&myFile, &NCCH, sizeof(NCCH), ncch_base);
 		FileClose(&myFile);
-		print(strings[STR_COMPLETED]);
-		ConsoleShow();
-		return 0;
+		return 1;
 	}
-	return 1;
+	return 0;
 }
 
 int ExploreFolders(wchar_t* folder){
@@ -180,14 +150,10 @@ int ExploreFolders(wchar_t* folder){
 		swprintf(path, _MAX_LFN, L"%ls/%ls", folder, myInfo->fname);
 		if(path[wcslen(path) - 1] == '/') break;
 
-		if(myInfo->fattrib & AM_DIR){
+		if (myInfo->fattrib & AM_DIR)
 			nfiles += ExploreFolders(path);
-		}else if(1){
-			if(ProcessCTR(path) == 0){
-				nfiles++;
-			}
-		}
-
+		else if(ProcessCTR(path))
+			nfiles++;
 	}
 	f_closedir(&myDir);
 	return nfiles;
