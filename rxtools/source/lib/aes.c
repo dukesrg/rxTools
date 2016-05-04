@@ -74,7 +74,7 @@ static void aes_add_cbc(aes_ctr *ctr, void *lastblock, uint32_t mode) {
 }
 
 void aes(void *outbuf, void *inbuf, size_t size, aes_ctr *ctr, uint32_t mode) {
-	if (!outbuf || !ctr || !size) return;
+	if (!outbuf || !size) return;
 	size_t rblocks, wblocks, blocks = 0;
 	uint32_t *in = (uint32_t*)inbuf;
 	uint32_t *out = (uint32_t*)outbuf;

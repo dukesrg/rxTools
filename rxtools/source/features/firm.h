@@ -23,12 +23,12 @@
 #include <stdio.h>
 #include <reboot.h>
 #include "fs.h"
-#include "crypto.h"
+#include "aes.h"
 
 typedef struct {
-	uint8_t keyX[AES_BLOCK_SIZE];
-	uint8_t keyY[AES_BLOCK_SIZE];
-	aes_ctr_old ctr;
+	aes_key_data keyX;
+	aes_key_data keyY;
+	aes_ctr_data ctr;
 	char size[8];
 	uint8_t pad[8];
 	uint8_t control[AES_BLOCK_SIZE];
@@ -36,7 +36,7 @@ typedef struct {
 		uint32_t pad[8];
 		struct {
 			uint8_t unk[16];
-			uint8_t keyX_0x16[AES_BLOCK_SIZE];
+			aes_key_data keyX_0x16;
 		} s;
 	} ext;
 } Arm9Hdr;

@@ -26,6 +26,8 @@ STR("SD XORpad", S_SD_XORPAD)
 STR("NCCH XORpad", S_NCCH_XORPAD)
 STR("FAT16 XORpad", S_FAT16_XORPAD)
 
+STR("Decrypting %16s", SF_DECRYPTING)
+
 //STR("Error reading %ls!", SF_ERROR_READING)
 STR("Failed to %ls %ls!", SF_FAILED_TO)
 STR("mount", S_MOUNT) //don't need a translation

@@ -11,6 +11,7 @@ Launch specific function ("func" object)
 |RUN_SHUTDOWN|Shutdown console|0 - turn off, 1 - reboot|
 |RUN_CFG_NEXT|Toggle configuration option to the next value|configuration key|
 |GEN_XORPAD|Generate title XORpads|name of a source file in ncchinfo.bin or SDinfo.bin format|
+|GEN_FAT16XORPAD|Generate NAND FAT16 partition XORpad||
 
 ###Status check functions
 Check menu option state ("enabled" object)
@@ -19,7 +20,7 @@ Check menu option state ("enabled" object)
 |---|---|---|
 |CHK_CFG|Check rxTools configuration property availability|configuration key|
 |CHK_EMUNAND|Check if EmuNAND exists||
-|CHK_FILE|Check if file exist, have exact size and hash|full path name; size(optional); MD5 hash(optional)|
+|CHK_FILE|Check if file exist, have exact size and hash|full path name; size(optional); SSHA-1/SHA-224/SHA-256 hash(optional)|
 |CHK_TITLE|Check that .tmd and accompanied encrypted (.app) or decrypted (obtaied from NUS) exists|full path name of the .tmd|
 
 ###Value resolve functions
