@@ -27,6 +27,7 @@
 #include "lang.h"
 #include "console.h"
 #include "fs.h"
+#include "nand.h"
 #include "ncch.h"
 #include "draw.h"
 #include "menu.h"
@@ -289,39 +290,37 @@ void rxModeWithSplash(int_fast8_t drive)
 }
 
 //Just patches signatures check, loads in sysnand
-int PastaMode(){
+#define PASTA_FIRM_SEEK_SIZE 0xF0000
+
+int PastaMode() {
 	/*PastaMode is ready for n3ds BUT there's an unresolved bug which affects nand reading functions, like nand_readsectors(0, 0xF0000 / 0x200, firm, FIRM0);*/
 
-	uint8_t* firm = (void*)FIRM_ADDR;
-	nand_readsectors(0, 0xF0000 / 0x200, firm, FIRM0);
-	if (strncmp((char*)firm, "FIRM", 4))
-		nand_readsectors(0, 0xF0000 / 0x200, firm, FIRM1);
+	uint8_t *firm = (void*)FIRM_ADDR;
 
-	if(getMpInfo() == MPINFO_CTR)
-	{
+	nand_readsectors(0, PASTA_FIRM_SEEK_SIZE / NAND_SECTOR_SIZE, firm, SYSNAND, NAND_PARTITION_FIRM0);
+	if (*(uint32_t*)firm != 'MRIF')
+		nand_readsectors(0, PASTA_FIRM_SEEK_SIZE / NAND_SECTOR_SIZE, firm, SYSNAND, NAND_PARTITION_FIRM1);
+
+	if (getMpInfo() == MPINFO_CTR) {
 		//o3ds patches
-		unsigned char sign1[] = { 0xC1, 0x17, 0x49, 0x1C, 0x31, 0xD0, 0x68, 0x46, 0x01, 0x78, 0x40, 0x1C, 0x00, 0x29, 0x10, 0xD1 };
-		unsigned char sign2[] = { 0xC0, 0x1C, 0x76, 0xE7, 0x20, 0x00, 0x74, 0xE7, 0x22, 0xF8, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F };
-		unsigned char patch1[] = { 0x00, 0x20, 0x4E, 0xB0, 0x70, 0xBD };
-		unsigned char patch2[] = { 0x00, 0x20 };
+		uint8_t sign1[] = { 0xC1, 0x17, 0x49, 0x1C, 0x31, 0xD0, 0x68, 0x46, 0x01, 0x78, 0x40, 0x1C, 0x00, 0x29, 0x10, 0xD1 };
+		uint8_t sign2[] = { 0xC0, 0x1C, 0x76, 0xE7, 0x20, 0x00, 0x74, 0xE7, 0x22, 0xF8, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F };
+		uint8_t patch1[] = { 0x00, 0x20, 0x4E, 0xB0, 0x70, 0xBD };
+		uint8_t patch2[] = { 0x00, 0x20 };
 
-		for (int i = 0; i < 0xF0000; i++){
-			if (!memcmp(firm + i, sign1, 16)){
-				memcpy(firm + i, patch1, 6);
-			}
-			if (!memcmp(firm + i, sign2, 16)){
-				memcpy(firm + i, patch2, 2);
-			}
+		for (size_t i = 0; i < PASTA_FIRM_SEEK_SIZE; i++) {
+			if (!memcmp(firm + i, sign1, sizeof(sign1)))
+				memcpy(firm + i, patch1, sizeof(patch1));
+			if (!memcmp(firm + i, sign2, sizeof(sign2)))
+				memcpy(firm + i, patch2, sizeof(patch2));
 		}
-	}
-	else
-	{
+	} else {
 		//new 3ds patches
 		decryptFirmKtrArm9((void *)FIRM_ADDR);
 		uint8_t patch0[] = { 0x00, 0x20, 0x3B, 0xE0 };
-        uint8_t patch1[] = { 0x00, 0x20, 0x08, 0xE0 };
-        memcpy((uint32_t*)(FIRM_ADDR + 0xB39D8), patch0, 4);
-		memcpy((uint32_t*)(FIRM_ADDR + 0xB9204), patch1, 4);
+		uint8_t patch1[] = { 0x00, 0x20, 0x08, 0xE0 };
+		memcpy((uint32_t*)(FIRM_ADDR + 0xB39D8), patch0, sizeof(patch0));
+		memcpy((uint32_t*)(FIRM_ADDR + 0xB9204), patch1, sizeof(patch1));
 	}
 
 	return loadExecReboot();

@@ -26,6 +26,7 @@
 #include "CTRDecryptor.h"
 
 #define MOVABLE_SEED_SIZE 0x120
+#include "draw.h"
 
 static uint_fast8_t NcchPadgen(NcchInfo *info) {
 	uint32_t size = 0;

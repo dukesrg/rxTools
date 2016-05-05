@@ -33,8 +33,8 @@
 #include "CTRDecryptor.h"
 #include "progress.h"
 #include "strings.h"
+#include "nand.h"
 
-#define NAND_SECTOR_SIZE 0x200
 #define BUF1 (void*)0x21000000
 #define PROGRESS_WIDTH	16
 
@@ -137,30 +137,28 @@ void DumpNandPartitions(){
 		L"firm0.bin", L"firm1.bin", L"ctrnand.bin"
 	};
 	wchar_t* p_descr[] = { strings[STR_TWLN], strings[STR_TWLP], strings[STR_AGB_SAVE], strings[STR_FIRM0], strings[STR_FIRM1], strings[STR_CTRNAND] };
-	unsigned int p_size[] = { 0x08FB5200, 0x020B6600, 0x00030000, 0x00400000, 0x00400000, getMpInfo() == MPINFO_KTR ? 0x41D2D200 : 0x2F3E3600 };
-	unsigned int p_addr[] = { TWLN, TWLP, AGB_SAVE, FIRM0, FIRM1, CTRNAND };
+	nand_partition_index p_idx[] = { NAND_PARTITION_TWLN, NAND_PARTITION_TWLP, NAND_PARTITION_AGB_SAVE, NAND_PARTITION_FIRM0, NAND_PARTITION_FIRM1, NAND_PARTITION_CTRNAND};
 	int sect_row = 0x80;
 
 	wchar_t tmp[_MAX_LFN];
-	for(int i = 3; i < 6; i++){		//Cutting out twln, twlp and agb_save. Todo: Properly decrypt them
+	for(int i = 3; i < sizeof(p_idx) / sizeof(p_idx[0]); i++){		//Cutting out twln, twlp and agb_save. Todo: Properly decrypt them
 		File out;
 		swprintf(tmp, _MAX_LFN, L"rxTools/nand/%ls%ls", isEmuNand ? L"emu_" : L"", p_name[i]);
 		FileOpen(&out, tmp, 1);
 		print(strings[STR_DUMPING], p_descr[i], tmp);
 		ConsoleShow();
 
-		for(int j = 0; j*NAND_SECTOR_SIZE < p_size[i]; j += sect_row){
-			swprintf(tmp, _MAX_LFN, L"%08X / %08X", j*NAND_SECTOR_SIZE, p_size[i]);
+		size_t size = GetNANDPartition(isEmuNand ? EMUNAND : SYSNAND, p_idx[i])->sectors_count;
+		for(int j = 0; j < size; j += sect_row){
+			swprintf(tmp, _MAX_LFN, L"%08X / %08X", j * NAND_SECTOR_SIZE, size * NAND_SECTOR_SIZE);
 			int x, y;
 			ConsoleGetXY(&x, &y);
 			y += 16 * 3;
 			x += 8 * 2;
 			ConsoleShow();
 			DrawString(&bottomScreen, tmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-
-			if(isEmuNand) emunand_readsectors(j, sect_row, BUF1, p_addr[i]);
-			else nand_readsectors(j, sect_row, BUF1, p_addr[i]);
-			FileWrite(&out, BUF1, sect_row*NAND_SECTOR_SIZE, j*NAND_SECTOR_SIZE);
+			nand_readsectors(j, sect_row, BUF1, isEmuNand ? EMUNAND0 : SYSNAND, p_idx[i]);
+			FileWrite(&out, BUF1, sect_row * NAND_SECTOR_SIZE, j * NAND_SECTOR_SIZE);
 		}
 		FileClose(&out);
 	}
@@ -170,14 +168,15 @@ void DumpNandPartitions(){
 }
 
 void GenerateNandXorpads(){
-	const char *filename = "0:rxTools/nand.fat16.xorpad";
-	size_t size = getMpInfo() == MPINFO_KTR ? 1055 : 758;
 	aes_ctr ctr;
+	const char *filename = "0:rxTools/nand.fat16.xorpad";
+	nand_partition *partition = GetNANDPartition(SYSNAND, NAND_PARTITION_CTR);
+	size_t size_mb = (partition->sectors_count * NAND_SECTOR_SIZE + ((1 << 20) - 1)) >> 20;
 
-	statusInit(size, lang(SF_GENERATING), lang(S_FAT16_XORPAD));
+	statusInit(size_mb, lang(SF_GENERATING), lang(S_FAT16_XORPAD));
 	GetNANDCTR(&ctr);
-	aes_add_ctr(&ctr, 0xB93000);
-	CreatePad(&ctr, &(aes_key){NULL, 0, getMpInfo() == MPINFO_KTR ? 0x5 : 0x4, 0}, size, filename, 0);
+	aes_add_ctr(&ctr, partition->first_sector * NAND_SECTOR_SIZE / AES_BLOCK_SIZE);
+	CreatePad(&ctr, &(aes_key){NULL, 0, partition->keyslot, 0}, size_mb, filename, 0);
 }
 
 void DumpNANDSystemTitles(){
@@ -197,9 +196,8 @@ void DumpNANDSystemTitles(){
 	unsigned int tot_size = 0x179000;
 	f_mkdir (outfolder);
 	for(int i = 0; i < tot_size; i++){
-		if(isEmuNand) emunand_readsectors(i, 1, BUF1, CTRNAND);
-		else nand_readsectors(i, 1, BUF1, CTRNAND);
-		if(*((char*)BUF1 + 0x100) == 'N' && *((char*)BUF1 + 0x101) == 'C' && *((char*)BUF1 + 0x102) == 'C' && *((char*)BUF1 + 0x103) == 'H'){
+		nand_readsectors(i, 1, BUF1, isEmuNand ? EMUNAND : SYSNAND, NAND_PARTITION_CTRNAND);
+		if (*(uint32_t*)((uint8_t*)BUF1 + 0x100) == 'HCCN') {
 			ctr_ncchheader ncch;
 			memcpy((void*)&ncch, BUF1, NAND_SECTOR_SIZE);
 			swprintf(filename, _MAX_LFN, L"%ls/%ls%08X%08X.app",
@@ -210,8 +208,7 @@ void DumpNANDSystemTitles(){
 			ConsoleShow();
 			FileOpen(&pfile, filename, 1);
 			for(int j = 0; j < ncch.contentsize; j++){
-				if(isEmuNand) emunand_readsectors(i + j, 1, BUF1, CTRNAND);
-				else nand_readsectors(i + j, 1, BUF1, CTRNAND);
+				nand_readsectors(i + j, 1, BUF1, isEmuNand ? EMUNAND : SYSNAND, NAND_PARTITION_CTRNAND);
 				FileWrite(&pfile, BUF1, NAND_SECTOR_SIZE, j*NAND_SECTOR_SIZE);
 			}
 			FileClose(&pfile);
@@ -238,9 +235,8 @@ void DumpNANDSystemTitles(){
 void RebuildNand(){
 	char* p_name[] = { "twln.bin", "twlp.bin", "agb_save.bin", "firm0.bin", "firm1.bin", "ctrnand.bin" };
 	wchar_t* p_descr[] = { strings[STR_TWLN], strings[STR_TWLP], strings[STR_AGB_SAVE], strings[STR_FIRM0], strings[STR_FIRM1], strings[STR_CTRNAND] };
-	unsigned int p_size[] = { 0x08FB5200, 0x020B6600, 0x00030000, 0x00400000, 0x00400000, getMpInfo() == MPINFO_KTR ? 0x41D2D200 : 0x2F3E3600 };
-	unsigned int p_addr[] = { TWLN, TWLP, AGB_SAVE, FIRM0, FIRM1, CTRNAND };
-	int sect_row = 0x1;			//Slow, ok, but secure
+	nand_partition_index p_idx[] = { NAND_PARTITION_TWLN, NAND_PARTITION_TWLP, NAND_PARTITION_AGB_SAVE, NAND_PARTITION_FIRM0, NAND_PARTITION_FIRM1, NAND_PARTITION_CTRNAND};
+	int sect_row = 0x1; //Slow, ok, but secure
 
 	ConsoleInit();
 	int isEmuNand = checkEmuNAND();
@@ -255,15 +251,16 @@ void RebuildNand(){
 	print(strings[STR_PROCESSING], isEmuNand ? strings[STR_EMUNAND] : strings[STR_SYSNAND]);
 	const size_t wtmpLen = 256;
 	wchar_t wtmp[wtmpLen];
-	for(int i = 3; i < 6; i++){		//Cutting out twln, twlp and agb_save. Todo: Properly decrypt them
+	for(int i = 3; i < sizeof(p_idx) / sizeof(p_idx[0]); i++){ //Cutting out twln, twlp and agb_save. Todo: Properly decrypt them
 		File out;
 		swprintf(wtmp, wtmpLen, L"rxTools/nand/%ls%ls", isEmuNand ? L"emu_" : L"", p_name[i]);
 		if(FileOpen(&out, wtmp, 0)){
 			print(strings[STR_INJECTING], wtmp, p_descr[i]);
 			ConsoleShow();
 
-			for(int j = 0; j*NAND_SECTOR_SIZE < p_size[i]; j += sect_row){
-				swprintf(wtmp, wtmpLen, L"%08X / %08X", j*NAND_SECTOR_SIZE, p_size[i]);
+			size_t size = GetNANDPartition(isEmuNand ? EMUNAND : SYSNAND, p_idx[i])->sectors_count;
+			for(int j = 0; j < size; j += sect_row){
+				swprintf(wtmp, wtmpLen, L"%08X / %08X", j*NAND_SECTOR_SIZE, size * NAND_SECTOR_SIZE);
 				int x, y;
 				ConsoleGetXY(&x, &y);
 				y += 16 * 3;
@@ -271,7 +268,8 @@ void RebuildNand(){
 				DrawString(&bottomScreen, wtmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
 
 				FileRead(&out, BUF1, sect_row*NAND_SECTOR_SIZE, j*NAND_SECTOR_SIZE);
-				if(isEmuNand) emunand_writesectors(j, sect_row, BUF1, p_addr[i]);
+				if (isEmuNand)
+					nand_writesectors(j, sect_row, BUF1, EMUNAND, p_idx[i]);
 			}
 			FileClose(&out);
 		}
