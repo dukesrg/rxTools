@@ -21,24 +21,61 @@
 #include <stdint.h>
 #include "aes.h"
 
+#define NAND_SECTOR_SIZE 0x200
+
 typedef enum {
-	TWLN = 0x00012E00,
-	TWLP = 0x09011A00,
-	AGB_SAVE = 0x0B100000,
-	FIRM0 = 0x0B130000,
-	FIRM1 = 0x0B530000,
-	CTRNAND = 0x0B95CA00,
-	KTR_CTRNAND = 0x0B95AE00
+// NCSD partitions
+	NAND_PARTITION_TWL = 0,
+	NAND_PARTITION_AGB_SAVE = 1,
+	NAND_PARTITION_FIRM0 = 2,
+	NAND_PARTITION_FIRM1 = 3,
+	NAND_PARTITION_CTR = 4,
+	NAND_PARTITION_5 = 5,
+	NAND_PARTITION_6 = 6,
+	NAND_PARTITION_7 = 7,
+// TWL partition logical partitions 0-3
+	NAND_PARTITION_TWLN = 8,
+	NAND_PARTITION_TWLP = 9,
+	NAND_PARTITION_TWL2 = 10,
+	NAND_PARTITION_TWL3 = 11,
+// CTR partition logical partitions 0-3
+	NAND_PARTITION_CTRNAND = 12,
+	NAND_PARTITION_CTR1 = 13,
+	NAND_PARTITION_CTR2 = 14,
+	NAND_PARTITION_CTR3 = 15,
+	NAND_PARTITION_COUNT
+} nand_partition_index;
+
+typedef enum {
+	SYSNAND = 0,
+	EMUNAND0 = 1,
+	EMUNAND = EMUNAND0,
+	EMUNAND1 = 2,
+	EMUNAND2 = 3,
+	NAND_COUNT
+} nand_type;
+
+typedef enum {
+	NAND_FORMAT_PLAIN = 0,
+	NAND_FORMAT_RED = NAND_FORMAT_PLAIN,
+	NAND_FORMAT_GW = 1
+} nand_format;
+
+typedef struct {
+	uint32_t first_sector;
+	uint32_t sectors_count;
+	uint_fast8_t keyslot;
 } nand_partition;
 
 extern int sysver;
 
 void FSNandInitCrypto(void);
-unsigned int checkEmuNAND();
+uint32_t checkNAND(nand_type index);
+uint32_t checkEmuNAND();
 void GetNANDCTR(aes_ctr *ctr);
-void nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
-void nand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
-void emunand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
-void emunand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_partition partition);
+uint_fast8_t nandInit();
+nand_partition *GetNANDPartition(nand_type type, nand_partition_index partition);
+void nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_type nidx, nand_partition_index pidx);
+void nand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_type nidx, nand_partition_index pidx);
 
 #endif

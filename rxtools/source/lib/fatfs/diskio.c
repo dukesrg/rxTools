@@ -11,15 +11,6 @@
 #include <tmio/tmio.h>
 #include <nand.h>
 
-/* Definitions of physical drive number for each media */
-enum {
-	DRV_SDMC,
-	DRV_NAND,
-	DRV_EMU,
-
-	DRV_NUM
-};
-
 static uint_fast8_t initedTmio = 0;
 static uint_fast8_t initedCrypto = 0;
 
@@ -111,10 +102,10 @@ DRESULT disk_read (
                 return RES_PARERR;
             break;
         case DRV_NAND:
-            nand_readsectors(sector, count, (uint8_t *)buff, CTRNAND);
+            nand_readsectors(sector, count, (uint8_t *)buff, SYSNAND, NAND_PARTITION_CTRNAND);
             break;
         case DRV_EMU:
-            emunand_readsectors(sector, count, (uint8_t *)buff, CTRNAND);
+            nand_readsectors(sector, count, (uint8_t *)buff, EMUNAND, NAND_PARTITION_CTRNAND);
             break;
     }
     return RES_OK;
@@ -140,10 +131,10 @@ DRESULT disk_write (
                 return RES_PARERR;
             break;
         case DRV_NAND:
-            nand_writesectors(sector, count, (uint8_t *)buff, CTRNAND);
+            nand_writesectors(sector, count, (uint8_t *)buff, SYSNAND, NAND_PARTITION_CTRNAND);
 			break;
         case DRV_EMU:
-            emunand_writesectors(sector, count, (uint8_t *)buff, CTRNAND);
+            nand_writesectors(sector, count, (uint8_t *)buff, EMUNAND, NAND_PARTITION_CTRNAND);
 			break;
     }
     return RES_OK;

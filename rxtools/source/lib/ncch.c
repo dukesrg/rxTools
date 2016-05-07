@@ -26,30 +26,6 @@ typedef union {
 	aes_ctr_data data;
 } __attribute__((packed)) ncchcounter;
 
-/*
-void ncch_get_counter(ctr_ncchheader *header, aes_ctr *counter, ctr_ncchtype type) {
-	switch (header->version) {
-		case 0:
-		case 2:
-			*counter = ((ncchcounter){{__builtin_bswap64(header->partitionid), type, 0}}).ctr;
-			break;
-		case 1:
-			switch (type) {
-				case NCCHTYPE_EXHEADER:
-					((ncchcounter*)counter)->offset = sizeof(header);
-					break;
-				case NCCHTYPE_EXEFS:
-					((ncchcounter*)counter)->offset = header->exefsoffset * NCCH_MEDIA_UNIT_SIZE;
-					break;
-				case NCCHTYPE_ROMFS:
-					((ncchcounter*)counter)->offset = header->romfsoffset * NCCH_MEDIA_UNIT_SIZE;
-					break;
-			}
-			*counter = ((ncchcounter){{header->partitionid, 0, __builtin_bswap32(((ncchcounter*)counter)->offset)}}).ctr;
-		break;
-	}
-}
-*/
 void ncch_get_counter(ctr_ncchheader *header, aes_ctr *counter, ctr_ncchtype type) {
 	counter->mode = AES_CNT_INPUT_LE_REVERSE;
 	switch (header->version) {

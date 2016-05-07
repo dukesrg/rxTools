@@ -36,6 +36,7 @@
 #include "strings.h"
 #include "cfnt.h"
 
+#include "nand.h"
 #include "ncch.h"
 #include "romfs.h"
 #include "progress.h"
@@ -211,9 +212,7 @@ static _Noreturn void mainLoop() {
 	}
 }
 
-__attribute__((section(".text.start"), noreturn)) void _start()
-{
-
+__attribute__((section(".text.start"), noreturn)) void _start() {
 	wchar_t langDir[_MAX_LFN + 1];
 	wchar_t themeDir[_MAX_LFN + 1];
 	wchar_t path[_MAX_LFN + 1];
@@ -231,7 +230,7 @@ __attribute__((section(".text.start"), noreturn)) void _start()
 	top1Screen.addr = (uint8_t*)*(uint32_t*)top1Screen.addr;
 	top2Screen.addr = (uint8_t*)*(uint32_t*)top2Screen.addr;
 
-	if (!FSInit()) {
+	if (!nandInit() || !FSInit()) {
 		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang(S_MOUNT), lang(S_FILE_SYSTEM));
 		Shutdown(1);		
 	}

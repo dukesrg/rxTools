@@ -27,6 +27,14 @@ typedef enum {
 	RES_PARERR		/* 4: Invalid Parameter */
 } DRESULT;
 
+/* Definitions of physical drive number for each media */
+enum {
+	DRV_SDMC,
+	DRV_NAND,
+	DRV_EMU,
+
+	DRV_NUM
+};
 
 /*---------------------------------------*/
 /* Prototypes for disk control functions */
