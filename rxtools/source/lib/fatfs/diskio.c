@@ -11,9 +11,6 @@
 #include <tmio/tmio.h>
 #include <nand.h>
 
-static uint_fast8_t initedTmio = 0;
-static uint_fast8_t initedCrypto = 0;
-
 /*-----------------------------------------------------------------------*/
 /* Inidialize a Drive                                                    */
 /*-----------------------------------------------------------------------*/
@@ -22,33 +19,7 @@ DSTATUS disk_initialize (
     BYTE pdrv               /* Physical drive nmuber (0..) */
 )
 {
-	uint32_t res;
-
-	if (!initedTmio) {
-		tmio_init();
-		initedTmio = 1;
-	}
-
-	if ((pdrv == DRV_EMU || pdrv == DRV_NAND) && !initedCrypto) {
-		FSNandInitCrypto();
-		initedCrypto = 1;
-	}
-
-	switch (pdrv) {
-		case DRV_EMU:
-		case DRV_SDMC:
-			res = tmio_init_sdmc();
-			break;
-
-		case DRV_NAND:
-			res = tmio_init_nand();
-			break;
-
-		default:
-			return RES_PARERR;
-	}
-
-	return res ? RES_ERROR : RES_OK;
+	return RES_OK;
 }
 
 
@@ -62,9 +33,6 @@ DSTATUS disk_status (
 )
 {
 	enum tmio_dev_id d;
-
-	if ((pdrv == DRV_EMU || pdrv == DRV_NAND) && !initedCrypto)
-		return STA_NOINIT;
 
 	switch (pdrv) {
 		case DRV_EMU:

@@ -20,7 +20,9 @@
 
 #include <stdint.h>
 #include "aes.h"
+#include "strings.h"
 
+#define AGB_SAVE_MAGIC 'VAS.'
 #define NAND_SECTOR_SIZE 0x200
 
 typedef enum {
@@ -65,16 +67,49 @@ typedef struct {
 	uint32_t first_sector;
 	uint32_t sectors_count;
 	uint_fast8_t keyslot;
-} nand_partition;
+} nand_partition_entry;
+
+typedef struct {
+	nand_partition_entry partition[NAND_PARTITION_COUNT];
+	uint32_t first_sector;
+	uint32_t sectors_count;
+	nand_format format;
+} nand_metrics;
+
+static const char *const *const nand_names[] = {
+	&S_SYSNAND,
+	&S_EMUNAND,
+	&S_EMUNAND1,
+	&S_EMUNAND2
+};
+ 
+static const char *const *const nand_partition_names[] = {
+	&S_TWL,
+	&S_AGB_SAVE,
+	&S_FIRM0,
+	&S_FIRM1,
+	&S_CTR,
+	&S_NCSD5,
+	&S_NCSD6,
+	&S_NCSD7,
+	&S_TWLN,
+	&S_TWLP,
+	&S_TWL2,
+	&S_TWL3,
+	&S_CTRNAND,
+	&S_CTR1,
+	&S_CTR2,
+	&S_CTR3
+};
 
 extern int sysver;
 
-void FSNandInitCrypto(void);
 uint32_t checkNAND(nand_type index);
 uint32_t checkEmuNAND();
 void GetNANDCTR(aes_ctr *ctr);
 uint_fast8_t nandInit();
-nand_partition *GetNANDPartition(nand_type type, nand_partition_index partition);
+nand_partition_entry *GetNANDPartition(nand_type type, nand_partition_index partition);
+nand_metrics *GetNANDMetrics(nand_type type);
 void nand_readsectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_type nidx, nand_partition_index pidx);
 void nand_writesectors(uint32_t sector_no, uint32_t numsectors, uint8_t *out, nand_type nidx, nand_partition_index pidx);
 

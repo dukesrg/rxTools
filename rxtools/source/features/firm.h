@@ -25,6 +25,8 @@
 #include "fs.h"
 #include "aes.h"
 
+#define FIRM_MAGIC 'MRIF'
+
 typedef struct {
 	aes_key_data keyX;
 	aes_key_data keyY;

@@ -1,7 +1,7 @@
 #include "aes.h"
 
-void aes_set_key(aes_key *key) {
-	if (!key || key->slot > AES_MAX_KEYSLOT) return;
+uint_fast8_t aes_set_key(aes_key *key) {
+	if (!key || key->slot > AES_MAX_KEYSLOT) return 0;
 	if (key->data) {
 		*REG_AESCNT = (*REG_AESCNT & (~AES_CNT_INPUT_MODE)) | key->mode;
 		if (key->slot > 0x04) {
@@ -14,6 +14,7 @@ void aes_set_key(aes_key *key) {
 	}
 	*REG_AESKEYSEL = key->slot;
 	*REG_AESCNT |= AES_CNT_UPDATE_KEYSLOT;
+	return 1;
 }
 
 void aes_add_ctr(aes_ctr *ctr, uint32_t carry) {

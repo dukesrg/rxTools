@@ -26,9 +26,9 @@
 #include "CTRDecryptor.h"
 
 #define MOVABLE_SEED_SIZE 0x120
-#include "draw.h"
 
 static uint_fast8_t NcchPadgen(NcchInfo *info) {
+	wchar_t fname[sizeof(((NcchInfoEntry*)0)->filename)];
 	uint32_t size = 0;
 	aes_ctr ctr = {(aes_ctr_data){{0}}, AES_CNT_INPUT_BE_NORMAL};
 	aes_key key = {NULL, AES_CNT_INPUT_BE_NORMAL, 0, KEYY};
@@ -40,7 +40,7 @@ static uint_fast8_t NcchPadgen(NcchInfo *info) {
 	) return 0;
 	
 	for (i = info->n_entries; i--; size += info->entries[i].size_mb);
-	statusInit(size, lang(SF_GENERATING), lang(S_NCCH_XORPAD));
+	statusInit(size, lang(SF_GENERATING_XORPAD), lang(S_NCCH));
 	for (i = info->n_entries; i--;) {
 		if (info->entries[i].uses7xCrypto >> 8 == 0xDEC0DE) // magic value to manually specify keyslot
 			key.slot = info->entries[i].uses7xCrypto & 0x3F;
@@ -52,7 +52,7 @@ static uint_fast8_t NcchPadgen(NcchInfo *info) {
 			key.slot = 0x2C;
 		key.data = (aes_key_data*)&info->entries[i].keyY;
 		ctr.data = *(aes_ctr_data*)&info->entries[i].CTR;
-		if (!CreatePad(&ctr, &key, info->entries[i].size_mb, info->entries[i].filename, i))
+		if (mbstowcs(fname, info->entries[i].filename, sizeof(((NcchInfoEntry*)0)->filename)) != (size_t)-1 && !CreatePad(&ctr, &key, info->entries[i].size_mb, fname, i))
 			return 0;
 	}
 
@@ -61,6 +61,7 @@ static uint_fast8_t NcchPadgen(NcchInfo *info) {
 
 static uint_fast8_t SdPadgen(SdInfo *info) {
 	File pf;
+	wchar_t fname[sizeof(((SdInfoEntry*)0)->filename)];
 	const wchar_t *filename;
 	const wchar_t *filenames[] = {
 		L"0:movable.sed",
@@ -96,9 +97,9 @@ static uint_fast8_t SdPadgen(SdInfo *info) {
 	}
 	Key.data = NULL;
 	for (i = info->n_entries; i--; size += info->entries[i].size_mb);
-	statusInit(size, lang(SF_GENERATING), lang(S_SD_XORPAD));
+	statusInit(size, lang(SF_GENERATING_XORPAD), lang(S_SD));
 	for (i = info->n_entries; i--;)
-		if (!CreatePad(&(aes_ctr){*(aes_ctr_data*)&info->entries[i].CTR, AES_CNT_INPUT_BE_NORMAL}, &Key, info->entries[i].size_mb, info->entries[i].filename, i))
+		if (mbstowcs(fname, info->entries[i].filename, sizeof(((SdInfoEntry*)0)->filename)) != (size_t)-1 && !CreatePad(&(aes_ctr){*(aes_ctr_data*)&info->entries[i].CTR, AES_CNT_INPUT_BE_NORMAL}, &Key, info->entries[i].size_mb, fname, i))
 			return 0;
 
 	return 1;
@@ -120,21 +121,14 @@ uint_fast8_t PadGen(wchar_t *filename) {
 	return info.ncch.padding == 0xFFFFFFFF ? NcchPadgen(&info.ncch) : SdPadgen(&info.sd);
 }
 
-uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size_mb, const char *filename, int index) {
+uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size_mb, wchar_t *filename, int index) {
 	File pf;
 	size_t size = size_mb << 20;
-	wchar_t fname[sizeof(((SdInfoEntry*)0)->filename)];
 
-	if (mbstowcs(fname, filename, sizeof(((SdInfoEntry*)0)->filename)) == (size_t)-1 ||
-		!FileOpen(&pf, wcsncmp(fname, L"sdmc:/", 6) == 0 ? fname + 6 : fname, 1)
-	) return 0;
-
-	aes_set_key(key);
-
-	if (!decryptFile(&pf, NULL, size, 0, ctr, key, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL)) {
-		FileClose(&pf);
-		return 0;
-	}
+	if (!FileOpen(&pf, wcsncmp(filename, L"sdmc:/", 6) == 0 ? filename + 6 : filename, 1) || (
+		(!aes_set_key(key) || !decryptFile(&pf, NULL, size, 0, ctr, key, AES_CTR_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL)) &&
+		(FileClose(&pf) || 1)
+	)) return 0;
 
 	FileClose(&pf);
 	return 1;

@@ -95,7 +95,7 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 	uint32_t size;
 	if (!(FileOpen(&fd, src, 0) && (
 		(FileRead2(&fd, &NCCH, sizeof(NCCH)) == sizeof(NCCH) &&
-		NCCH.magic == 'HCCN' &&
+		NCCH.magic == NCCH_MAGIC &&
 		FileSeek(&fd, NCCH.romfsoffset * NCCH_MEDIA_UNIT_SIZE) &&
 		(size = NCCH.romfssize * NCCH_MEDIA_UNIT_SIZE)) ||
 		(FileClose(&fd) && 0)

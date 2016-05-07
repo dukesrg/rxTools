@@ -25,6 +25,7 @@
 #include "draw.h"
 #include "hid.h"
 #include "ncch.h"
+#include "ncsd.h"
 #include "aes.h"
 #include "lang.h"
 #include "menu.h"
@@ -74,9 +75,9 @@ uint_fast8_t ProcessCTR(wchar_t *path){
 		uint32_t ncch_base;
 		ctr_ncchheader NCCH;
 		FileRead(&myFile, &NCCH, sizeof(NCCH), ncch_base = 0);
-		if (NCCH.magic == 'DSCN')
+		if (NCCH.magic == NCSD_MAGIC)
 			FileRead(&myFile, &NCCH, sizeof(NCCH), ncch_base = 0x4000);
-		if (NCCH.magic != 'HCCN') {
+		if (NCCH.magic != NCCH_MAGIC) {
 			FileClose(&myFile);
 			return 0;
 		}

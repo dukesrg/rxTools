@@ -24,7 +24,9 @@ uint_fast8_t FSInit(void) {
 	if (f_mount(&fs[0], L"0:", 0) != FR_OK || //SDCard
 		f_mount(&fs[1], L"1:", 1) != FR_OK //NAND
 	) return 0;
+
 	f_mount(&fs[2], L"2:", 0); //EmuNAND, Sometimes it doesn't exist
+
 	return 1;
 }
 /**[Unused?]DeInit FileSystems.*/

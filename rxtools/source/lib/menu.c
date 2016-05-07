@@ -39,6 +39,9 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "progress.h"
 #include "aes.h"
 #include "sha.h"
+#include "nand.h"
+#include "firm.h"
+#include "ncsd.h"
 
 static Json menuJson;
 static int menuPosition = 0;
@@ -261,13 +264,8 @@ static const char *const runResolve(int key, int params) {
 	{"FUNC_DEC_CTR", &CTRDecryptor},
 	{"FUNC_DEC_TK", &DecryptTitleKeys},
 	{"FUNC_DEC_TKF", &DecryptTitleKeyFile},
-	{"FUNC_GEN_T_PAD", &PadGen},
-	{"FUNC_DEC_PAR", &DumpNandPartitions},
-	{"FUNC_GEN_PAT_PAD", &GenerateNandXorpads},
-	{"FUNC_DMP_N", &NandDumper},
 	{"FUNC_DMP_NT", &DumpNANDSystemTitles},
 	{"FUNC_DMP_NF", &dumpCoolFiles},
-	{"FUNC_INJ_N", &RebuildNand},
 	{"FUNC_INJ_NF", &restoreCoolFiles},
 	{"FUNC_DG_MSET", &downgradeMSET},
 	{"FUNC_INS_FBI", &installFBI},
@@ -326,54 +324,102 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 			}
 		}
 	} else if (!memcmp(funckey - 4, "CHK_", 4)) {
-		if (!memcmp(funckey, "EMUNAND", funcsize)) return checkEmuNAND();
-		else if (!memcmp(funckey, "FILE", funcsize)) {
-			if (params > 0) {
-				switch (menuJson.tok[params].type) {
-					case JSMN_STRING:
-						return getStrVal(str, params) && f_stat(str, NULL) == FR_OK;
-					case JSMN_ARRAY:
-						fno.lfname = 0;
-						if (menuJson.tok[params].size == 0 || !getStrVal(str, params + 1) || f_stat(str, &fno) != FR_OK) return 0;
-						if (menuJson.tok[params].size == 1) return 1;
-						if (fno.fsize != getIntVal(params + 2)) return 0;
-						if (menuJson.tok[params].size == 2) return 1;
-						if (!FileOpen(&fp, str, 0) || ((FileGetSize(&fp)) != fno.fsize && (FileClose(&fp) || 1)) ||
-							(hashsize = (menuJson.tok[params + 3].end - menuJson.tok[params + 3].start) / 2) < SHA_1_SIZE
-						) return 0;
-
-						sha_start(hashsize == SHA_256_SIZE ? SHA_256_MODE : hashsize == SHA_224_SIZE ? SHA_224_MODE : SHA_1_MODE, NULL);
-						hash = (uint32_t*)__builtin_alloca(hashsize);
-						buf = (uint8_t*)__builtin_alloca(hashsize);
-						filehash = (uint8_t*)__builtin_alloca(hashsize);
-						checkhash = (uint8_t*)hash;
-
-						while ((size = FileRead2(&fp, buf, BUF_SIZE))) sha_update(buf, size);
-						FileClose(&fp);
-						sha_finish(filehash);
-
-						char tmp[9];
-						for (i = 0; i < hashsize/sizeof(uint32_t); i++) {
-							strncpy(tmp, menuJson.js + menuJson.tok[params + 3].start + 8 * i, 8);
-							hash[i] = __builtin_bswap32(strtoul(tmp, NULL, 16));
-						}
-						return !memcmp(checkhash, filehash, hashsize);
-					default:
-						break;
-				}
+		if (!memcmp(funckey, "NAND", funcsize)) {
+			if (params <= 0) return 0;
+			ncsd_header ncsd;
+			switch (menuJson.tok[params].type) {
+				case JSMN_PRIMITIVE:
+					return checkNAND(getIntVal(params) - 1);
+				case JSMN_ARRAY:
+					if (menuJson.tok[params].size == 0 || !checkNAND(getIntVal(params + 1) - 1)) return 0;
+					if (menuJson.tok[params].size == 1) return 1;
+					if (!getStrVal(str, params + 2) || !FileOpen(&fp, str, 0) || (
+						(FileGetSize(&fp) != GetNANDMetrics(getIntVal(params + 1) - 1)->sectors_count * NAND_SECTOR_SIZE ||
+						FileRead2(&fp, &ncsd, NAND_SECTOR_SIZE) != NAND_SECTOR_SIZE) &&
+						(FileClose(&fp) || 1)) ||
+						ncsd.magic != NCSD_MAGIC
+					) return 0;
+					FileClose(&fp);
+					return 1;
+				default:
+					break;
+			}
+		} else if (!memcmp(funckey, "PARTITION", funcsize)) {
+			if (params <= 0 || menuJson.tok[params].type != JSMN_ARRAY || menuJson.tok[params].size < 2) return 0;
+			nand_partition_entry *partition;
+			void *buf;
+			uint_fast8_t partition_type;
+			if (!(partition = GetNANDPartition(getIntVal(params + 1) - 1, (partition_type = getIntVal(params + 2)))))
+				return 0;
+			if (menuJson.tok[params].size == 2) return 1;
+			buf = __builtin_alloca(NAND_SECTOR_SIZE);
+			if (!getStrVal(str, params + 3) || !FileOpen(&fp, str, 0) || (
+				(FileGetSize(&fp) != partition->sectors_count * NAND_SECTOR_SIZE ||
+				FileRead2(&fp, buf, NAND_SECTOR_SIZE) != NAND_SECTOR_SIZE) &&
+				(FileClose(&fp) || 1))
+			) return 0;
+			FileClose(&fp);
+			switch (partition_type) {
+				case NAND_PARTITION_AGB_SAVE:
+					return *(uint32_t*)buf == AGB_SAVE_MAGIC;
+				case NAND_PARTITION_FIRM0:
+				case NAND_PARTITION_FIRM1:
+					return *(uint32_t*)buf == FIRM_MAGIC;
+				case NAND_PARTITION_TWLN:
+					if (memcmp(buf + FAT_VOLUME_LABEL_OFFSET, S_TWL, strlen(S_TWL))) return 0;
+					goto check_boot_magic;
+				case NAND_PARTITION_TWLP:
+					if (memcmp(buf + FAT_VOLUME_LABEL_OFFSET, S_TWL, strlen(S_TWL))) return 0;
+					goto check_boot_magic;
+				case NAND_PARTITION_CTRNAND:
+					if (memcmp(buf + FAT_VOLUME_LABEL_OFFSET, S_CTR, strlen(S_CTR))) return 0;
+				case NAND_PARTITION_TWL:
+				case NAND_PARTITION_CTR:
+				check_boot_magic:
+					return ((mbr*)buf)->partition_table.magic == MBR_BOOT_MAGIC;
+			}
+		} else if (!memcmp(funckey, "FILE", funcsize)) {
+			if (params <= 0) return 0;
+			switch (menuJson.tok[params].type) {
+				case JSMN_STRING:
+					return getStrVal(str, params) && f_stat(str, NULL) == FR_OK;
+				case JSMN_ARRAY:
+					fno.lfname = 0;
+					if (menuJson.tok[params].size == 0 || !getStrVal(str, params + 1) || f_stat(str, &fno) != FR_OK) return 0;
+					if (menuJson.tok[params].size == 1) return 1;
+					if (fno.fsize != getIntVal(params + 2)) return 0;
+					if (menuJson.tok[params].size == 2) return 1;
+					if (!FileOpen(&fp, str, 0) || ((FileGetSize(&fp)) != fno.fsize && (FileClose(&fp) || 1)) ||
+						(hashsize = (menuJson.tok[params + 3].end - menuJson.tok[params + 3].start) / 2) < SHA_1_SIZE
+					) return 0;
+					sha_start(hashsize == SHA_256_SIZE ? SHA_256_MODE : hashsize == SHA_224_SIZE ? SHA_224_MODE : SHA_1_MODE, NULL);
+					hash = (uint32_t*)__builtin_alloca(hashsize);
+					buf = (uint8_t*)__builtin_alloca(hashsize);
+					filehash = (uint8_t*)__builtin_alloca(hashsize);
+					checkhash = (uint8_t*)hash;
+					while ((size = FileRead2(&fp, buf, BUF_SIZE))) sha_update(buf, size);
+					FileClose(&fp);
+					sha_finish(filehash);
+					char tmp[9];
+					for (i = 0; i < hashsize/sizeof(uint32_t); i++) {
+						strncpy(tmp, menuJson.js + menuJson.tok[params + 3].start + 8 * i, 8);
+						hash[i] = __builtin_bswap32(strtoul(tmp, NULL, 16));
+					}
+					return !memcmp(checkhash, filehash, hashsize);
+				default:
+					break;
 			}
 		} else if (!memcmp(funckey, "TITLE", funcsize)) {
-			if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size == 2) {
-				tmd_data tmd;
-				uint_fast8_t drive;
-				params++;
-				getStrVal(str, params);
-				drive = getIntVal(params + 1);
-				if (tmdPreloadHeader(&tmd, str) &&
-					(__builtin_bswap32(tmd.header.title_id_lo) & 0x0000F000) == getRegion(drive)->title_id_lo &&
-					tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive)
-				) return 1;
-			}
+			if (params <= 0 || menuJson.tok[params].type != JSMN_ARRAY || menuJson.tok[params].size < 2) return 0;
+			tmd_data tmd;
+			uint_fast8_t drive;
+			params++;
+			getStrVal(str, params);
+			drive = getIntVal(params + 1);
+			if (tmdPreloadHeader(&tmd, str) &&
+				(__builtin_bswap32(tmd.header.title_id_lo) & 0x0000F000) == getRegion(drive)->title_id_lo &&
+				tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive)
+			) return 1;
 		} else if (!memcmp(funckey, "CFG", funcsize)) {
 			if ((params = getConfig(params)) >= 0) {
 				switch (cfgs[params].type) {
@@ -413,12 +459,32 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 				}
 			}
 */		}
+	} else if (!memcmp(funckey - 4, "DMP_", 4)) {
+		if (!memcmp(funckey, "NAND", funcsize))
+			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2 &&
+				getStrVal(str, params + 2) && DumpNand(getIntVal(params + 1) - 1, str);
+		else if (!memcmp(funckey, "PARTITION", funcsize))
+			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 3 &&
+				getStrVal(str, params + 3) && DumpPartition(getIntVal(params + 1) - 1, getIntVal(params + 2), str);
+	} else if (!memcmp(funckey - 4, "INJ_", 4)) {
+		if (!memcmp(funckey, "NAND", funcsize))
+			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2 &&
+				getStrVal(str, params + 2) && InjectNand(getIntVal(params + 1) - 1, str);
+		else if (!memcmp(funckey, "PARTITION", funcsize))
+			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 3 &&
+				getStrVal(str, params + 3) && InjectPartition(getIntVal(params + 1) - 1, getIntVal(params + 2), str);
 	} else if (!memcmp(funckey - 4, "GEN_", 4)) {
 		if (!memcmp(funckey, "XORPAD", funcsize)) {
-			if (params > 0)
-				return getStrVal(str, params) && PadGen(str);
-		} else if (!memcmp(funckey, "FAT16XORPAD", funcsize)) {
-			GenerateNandXorpads();
+			if (params <= 0) return 0;
+			switch (menuJson.tok[params].type) {
+				case JSMN_STRING:
+					return getStrVal(str, params) && PadGen(str);
+				case JSMN_ARRAY:
+					if (menuJson.tok[params].size >= 2 && getStrVal(str, params + 2))
+						return GenerateNandXorpad(getIntVal(params + 1), str);
+				default:
+					break;
+			}			
 		}
 	}
 	return 0;
@@ -436,7 +502,7 @@ int menuNavigate(int pos, menunav nav) {
 			newpos -= 1 << bitlevel;
 			break;
 		case NAV_DOWN:
-			if ((bitlevel -= MENU_LEVEL_BIT_WIDTH) > 0)
+			if (bitlevel && ((bitlevel -= MENU_LEVEL_BIT_WIDTH) || 1))
 		case NAV_NEXT:
 			newpos += 1 << bitlevel;
 			break;

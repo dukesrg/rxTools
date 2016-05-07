@@ -6,7 +6,7 @@
 			"ITEM_1-1":{
 				"caption":"rxMode EmuNAND",
 				"description":"Apply patches and reboot the console into rxMode on EmuNAND, if present.",
-				"enabled":"CHK_EMUNAND",
+				"enabled":"CHK_NAND",
 				"function":"RUN_RXMODE",
 				"parameters":2
 			},"ITEM_1-2":{
@@ -45,132 +45,479 @@
 				"description":"Decrypt the private key of a game.",
 				"function":"FUNC_DEC_TKF"
 			},"ITEM_2-4":{
-				"caption":"EmuNAND partitions",
-				"description":"Dump and decrypt all EmuNAND partitions (except the TWL partition for now).",
-				"function":"FUNC_DEC_PAR",
-				"parameters":2
-			},"ITEM_2-5":{
-				"caption":"SysNAND partitions",
-				"description":"Dump and decrypt all SysNAND partitions (except the TWL partition for now).",
-				"function":"FUNC_DEC_PAR",
-				"parameters":1
-			},"ITEM_2-6":{
-				"caption":"Generate SD XORpad",
-				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles from SDinfo.bin.",
-				"enabled":"CHK_FILE",
-				"function":"GEN_XORPAD",
-				"parameters":"0:SDinfo.bin"
-			},"ITEM_2-7":{
-				"caption":"Generate NCCH XORpad",
-				"description":"Generate XORpads needed to decrypt and encrypt 3DS titles from ncchinfo.bin.",
-				"enabled":"CHK_FILE",
-				"function":"GEN_XORPAD",
-				"parameters":"0:ncchinfo.bin"
-			},"ITEM_2-8":{
-				"caption":"Generate FAT16 XORpad",
-				"description":"Generate XORpad needed to decrypt main NAND partition.",
-				"function":"GEN_FAT16XORPAD"
+				"caption":"Generate XORpads",
+				"description":"Generate XORpads for titles and NAND partitions.",
+				"ITEM_2-4-1":{
+					"caption":"SD",
+					"description":"Generate XORpads needed to decrypt and encrypt 3DS titles from SDinfo.bin.",
+					"enabled":"CHK_FILE",
+					"function":"GEN_XORPAD",
+					"parameters":"0:SDinfo.bin"
+				},"ITEM_2-4-2":{
+					"caption":"NCCH",
+					"description":"Generate XORpads needed to decrypt and encrypt 3DS titles from ncchinfo.bin.",
+					"enabled":"CHK_FILE",
+					"function":"GEN_XORPAD",
+					"parameters":"0:ncchinfo.bin"
+				},"ITEM_2-4-3":{
+					"caption":"TWL",
+					"description":"Generate XORpad of the TWL (DSi) partition.",
+					"function":"GEN_XORPAD",
+					"parameters":[0,"0:rxTools/nand/twl.xorpad"]
+				},"ITEM_2-4-4":{
+					"caption":"TWLN",
+					"description":"Generate XORpad of the TWL (DSi) FAT16 partition (TWL logical partition 0).",
+					"function":"GEN_XORPAD",
+					"parameters":[8,"0:rxTools/nand/twln.xorpad"]
+				},"ITEM_2-4-5":{
+					"caption":"TWLP",
+					"description":"Generate XORpad of the TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+					"function":"GEN_XORPAD",
+					"parameters":[9,"0:rxTools/nand/twlp.xorpad"]
+				},"ITEM_2-4-6":{
+					"caption":"AGB_SAVE",
+					"description":"Generate XORpad of the AGB (GBA) savegame partition.",
+					"function":"GEN_XORPAD",
+					"parameters":[1,"0:rxTools/nand/agb_save.xorpad"]
+				},"ITEM_2-4-7":{
+					"caption":"FIRM0",
+					"description":"Generate XORpad of the firmware partition.",
+					"function":"GEN_XORPAD",
+					"parameters":[2,"0:rxTools/nand/firm0.xorpad"]
+				},"ITEM_2-4-8":{
+					"caption":"FIRM1",
+					"description":"Generate XORpad of the firmware partition.",
+					"function":"GEN_XORPAD",
+					"parameters":[3,"0:rxTools/nand/firm1.xorpad"]
+				},"ITEM_2-4-9":{
+					"caption":"CTR",
+					"description":"Generate XORpad of the CTR partition.",
+					"function":"GEN_XORPAD",
+					"parameters":[4,"0:rxTools/nand/ctr.xorpad"]
+				},"ITEM_2-4-10":{
+					"caption":"CTRNAND",
+					"description":"Generate XORpad of the CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+					"function":"GEN_XORPAD",
+					"parameters":[12,"0:rxTools/nand/ctrnand.xorpad"]
+				}
 			}
 		},"ITEM_3":{
 			"caption":"Dump",
 			"description":"Dumping options.",
 			"ITEM_3-1":{
-				"caption":"EmuNAND",
-				"description":"Backup your EmuNAND partition.",
-				"enabled":"CHK_EMUNAND",
-				"function":"FUNC_DMP_N",
-				"parameters":2
+				"caption":"SysNAND",
+				"description":"Dump NAND image, separate partitions or files from the SysNAND.",
+				"ITEM_3-1-1":{
+					"caption":"Image",
+					"description":"Backup NAND raw image to file.",
+					"function":"DMP_NAND",
+					"parameters":[1,"0:rxTools/nand/NAND.bin"]
+				},"ITEM_3-1-2":{
+					"caption":"Partitions",
+					"description":"Dump decrypted NAND partitions.",
+					"ITEM_3-1-2-1":{
+						"caption":"TWL",
+						"description":"Dump decrypted TWL (DSi) partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[1,0,"0:rxTools/nand/twl.dec"]
+					},"ITEM_3-1-2-2":{
+						"caption":"TWLN",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[1,8,"0:rxTools/nand/twln.dec"]
+					},"ITEM_3-1-2-3":{
+						"caption":"TWLP",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"function":"DMP_PARTITION",
+						"parameters":[1,9,"0:rxTools/nand/twlp.dec"]
+					},"ITEM_3-1-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[1,1,"0:rxTools/nand/agb_save.dec"]
+					},"ITEM_3-1-2-5":{
+						"caption":"FIRM0",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[1,2,"0:rxTools/nand/firm0.dec"]
+					},"ITEM_3-1-2-6":{
+						"caption":"FIRM1",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[1,3,"0:rxTools/nand/firm1.dec"]
+					},"ITEM_3-1-2-7":{
+						"caption":"CTR",
+						"description":"Dump decrypted CTR partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[1,4,"0:rxTools/nand/ctr.dec"]
+					},"ITEM_3-1-2-8":{
+						"caption":"CTRNAND",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[1,12,"0:rxTools/nand/ctrnand.dec"]
+					}
+				},"ITEM_3-1-3":{
+					"caption":"Files",
+					"description":"Dump files from the CTRNAND FAT16 partition.",
+					"ITEM_3-1-3-1":{
+						"caption":"certs.db",
+						"function":"DMP_FILE",
+						"parameters":"1:dbs/certs.db"
+					},"ITEM_3-1-3-2":{
+						"caption":"import.db",
+						"function":"DMP_FILE",
+						"parameters":"1:dbs/import.db"
+					},"ITEM_3-1-3-3":{
+						"caption":"ticket.db",
+						"function":"DMP_FILE",
+						"parameters":"1:dbs/ticket.db"
+					},"ITEM_3-1-3-4":{
+						"caption":"title.db",
+						"function":"DMP_FILE",
+						"parameters":"1:dbs/title.db"
+					},"ITEM_3-1-3-5":{
+						"caption":"movable.sed",
+						"function":"DMP_FILE",
+						"parameters":"1:private/movable.sed"
+					},"ITEM_3-1-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"1:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_3-1-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"1:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_3-1-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"1:rw/sys/SecureInfo_A"
+					},"ITEM_3-1-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"1:rw/sys/SecureInfo_B"
+					},"ITEM_3-1-3-10":{
+						"caption":"rand_seed",
+						"function":"DMP_FILE",
+						"parameters":"1:rw/sys/rand_seed"
+					}
+				}
 			},"ITEM_3-2":{
-				"caption":"EmuNAND files",
-				"description":"Dump various important files from EmuNAND.",
-				"enabled":"CHK_EMUNAND",
+				"caption":"EmuNAND",
+				"description":"Dump NAND image, separate partitions or files from the first EmuNAND.",
+				"enabled":"CHK_NAND",
 				"parameters":2,
 				"ITEM_3-2-1":{
-					"caption":"movable.sed",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:private/movable.sed"
+					"caption":"Image",
+					"description":"Backup NAND raw image to file.",
+					"function":"DMP_NAND",
+					"parameters":[2,"0:rxTools/nand/EmuNAND.bin"]
 				},"ITEM_3-2-2":{
-					"caption":"SecureInfo_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:rw/sys/SecureInfo_A"
+					"caption":"Partitions",
+					"description":"Dump decrypted NAND partitions.",
+					"ITEM_3-2-2-1":{
+						"caption":"TWL",
+						"description":"Dump decrypted TWL (DSi) partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[2,0,"0:rxTools/nand/emu_twl.dec"]
+					},"ITEM_3-2-2-2":{
+						"caption":"TWLN",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[2,8,"0:rxTools/nand/emu_twln.dec"]
+					},"ITEM_3-2-2-3":{
+						"caption":"TWLP",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"function":"DMP_PARTITION",
+						"parameters":[2,9,"0:rxTools/nand/emu_twlp.dec"]
+					},"ITEM_3-2-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[2,1,"0:rxTools/nand/emu_agb_save.dec"]
+					},"ITEM_3-2-2-5":{
+						"caption":"FIRM0",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[2,2,"0:rxTools/nand/emu_firm0.dec"]
+					},"ITEM_3-2-2-6":{
+						"caption":"FIRM1",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[2,3,"0:rxTools/nand/emu_firm1.dec"]
+					},"ITEM_3-2-2-7":{
+						"caption":"CTR",
+						"description":"Dump decrypted CTR partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[2,4,"0:rxTools/nand/emu_ctr.dec"]
+					},"ITEM_3-2-2-8":{
+						"caption":"CTRNAND",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[2,12,"0:rxTools/nand/emu_ctrnand.dec"]
+					}
 				},"ITEM_3-2-3":{
-					"caption":"SecureInfo_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:rw/sys/SecureInfo_B"
-				},"ITEM_3-2-4":{
-					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM_3-2-5":{
-					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM_3-2-6":{
-					"caption":"rand_seed",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:rw/sys/rand_seed"
-				},"ITEM_3-2-7":{
-					"caption":"ticket.db",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:dbs/ticket.db"
-				},"ITEM_3-2-8":{
-					"caption":"import.db",
-					"function":"FUNC_DMP_NF",
-					"parameters":"2:dbs/import.db"
+					"caption":"Files",
+					"description":"Dump files from the CTRNAND FAT16 partition.",
+					"ITEM_3-2-3-1":{
+						"caption":"certs.db",
+						"function":"DMP_FILE",
+						"parameters":"2:dbs/certs.db"
+					},"ITEM_3-2-3-2":{
+						"caption":"import.db",
+						"function":"DMP_FILE",
+						"parameters":"2:dbs/import.db"
+					},"ITEM_3-2-3-3":{
+						"caption":"ticket.db",
+						"function":"DMP_FILE",
+						"parameters":"2:dbs/ticket.db"
+					},"ITEM_3-2-3-4":{
+						"caption":"title.db",
+						"function":"DMP_FILE",
+						"parameters":"2:dbs/title.db"
+					},"ITEM_3-2-3-5":{
+						"caption":"movable.sed",
+						"function":"DMP_FILE",
+						"parameters":"2:private/movable.sed"
+					},"ITEM_3-2-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"2:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_3-2-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"2:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_3-2-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"2:rw/sys/SecureInfo_A"
+					},"ITEM_3-2-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"2:rw/sys/SecureInfo_B"
+					},"ITEM_3-2-3-10":{
+						"caption":"rand_seed",
+						"function":"DMP_FILE",
+						"parameters":"2:rw/sys/rand_seed"
+					}
 				}
 			},"ITEM_3-3":{
-				"caption":"SysNAND",
-				"description":"Backup your SysNAND partition. It is highly recommended to backup your SysNAND partition.",
-				"function":"FUNC_DMP_N",
-				"parameters":1
+				"caption":"EmuNAND1",
+				"description":"Dump NAND image, separate partitions or files from the second EmuNAND.",
+				"enabled":"CHK_NAND",
+				"parameters":3,
+				"ITEM_3-3-1":{
+					"caption":"Image",
+					"description":"Backup NAND raw image to file.",
+					"function":"DMP_NAND",
+					"parameters":[3,"0:rxTools/nand/EmuNAND1.bin"]
+				},"ITEM_3-3-2":{
+					"caption":"Partitions",
+					"description":"Dump decrypted NAND partitions.",
+					"ITEM_3-3-2-1":{
+						"caption":"TWL",
+						"description":"Dump decrypted TWL (DSi) partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[3,0,"0:rxTools/nand/emu1twl.dec"]
+					},"ITEM_3-3-2-2":{
+						"caption":"TWLN",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[3,8,"0:rxTools/nand/emu1twln.dec"]
+					},"ITEM_3-3-2-3":{
+						"caption":"TWLP",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"function":"DMP_PARTITION",
+						"parameters":[3,9,"0:rxTools/nand/emu1twlp.dec"]
+					},"ITEM_3-3-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[3,1,"0:rxTools/nand/emu1agb_save.dec"]
+					},"ITEM_3-3-2-5":{
+						"caption":"FIRM0",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[3,2,"0:rxTools/nand/emu1firm0.dec"]
+					},"ITEM_3-3-2-6":{
+						"caption":"FIRM1",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[3,3,"0:rxTools/nand/emu1firm1.dec"]
+					},"ITEM_3-3-2-7":{
+						"caption":"CTR",
+						"description":"Dump decrypted CTR partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[3,4,"0:rxTools/nand/emu1ctr.dec"]
+					},"ITEM_3-3-2-8":{
+						"caption":"CTRNAND",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[3,12,"0:rxTools/nand/emu1ctrnand.dec"]
+					}
+				},"ITEM_3-3-3":{
+					"caption":"Files",
+					"description":"Dump files from the CTRNAND FAT16 partition.",
+					"ITEM_3-3-3-1":{
+						"caption":"certs.db",
+						"function":"DMP_FILE",
+						"parameters":"3:dbs/certs.db"
+					},"ITEM_3-3-3-2":{
+						"caption":"import.db",
+						"function":"DMP_FILE",
+						"parameters":"3:dbs/import.db"
+					},"ITEM_3-3-3-3":{
+						"caption":"ticket.db",
+						"function":"DMP_FILE",
+						"parameters":"3:dbs/ticket.db"
+					},"ITEM_3-3-3-4":{
+						"caption":"title.db",
+						"function":"DMP_FILE",
+						"parameters":"3:dbs/title.db"
+					},"ITEM_3-3-3-5":{
+						"caption":"movable.sed",
+						"function":"DMP_FILE",
+						"parameters":"3:private/movable.sed"
+					},"ITEM_3-3-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"3:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_3-3-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"3:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_3-3-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"3:rw/sys/SecureInfo_A"
+					},"ITEM_3-3-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"3:rw/sys/SecureInfo_B"
+					},"ITEM_3-3-3-10":{
+						"caption":"rand_seed",
+						"function":"DMP_FILE",
+						"parameters":"3:rw/sys/rand_seed"
+					}
+				}
 			},"ITEM_3-4":{
+				"caption":"EmuNAND2",
+				"description":"Dump NAND image, separate partitions or files from the third EmuNAND.",
+				"enabled":"CHK_NAND",
+				"parameters":4,
+				"ITEM_3-4-1":{
+					"caption":"Image",
+					"description":"Backup NAND raw image to file.",
+					"function":"DMP_NAND",
+					"parameters":[4,"0:rxTools/nand/EmuNAND2.bin"]
+				},"ITEM_3-4-2":{
+					"caption":"Partitions",
+					"description":"Dump decrypted NAND partitions.",
+					"ITEM_3-4-2-1":{
+						"caption":"TWL",
+						"description":"Dump decrypted TWL (DSi) partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[4,0,"0:rxTools/nand/emu2twl.dec"]
+					},"ITEM_3-4-2-2":{
+						"caption":"TWLN",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[4,8,"0:rxTools/nand/emu2twln.dec"]
+					},"ITEM_3-4-2-3":{
+						"caption":"TWLP",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"function":"DMP_PARTITION",
+						"parameters":[4,9,"0:rxTools/nand/emu2twlp.dec"]
+					},"ITEM_3-4-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[4,1,"0:rxTools/nand/emu2agb_save.dec"]
+					},"ITEM_3-4-2-5":{
+						"caption":"FIRM0",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[4,2,"0:rxTools/nand/emu2firm0.dec"]
+					},"ITEM_3-4-2-6":{
+						"caption":"FIRM1",
+						"description":"Dump decrypted firmware partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[4,3,"0:rxTools/nand/emu2firm1.dec"]
+					},"ITEM_3-4-2-7":{
+						"caption":"CTR",
+						"description":"Dump decrypted CTR partition.",
+						"function":"DMP_PARTITION",
+						"parameters":[4,4,"0:rxTools/nand/emu2ctr.dec"]
+					},"ITEM_3-4-2-8":{
+						"caption":"CTRNAND",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"function":"DMP_PARTITION",
+						"parameters":[4,12,"0:rxTools/nand/emu2ctrnand.dec"]
+					}
+				},"ITEM_3-4-3":{
+					"caption":"Files",
+					"description":"Dump files from the CTRNAND FAT16 partition.",
+					"ITEM_3-4-3-1":{
+						"caption":"certs.db",
+						"function":"DMP_FILE",
+						"parameters":"4:dbs/certs.db"
+					},"ITEM_3-4-3-2":{
+						"caption":"import.db",
+						"function":"DMP_FILE",
+						"parameters":"4:dbs/import.db"
+					},"ITEM_3-4-3-3":{
+						"caption":"ticket.db",
+						"function":"DMP_FILE",
+						"parameters":"4:dbs/ticket.db"
+					},"ITEM_3-4-3-4":{
+						"caption":"title.db",
+						"function":"DMP_FILE",
+						"parameters":"4:dbs/title.db"
+					},"ITEM_3-4-3-5":{
+						"caption":"movable.sed",
+						"function":"DMP_FILE",
+						"parameters":"4:private/movable.sed"
+					},"ITEM_3-4-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"4:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_3-4-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"4:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_3-4-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"4:rw/sys/SecureInfo_A"
+					},"ITEM_3-4-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"DMP_FILE",
+						"parameters":"4:rw/sys/SecureInfo_B"
+					},"ITEM_3-4-3-10":{
+						"caption":"rand_seed",
+						"function":"DMP_FILE",
+						"parameters":"4:rw/sys/rand_seed"
+					}
+				}
+			},"ITEM_3-5":{
 				"caption":"System titles",
 				"description":"Dump all 3DS titles from SysNAND.",
 				"function":"FUNC_DMP_NT"
-			},"ITEM_3-5":{
-				"caption":"SysNAND files",
-				"description":"Dump various important files from SysNAND.",
-				"ITEM_3-5-1":{
-					"caption":"movable.sed",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:private/movable.sed"
-				},"ITEM_3-5-2":{
-					"caption":"SecureInfo_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:rw/sys/SecureInfo_A"
-				},"ITEM_3-5-3":{
-					"caption":"SecureInfo_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:rw/sys/SecureInfo_B"
-				},"ITEM_3-5-4":{
-					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM_3-5-5":{
-					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM_3-5-6":{
-					"caption":"rand_seed",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:rw/sys/rand_seed"
-				},"ITEM_3-5-7":{
-					"caption":"ticket.db",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:dbs/ticket.db"
-				},"ITEM_3-5-8":{
-					"caption":"import.db",
-					"function":"FUNC_DMP_NF",
-					"parameters":"1:dbs/import.db"
-				}
 			},"ITEM_3-6":{
 				"caption":"ARM9 RAM",
 				"description":"Dump ARM9 RAM (for development purposes).",
@@ -180,92 +527,450 @@
 			"caption":"Inject",
 			"description":"Injection options.",
 			"ITEM_4-1":{
-				"caption":"EmuNAND partitions",
-				"description":"Encrypt and write partitions from files on SD card into EmuNAND (except the TWL partition for now).",
-				"enabled":"CHK_EMUNAND",
-				"function":"FUNC_INJ_N",
-				"parameters":2
+				"caption":"SysNAND",
+				"description":"Inject NAND image, separate partitions or files to the SysNAND.",
+				"ITEM_4-1-1":{
+					"caption":"Image",
+					"description":"Restore NAND from raw image file.",
+					"enabled":"CHK_NAND",
+					"function":"INJ_NAND",
+					"parameters":[1,"0:rxTools/nand/NAND.bin"]
+				},"ITEM_4-1-2":{
+					"caption":"Partitions",
+					"description":"Inject unencrypted NAND partitions.",
+					"ITEM_4-1-2-1":{
+						"caption":"TWL",
+						"description":"Inject unencrypted TWL (DSi) partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,0,"0:rxTools/nand/twl.dec"]
+					},"ITEM_4-1-2-2":{
+						"caption":"TWLN",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,8,"0:rxTools/nand/twln.dec"]
+					},"ITEM_4-1-2-3":{
+						"caption":"TWLP",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,9,"0:rxTools/nand/twlp.dec"]
+					},"ITEM_4-1-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,1,"0:rxTools/nand/agb_save.dec"]
+					},"ITEM_4-1-2-5":{
+						"caption":"FIRM0",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,2,"0:rxTools/nand/firm0.dec"]
+					},"ITEM_4-1-2-6":{
+						"caption":"FIRM1",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,3,"0:rxTools/nand/firm1.dec"]
+					},"ITEM_4-1-2-7":{
+						"caption":"CTR",
+						"description":"Inject unencrypted CTR partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,4,"0:rxTools/nand/ctr.dec"]
+					},"ITEM_4-1-2-8":{
+						"caption":"CTRNAND",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[1,12,"0:rxTools/nand/ctrnand.dec"]
+					}
+				},"ITEM_4-1-3":{
+					"caption":"Files",
+					"description":"Inject files to the CTRNAND FAT16 partition.",
+					"ITEM_4-1-3-1":{
+						"caption":"certs.db",
+						"function":"INJ_FILE",
+						"parameters":"1:dbs/certs.db"
+					},"ITEM_4-1-3-2":{
+						"caption":"import.db",
+						"function":"INJ_FILE",
+						"parameters":"1:dbs/import.db"
+					},"ITEM_4-1-3-3":{
+						"caption":"ticket.db",
+						"function":"INJ_FILE",
+						"parameters":"1:dbs/ticket.db"
+					},"ITEM_4-1-3-4":{
+						"caption":"title.db",
+						"function":"INJ_FILE",
+						"parameters":"1:dbs/title.db"
+					},"ITEM_4-1-3-5":{
+						"caption":"movable.sed",
+						"function":"INJ_FILE",
+						"parameters":"1:private/movable.sed"
+					},"ITEM_4-1-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"1:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_4-1-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"1:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_4-1-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"1:rw/sys/SecureInfo_A"
+					},"ITEM_4-1-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"1:rw/sys/SecureInfo_B"
+					},"ITEM_4-1-3-10":{
+						"caption":"rand_seed",
+						"function":"INJ_FILE",
+						"parameters":"1:rw/sys/rand_seed"
+					}
+				}
 			},"ITEM_4-2":{
-				"caption":"EmuNAND files",
-				"description":"Inject various important files from SD card into EmuNAND.",
-				"enabled":"CHK_EMUNAND",
+				"caption":"EmuNAND",
+				"description":"Inject NAND image, separate partitions or files to the first EmuNAND.",
+				"enabled":"CHK_NAND",
 				"parameters":2,
 				"ITEM_4-2-1":{
-					"caption":"movable.sed",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:private/movable.sed"
+					"caption":"Image",
+					"description":"Restore NAND from raw image file.",
+					"enabled":"CHK_NAND",
+					"function":"INJ_NAND",
+					"parameters":[2,"0:rxTools/nand/EmuNAND.bin"]
 				},"ITEM_4-2-2":{
-					"caption":"SecureInfo_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:rw/sys/SecureInfo_A"
+					"caption":"Partitions",
+					"description":"Inject unencrypted NAND partitions.",
+					"ITEM_4-2-2-1":{
+						"caption":"TWL",
+						"description":"Inject unencrypted TWL (DSi) partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,0,"0:rxTools/nand/emu_twl.dec"]
+					},"ITEM_4-2-2-2":{
+						"caption":"TWLN",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,8,"0:rxTools/nand/emu_twln.dec"]
+					},"ITEM_4-2-2-3":{
+						"caption":"TWLP",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,9,"0:rxTools/nand/emu_twlp.dec"]
+					},"ITEM_4-2-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,1,"0:rxTools/nand/emu_agb_save.dec"]
+					},"ITEM_4-2-2-5":{
+						"caption":"FIRM0",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,2,"0:rxTools/nand/emu_firm0.dec"]
+					},"ITEM_4-2-2-6":{
+						"caption":"FIRM1",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,3,"0:rxTools/nand/emu_firm1.dec"]
+					},"ITEM_4-2-2-7":{
+						"caption":"CTR",
+						"description":"Inject unencrypted CTR partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,4,"0:rxTools/nand/emu_ctr.dec"]
+					},"ITEM_4-2-2-8":{
+						"caption":"CTRNAND",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[2,12,"0:rxTools/nand/emu_ctrnand.dec"]
+					}
 				},"ITEM_4-2-3":{
-					"caption":"SecureInfo_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:rw/sys/SecureInfo_B"
-				},"ITEM_4-2-4":{
-					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM_4-2-5":{
-					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM_4-2-6":{
-					"caption":"rand_seed",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:rw/sys/rand_seed"
-				},"ITEM_4-2-7":{
-					"caption":"ticket.db",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:dbs/ticket.db"
-				},"ITEM_4-2-8":{
-					"caption":"import.db",
-					"function":"FUNC_INJ_NF",
-					"parameters":"2:dbs/import.db"
-				}				
+					"caption":"Files",
+					"description":"Inject files to the CTRNAND FAT16 partition.",
+					"ITEM_4-2-3-1":{
+						"caption":"certs.db",
+						"function":"INJ_FILE",
+						"parameters":"2:dbs/certs.db"
+					},"ITEM_4-2-3-2":{
+						"caption":"import.db",
+						"function":"INJ_FILE",
+						"parameters":"2:dbs/import.db"
+					},"ITEM_4-2-3-3":{
+						"caption":"ticket.db",
+						"function":"INJ_FILE",
+						"parameters":"2:dbs/ticket.db"
+					},"ITEM_4-2-3-4":{
+						"caption":"title.db",
+						"function":"INJ_FILE",
+						"parameters":"2:dbs/title.db"
+					},"ITEM_4-2-3-5":{
+						"caption":"movable.sed",
+						"function":"INJ_FILE",
+						"parameters":"2:private/movable.sed"
+					},"ITEM_4-2-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"2:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_4-2-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"2:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_4-2-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"2:rw/sys/SecureInfo_A"
+					},"ITEM_4-2-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"2:rw/sys/SecureInfo_B"
+					},"ITEM_4-2-3-10":{
+						"caption":"rand_seed",
+						"function":"INJ_FILE",
+						"parameters":"2:rw/sys/rand_seed"
+					}
+				}
 			},"ITEM_4-3":{
-				"caption":"SysNAND files",
-				"description":"Inject various important files from SD card into SysNAND.",
+				"caption":"EmuNAND1",
+				"description":"Inject NAND image, separate partitions or files to the second EmuNAND.",
+				"enabled":"CHK_NAND",
+				"parameters":3,
 				"ITEM_4-3-1":{
-					"caption":"movable.sed",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:private/movable.sed"
+					"caption":"Image",
+					"description":"Restore NAND from raw image file.",
+					"enabled":"CHK_NAND",
+					"function":"INJ_NAND",
+					"parameters":[3,"0:rxTools/nand/EmuNAND1.bin"]
 				},"ITEM_4-3-2":{
-					"caption":"SecureInfo_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:rw/sys/SecureInfo_A"
+					"caption":"Partitions",
+					"description":"Inject unencrypted NAND partitions.",
+					"ITEM_4-3-2-1":{
+						"caption":"TWL",
+						"description":"Inject unencrypted TWL (DSi) partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,0,"0:rxTools/nand/emu1twl.dec"]
+					},"ITEM_4-3-2-2":{
+						"caption":"TWLN",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,8,"0:rxTools/nand/emu1twln.dec"]
+					},"ITEM_4-3-2-3":{
+						"caption":"TWLP",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,9,"0:rxTools/nand/emu1twlp.dec"]
+					},"ITEM_4-3-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,1,"0:rxTools/nand/emu1agb_save.dec"]
+					},"ITEM_4-3-2-5":{
+						"caption":"FIRM0",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,2,"0:rxTools/nand/emu1firm0.dec"]
+					},"ITEM_4-3-2-6":{
+						"caption":"FIRM1",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,3,"0:rxTools/nand/emu1firm1.dec"]
+					},"ITEM_4-3-2-7":{
+						"caption":"CTR",
+						"description":"Inject unencrypted CTR partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,4,"0:rxTools/nand/emu1ctr.dec"]
+					},"ITEM_4-3-2-8":{
+						"caption":"CTRNAND",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[3,12,"0:rxTools/nand/emu1ctrnand.dec"]
+					}
 				},"ITEM_4-3-3":{
-					"caption":"SecureInfo_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:rw/sys/SecureInfo_B"
-				},"ITEM_4-3-4":{
-					"caption":"LocalFriendCodeSeed_A",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:rw/sys/LocalFriendCodeSeed_A"
-				},"ITEM_4-3-5":{
-					"caption":"LocalFriendCodeSeed_B",
-					"enabled":"CHK_FILE",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:rw/sys/LocalFriendCodeSeed_B"
-				},"ITEM_4-3-6":{
-					"caption":"rand_seed",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:rw/sys/rand_seed"
-				},"ITEM_4-3-7":{
-					"caption":"ticket.db",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:dbs/ticket.db"
-				},"ITEM_4-3-8":{
-					"caption":"import.db",
-					"function":"FUNC_INJ_NF",
-					"parameters":"1:dbs/import.db"
+					"caption":"Files",
+					"description":"Inject files to the CTRNAND FAT16 partition.",
+					"ITEM_4-3-3-1":{
+						"caption":"certs.db",
+						"function":"INJ_FILE",
+						"parameters":"3:dbs/certs.db"
+					},"ITEM_4-3-3-2":{
+						"caption":"import.db",
+						"function":"INJ_FILE",
+						"parameters":"3:dbs/import.db"
+					},"ITEM_4-3-3-3":{
+						"caption":"ticket.db",
+						"function":"INJ_FILE",
+						"parameters":"3:dbs/ticket.db"
+					},"ITEM_4-3-3-4":{
+						"caption":"title.db",
+						"function":"INJ_FILE",
+						"parameters":"3:dbs/title.db"
+					},"ITEM_4-3-3-5":{
+						"caption":"movable.sed",
+						"function":"INJ_FILE",
+						"parameters":"3:private/movable.sed"
+					},"ITEM_4-3-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"3:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_4-3-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"3:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_4-3-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"3:rw/sys/SecureInfo_A"
+					},"ITEM_4-3-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"3:rw/sys/SecureInfo_B"
+					},"ITEM_4-3-3-10":{
+						"caption":"rand_seed",
+						"function":"INJ_FILE",
+						"parameters":"3:rw/sys/rand_seed"
+					}
+				}
+			},"ITEM_4-4":{
+				"caption":"EmuNAND2",
+				"description":"Inject NAND image, separate partitions or files to the third EmuNAND.",
+				"enabled":"CHK_NAND",
+				"parameters":4,
+				"ITEM_4-4-1":{
+					"caption":"Image",
+					"description":"Restore NAND from raw image file.",
+					"enabled":"CHK_NAND",
+					"function":"INJ_NAND",
+					"parameters":[4,"0:rxTools/nand/EmuNAND2.bin"]
+				},"ITEM_4-4-2":{
+					"caption":"Partitions",
+					"description":"Inject unencrypted NAND partitions.",
+					"ITEM_4-4-2-1":{
+						"caption":"TWL",
+						"description":"Inject unencrypted TWL (DSi) partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,0,"0:rxTools/nand/emu2twl.dec"]
+					},"ITEM_4-4-2-2":{
+						"caption":"TWLN",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,8,"0:rxTools/nand/emu2twln.dec"]
+					},"ITEM_4-4-2-3":{
+						"caption":"TWLP",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,9,"0:rxTools/nand/emu2twlp.dec"]
+					},"ITEM_4-4-2-4":{
+						"caption":"AGB_SAVE",
+						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,1,"0:rxTools/nand/emu2agb_save.dec"]
+					},"ITEM_4-4-2-5":{
+						"caption":"FIRM0",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,2,"0:rxTools/nand/emu2firm0.dec"]
+					},"ITEM_4-4-2-6":{
+						"caption":"FIRM1",
+						"description":"Inject unencrypted firmware partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,3,"0:rxTools/nand/emu2firm1.dec"]
+					},"ITEM_4-4-2-7":{
+						"caption":"CTR",
+						"description":"Inject unencrypted CTR partition.",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,4,"0:rxTools/nand/emu2ctr.dec"]
+					},"ITEM_4-4-2-8":{
+						"caption":"CTRNAND",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"enabled":"CHK_PARTITION",
+						"function":"INJ_PARTITION",
+						"parameters":[4,12,"0:rxTools/nand/emu2ctrnand.dec"]
+					}
+				},"ITEM_4-4-3":{
+					"caption":"Files",
+					"description":"Inject files to the CTRNAND FAT16 partition.",
+					"ITEM_4-4-3-1":{
+						"caption":"certs.db",
+						"function":"INJ_FILE",
+						"parameters":"4:dbs/certs.db"
+					},"ITEM_4-4-3-2":{
+						"caption":"import.db",
+						"function":"INJ_FILE",
+						"parameters":"4:dbs/import.db"
+					},"ITEM_4-4-3-3":{
+						"caption":"ticket.db",
+						"function":"INJ_FILE",
+						"parameters":"4:dbs/ticket.db"
+					},"ITEM_4-4-3-4":{
+						"caption":"title.db",
+						"function":"INJ_FILE",
+						"parameters":"4:dbs/title.db"
+					},"ITEM_4-4-3-5":{
+						"caption":"movable.sed",
+						"function":"INJ_FILE",
+						"parameters":"4:private/movable.sed"
+					},"ITEM_4-4-3-6":{
+						"caption":"LocalFriendCodeSeed_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"4:rw/sys/LocalFriendCodeSeed_A"
+					},"ITEM_4-4-3-7":{
+						"caption":"LocalFriendCodeSeed_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"4:rw/sys/LocalFriendCodeSeed_B"
+					},"ITEM_4-4-3-8":{
+						"caption":"SecureInfo_A",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"4:rw/sys/SecureInfo_A"
+					},"ITEM_4-4-3-9":{
+						"caption":"SecureInfo_B",
+						"enabled":"CHK_FILE",
+						"function":"INJ_FILE",
+						"parameters":"4:rw/sys/SecureInfo_B"
+					},"ITEM_4-4-3-10":{
+						"caption":"rand_seed",
+						"function":"INJ_FILE",
+						"parameters":"4:rw/sys/rand_seed"
+					}
 				}
 			}
 		},"ITEM_5":{
@@ -431,7 +1136,8 @@
 			},"ITEM_7-3":{
 				"caption":"EmuNAND",
 				"description":"Check EmuNAND firmware and system titles versions.",
-				"enabled":"CHK_EMUNAND",
+				"enabled":"CHK_NAND",
+				"parameters":2,
 				"ITEM_7-3-1":{
 					"caption":"Region",
 					"resolve":"VAL_REGION",

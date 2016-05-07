@@ -80,7 +80,7 @@ static int loadFirm(wchar_t *path, UINT *fsz)
 
 	f_close(&fd);
 
-	return ((FirmHdr *)FIRM_ADDR)->magic == 'MRIF' ? 0 : -1;
+	return ((FirmHdr *)FIRM_ADDR)->magic == FIRM_MAGIC ? 0 : -1;
 }
 
 static int decryptFirmKtrArm9(void *p) {
@@ -130,7 +130,7 @@ static int decryptFirmKtrArm9(void *p) {
 
 uint8_t *decryptFirmTitleNcch(uint8_t* title, size_t *size) {
 	ctr_ncchheader *NCCH = ((ctr_ncchheader*)title);
-	if (NCCH->magic != 'HCCN') return NULL;
+	if (NCCH->magic != NCCH_MAGIC) return NULL;
 	aes_ctr ctr;
 	ncch_get_counter(NCCH, &ctr, NCCHTYPE_EXEFS);
 
@@ -298,7 +298,7 @@ int PastaMode() {
 	uint8_t *firm = (void*)FIRM_ADDR;
 
 	nand_readsectors(0, PASTA_FIRM_SEEK_SIZE / NAND_SECTOR_SIZE, firm, SYSNAND, NAND_PARTITION_FIRM0);
-	if (*(uint32_t*)firm != 'MRIF')
+	if (*(uint32_t*)firm != FIRM_MAGIC)
 		nand_readsectors(0, PASTA_FIRM_SEEK_SIZE / NAND_SECTOR_SIZE, firm, SYSNAND, NAND_PARTITION_FIRM1);
 
 	if (getMpInfo() == MPINFO_CTR) {
