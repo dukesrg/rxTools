@@ -82,27 +82,8 @@ typedef struct {
 #define AES_KEYCNT_KEYGEN_DSI		0x40
 #define AES_KEYCNT_FIFO_FLUSH_ENABLE	0x80
 
-void aes_set_key(aes_key *key);
+uint_fast8_t aes_set_key(aes_key *key);
 void aes_add_ctr(aes_ctr *ctr, uint32_t carry);
 void aes(void *outbuf, void *inbuf, size_t size, aes_ctr *ctr, uint32_t mode);
 
-/*
-//#define REG_AESCTR	((volatile uint32_t *)0x10009020)
-#define REG_AESKEYNFIFO ((volatile uint32_t*)0x10009100)
-#define REG_AESKEYXFIFO ((volatile uint32_t*)0x10009104)
-#define REG_AESKEYYFIFO ((volatile uint32_t*)0x10009108)
-
-typedef union {
-	uint8_t data[16];
-	uint32_t data32[4];
-} aes_ctr_;
-
-typedef struct {
-	aes_ctr_ ctr;
-	uint32_t mode;
-} aes_ctr2;
-
-void aes_set_key_(uint_fast8_t keyslot, void *normalkey, void *keyx, void *keyy);
-void aes_(void *outbuf, void *inbuf, size_t size, aes_ctr2 *ctr, uint32_t mode);
-*/
 #endif

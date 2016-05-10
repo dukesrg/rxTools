@@ -50,7 +50,7 @@ uint_fast8_t progressSetPos(uint32_t pos) {
 		timerStop();
 	}
 	if (pos != progress_pos || !pos) {
-		if ((progress_pos = pos)) {
+		if ((progress_pos = pos) && pos) {
 			timeleft = timerGet();
 			timeleft = progress_posmax * timeleft / progress_pos - timeleft;
 		}

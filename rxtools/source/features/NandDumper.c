@@ -33,15 +33,10 @@
 #include "CTRDecryptor.h"
 #include "progress.h"
 #include "strings.h"
-#include "nand.h"
+#include "progress.h"
 
 #define BUF1 (void*)0x21000000
-#define PROGRESS_WIDTH	16
-
-static size_t getNandSize()
-{
-	return getMpInfo() == MPINFO_KTR ? 0x4D800000 : 0x3AF00000;
-}
+#define BUF_SIZE 0x100000
 
 int NandSwitch(){
 	if(!checkEmuNAND()) return  0; //If No EmuNAND, we force to work on SysNAND
@@ -60,123 +55,15 @@ int NandSwitch(){
     }
 }
 
-void NandDumper(){
-	ConsoleSetTitle(strings[STR_DUMP], strings[STR_NAND]);
-	File myFile;
-	int isEmuNand = SYS_NAND;
-	if(checkEmuNAND() && (isEmuNand = NandSwitch()) == UNK_NAND) return;
-	isEmuNand--;
-	ConsoleInit();
-	ConsoleSetTitle(strings[STR_DUMP], strings[STR_NAND]);
-	unsigned char* buf = BUF1;
-	unsigned int nsectors = NAND_SECTOR_SIZE;  //sectors in a row
-	wchar_t tmpstr[STR_MAX_LEN];
-	wchar_t ProgressBar[41] = {0,};
-	for(int i=0; i<PROGRESS_WIDTH; i++)
-		wcscat(ProgressBar, strings[STR_PROGRESS]);
-	unsigned int progress = 0;
-	wchar_t filename[_MAX_LFN];
-	swprintf(filename, _MAX_LFN, L"rxTools/nand/%lsNAND.bin",
-		isEmuNand ? L"EMU" : L"");
-	if(FileOpen(&myFile, filename, 1)){
-		print(strings[STR_DUMPING], isEmuNand ? strings[STR_EMUNAND] : strings[STR_SYSNAND], filename);
-		ConsoleShow();
-		int x, y;
-		ConsoleGetXY(&x, &y);
-		y += 16 * 6;
-		x += 8 * 2;
-
-		DrawString(&bottomScreen, ProgressBar, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-		swprintf(tmpstr, STR_MAX_LEN, strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_B], strings[STR_CANCEL]);
-		DrawString(&bottomScreen, tmpstr, x, y + 16 * 2, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-
-		for(int count = 0; count < getNandSize()/NAND_SECTOR_SIZE/nsectors; count++){
-
-			if(isEmuNand) tmio_readsectors(TMIO_DEV_SDMC, count*nsectors, nsectors, buf);
-			else tmio_readsectors(TMIO_DEV_NAND, count*nsectors, nsectors, buf);
-
-			FileWrite(&myFile, buf, nsectors*NAND_SECTOR_SIZE, count*NAND_SECTOR_SIZE*nsectors);
-			TryScreenShot();
-			if((count % (int)(getNandSize()/NAND_SECTOR_SIZE/nsectors/PROGRESS_WIDTH)) == 0 && count != 0){
-				DrawString(&bottomScreen, strings[STR_PROGRESS_OK], x+(16*(progress++)), y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-			}
-			unsigned int pad = GetInput();
-			if (pad & keys[KEY_B].mask) {
-				FileClose(&myFile);
-				goto end;
-			}
-		}
-		if(isEmuNand){
-			tmio_readsectors(TMIO_DEV_SDMC, checkEmuNAND()/NAND_SECTOR_SIZE, 1, buf);
-			FileWrite(&myFile, buf, NAND_SECTOR_SIZE, 0);
-		}
-		FileClose(&myFile);
-		print(strings[STR_COMPLETED]);
-		ConsoleShow();
-	}else{
-		print(strings[STR_FAILED]);
-		ConsoleShow();
-	}
-
-end:
-	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
-	ConsoleShow();
-	WaitForButton(keys[KEY_A].mask);
-}
-
-void DumpNandPartitions(){
-	ConsoleSetTitle(strings[STR_DUMP], strings[STR_NAND_PARTITIONS]);
-	int isEmuNand = SYS_NAND;
-	if(checkEmuNAND() && (isEmuNand = NandSwitch()) == UNK_NAND) return;
-	isEmuNand--;
-	ConsoleInit();
-	ConsoleSetTitle(strings[STR_DUMP], strings[STR_NAND_PARTITIONS]);
-	print(strings[STR_PROCESSING], isEmuNand ? strings[STR_EMUNAND] : strings[STR_SYSNAND]);
-	wchar_t* p_name[] = {
-		L"twln.bin", L"twlp.bin", L"agb_save.bin",
-		L"firm0.bin", L"firm1.bin", L"ctrnand.bin"
-	};
-	wchar_t* p_descr[] = { strings[STR_TWLN], strings[STR_TWLP], strings[STR_AGB_SAVE], strings[STR_FIRM0], strings[STR_FIRM1], strings[STR_CTRNAND] };
-	nand_partition_index p_idx[] = { NAND_PARTITION_TWLN, NAND_PARTITION_TWLP, NAND_PARTITION_AGB_SAVE, NAND_PARTITION_FIRM0, NAND_PARTITION_FIRM1, NAND_PARTITION_CTRNAND};
-	int sect_row = 0x80;
-
-	wchar_t tmp[_MAX_LFN];
-	for(int i = 3; i < sizeof(p_idx) / sizeof(p_idx[0]); i++){		//Cutting out twln, twlp and agb_save. Todo: Properly decrypt them
-		File out;
-		swprintf(tmp, _MAX_LFN, L"rxTools/nand/%ls%ls", isEmuNand ? L"emu_" : L"", p_name[i]);
-		FileOpen(&out, tmp, 1);
-		print(strings[STR_DUMPING], p_descr[i], tmp);
-		ConsoleShow();
-
-		size_t size = GetNANDPartition(isEmuNand ? EMUNAND : SYSNAND, p_idx[i])->sectors_count;
-		for(int j = 0; j < size; j += sect_row){
-			swprintf(tmp, _MAX_LFN, L"%08X / %08X", j * NAND_SECTOR_SIZE, size * NAND_SECTOR_SIZE);
-			int x, y;
-			ConsoleGetXY(&x, &y);
-			y += 16 * 3;
-			x += 8 * 2;
-			ConsoleShow();
-			DrawString(&bottomScreen, tmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-			nand_readsectors(j, sect_row, BUF1, isEmuNand ? EMUNAND0 : SYSNAND, p_idx[i]);
-			FileWrite(&out, BUF1, sect_row * NAND_SECTOR_SIZE, j * NAND_SECTOR_SIZE);
-		}
-		FileClose(&out);
-	}
-	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
-	ConsoleShow();
-	WaitForButton(keys[KEY_A].mask);
-}
-
-void GenerateNandXorpads(){
+uint_fast8_t GenerateNandXorpad(nand_partition_index pidx, wchar_t *path) {
 	aes_ctr ctr;
-	const char *filename = "0:rxTools/nand.fat16.xorpad";
-	nand_partition *partition = GetNANDPartition(SYSNAND, NAND_PARTITION_CTR);
+	nand_partition_entry *partition = GetNANDPartition(SYSNAND, pidx);
 	size_t size_mb = (partition->sectors_count * NAND_SECTOR_SIZE + ((1 << 20) - 1)) >> 20;
 
-	statusInit(size_mb, lang(SF_GENERATING), lang(S_FAT16_XORPAD));
+	statusInit(size_mb, lang(SF_GENERATING_XORPAD), lang(*nand_partition_names[pidx]));
 	GetNANDCTR(&ctr);
 	aes_add_ctr(&ctr, partition->first_sector * NAND_SECTOR_SIZE / AES_BLOCK_SIZE);
-	CreatePad(&ctr, &(aes_key){NULL, 0, partition->keyslot, 0}, size_mb, filename, 0);
+	return CreatePad(&ctr, &(aes_key){NULL, 0, partition->keyslot, 0}, size_mb, path, 0);
 }
 
 void DumpNANDSystemTitles(){
@@ -197,7 +84,7 @@ void DumpNANDSystemTitles(){
 	f_mkdir (outfolder);
 	for(int i = 0; i < tot_size; i++){
 		nand_readsectors(i, 1, BUF1, isEmuNand ? EMUNAND : SYSNAND, NAND_PARTITION_CTRNAND);
-		if (*(uint32_t*)((uint8_t*)BUF1 + 0x100) == 'HCCN') {
+		if (*(uint32_t*)((uint8_t*)BUF1 + 0x100) == NCCH_MAGIC) {
 			ctr_ncchheader ncch;
 			memcpy((void*)&ncch, BUF1, NAND_SECTOR_SIZE);
 			swprintf(filename, _MAX_LFN, L"%ls/%ls%08X%08X.app",
@@ -232,49 +119,104 @@ void DumpNANDSystemTitles(){
     }
 }
 
-void RebuildNand(){
-	char* p_name[] = { "twln.bin", "twlp.bin", "agb_save.bin", "firm0.bin", "firm1.bin", "ctrnand.bin" };
-	wchar_t* p_descr[] = { strings[STR_TWLN], strings[STR_TWLP], strings[STR_AGB_SAVE], strings[STR_FIRM0], strings[STR_FIRM1], strings[STR_CTRNAND] };
-	nand_partition_index p_idx[] = { NAND_PARTITION_TWLN, NAND_PARTITION_TWLP, NAND_PARTITION_AGB_SAVE, NAND_PARTITION_FIRM0, NAND_PARTITION_FIRM1, NAND_PARTITION_CTRNAND};
-	int sect_row = 0x1; //Slow, ok, but secure
+uint_fast8_t DumpNand(nand_type type, wchar_t *path) {
+	File f;
+	uint8_t buf[BUF_SIZE];
+	size_t block, size, offset = 0;
+	nand_metrics *n = GetNANDMetrics(type);
+	uint_fast8_t id = type == SYSNAND ? TMIO_DEV_NAND : TMIO_DEV_SDMC;
 
-	ConsoleInit();
-	int isEmuNand = checkEmuNAND();
-	ConsoleSetTitle(strings[STR_INJECT], strings[STR_NAND_PARTITIONS]);
-	if(!isEmuNand){
-		print(strings[STR_NO_EMUNAND]);
-		print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CANCEL]);
-		ConsoleShow();
-		WaitForButton(keys[KEY_A].mask);
-		return;
-	}
-	print(strings[STR_PROCESSING], isEmuNand ? strings[STR_EMUNAND] : strings[STR_SYSNAND]);
-	const size_t wtmpLen = 256;
-	wchar_t wtmp[wtmpLen];
-	for(int i = 3; i < sizeof(p_idx) / sizeof(p_idx[0]); i++){ //Cutting out twln, twlp and agb_save. Todo: Properly decrypt them
-		File out;
-		swprintf(wtmp, wtmpLen, L"rxTools/nand/%ls%ls", isEmuNand ? L"emu_" : L"", p_name[i]);
-		if(FileOpen(&out, wtmp, 0)){
-			print(strings[STR_INJECTING], wtmp, p_descr[i]);
-			ConsoleShow();
+	if (!n || !(size = n->sectors_count) || !path || !FileOpen(&f, path, 1))
+		return 0;
 
-			size_t size = GetNANDPartition(isEmuNand ? EMUNAND : SYSNAND, p_idx[i])->sectors_count;
-			for(int j = 0; j < size; j += sect_row){
-				swprintf(wtmp, wtmpLen, L"%08X / %08X", j*NAND_SECTOR_SIZE, size * NAND_SECTOR_SIZE);
-				int x, y;
-				ConsoleGetXY(&x, &y);
-				y += 16 * 3;
-				x += 8 * 2;
-				DrawString(&bottomScreen, wtmp, x, y, ConsoleGetTextColor(), ConsoleGetBackgroundColor());
-
-				FileRead(&out, BUF1, sect_row*NAND_SECTOR_SIZE, j*NAND_SECTOR_SIZE);
-				if (isEmuNand)
-					nand_writesectors(j, sect_row, BUF1, EMUNAND, p_idx[i]);
-			}
-			FileClose(&out);
+	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF_DUMPING), lang(*nand_names[type]));
+	while (size) {
+		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
+		if (offset || n->format != NAND_FORMAT_GW) 
+			tmio_readsectors(id, n->first_sector + offset, block, buf);
+		else {
+			tmio_readsectors(id, n->first_sector + n->sectors_count, 1, buf);
+			if (block > 1)
+				tmio_readsectors(id, n->first_sector + 1, block - 1, buf + NAND_SECTOR_SIZE);
 		}
+		FileWrite2(&f, buf, block * NAND_SECTOR_SIZE);
+		size -= block;
+		offset += block;
+		progressSetPos((offset * NAND_SECTOR_SIZE) >> 20);
 	}
-	print(strings[STR_PRESS_BUTTON_ACTION], strings[STR_BUTTON_A], strings[STR_CONTINUE]);
-	ConsoleShow();
-	WaitForButton(keys[KEY_A].mask);
+	FileClose(&f);
+	return 1;
+}
+
+uint_fast8_t InjectNand(nand_type type, wchar_t *path) {
+	File f;
+	uint8_t buf[BUF_SIZE];
+	size_t block, size, offset = 0;
+	nand_metrics *n = GetNANDMetrics(type);
+	uint_fast8_t id = type == SYSNAND ? TMIO_DEV_NAND : TMIO_DEV_SDMC;
+
+	if (!n || !path || !FileOpen(&f, path, 0) || (size = n->sectors_count) * NAND_SECTOR_SIZE != FileGetSize(&f))
+		return 0;
+
+	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF_INJECTING), lang(*nand_names[type]));
+	while (size) {
+		block = FileRead2(&f, buf, BUF_SIZE) / NAND_SECTOR_SIZE;
+		if (offset || n->format != NAND_FORMAT_GW) 
+			tmio_writesectors(id, n->first_sector + offset, block, buf);
+		else {
+			tmio_writesectors(id, n->first_sector + n->sectors_count, 1, buf);
+			if (block > 1)
+				tmio_writesectors(id, n->first_sector + 1, block - 1, buf + NAND_SECTOR_SIZE);
+		}
+		size -= block;
+		offset += block;
+		if (!progressSetPos((offset * NAND_SECTOR_SIZE) >> 20))
+			return 0;
+	}
+	FileClose(&f);
+	return 1;
+}
+
+uint_fast8_t DumpPartition(nand_type type, nand_partition_index partition, wchar_t *path) {
+	File f;
+	uint8_t buf[BUF_SIZE];
+	size_t block, size, offset = 0;
+	nand_partition_entry *p = GetNANDPartition(type, partition);
+
+	if (!p || !(size = p->sectors_count) || !path || !FileOpen(&f, path, 1))
+		return 0;
+
+	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF2_DUMPING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
+	while (size) {
+		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
+		nand_readsectors(offset, block, buf, type, partition);
+		FileWrite2(&f, buf, block * NAND_SECTOR_SIZE);
+		size -= block;
+		offset += block;
+		if (!progressSetPos((offset * NAND_SECTOR_SIZE) >> 20))
+			return 0;
+	}
+	FileClose(&f);
+	return 1;
+}
+
+uint_fast8_t InjectPartition(nand_type type, nand_partition_index partition, wchar_t *path) {
+	File f;
+	uint8_t buf[BUF_SIZE];
+	size_t block, size, offset = 0;
+	nand_partition_entry *p = GetNANDPartition(type, partition);
+
+	if (!p || !path || !FileOpen(&f, path, 0) || (size = p->sectors_count) * NAND_SECTOR_SIZE != FileGetSize(&f))
+		return 0;
+
+	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF2_INJECTING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
+	while (size) {
+		block = FileRead2(&f, buf, BUF_SIZE) / NAND_SECTOR_SIZE;
+		nand_writesectors(offset, block, buf, type, partition);
+		size -= block;
+		offset += block;
+		progressSetPos((offset * NAND_SECTOR_SIZE) >> 20);
+	}
+	FileClose(&f);
+	return 1;
 }

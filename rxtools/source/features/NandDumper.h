@@ -18,7 +18,9 @@
 #ifndef NAND_DUMPER_H
 #define NAND_DUMPER_H
 
-#include "menu.h"
+#include "nand.h"
+
+//#include "menu.h"
 
 enum nand_type{
 	UNK_NAND = -1,
@@ -27,10 +29,12 @@ enum nand_type{
 };
 
 int NandSwitch();
-void NandDumper();
-void DumpNandPartitions();
-void GenerateNandXorpads();
 void DumpNANDSystemTitles();
-void RebuildNand();
+
+uint_fast8_t GenerateNandXorpad(nand_partition_index partition, wchar_t *path);
+uint_fast8_t DumpNand(nand_type type, wchar_t *path);
+uint_fast8_t InjectNand(nand_type type, wchar_t *path);
+uint_fast8_t DumpPartition(nand_type type, nand_partition_index partition, wchar_t *path);
+uint_fast8_t InjectPartition(nand_type type, nand_partition_index partition, wchar_t *path);
 
 #endif
