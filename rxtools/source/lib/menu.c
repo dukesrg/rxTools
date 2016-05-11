@@ -29,7 +29,6 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "NandDumper.h"
 #include "TitleKeyDecrypt.h"
 #include "padgen.h"
-#include "nandtools.h"
 #include "downgradeapp.h"
 #include "AdvancedFileManager.h"
 #include "json.h"
@@ -237,7 +236,7 @@ static const char *const runResolve(int key, int params) {
 				case CFG_EMUNAND_FORCE:
 				case CFG_SYSNAND_FORCE:
 				case CFG_PASTA_FORCE:
-					return keys[cfgs[params].val.i].name;
+					return *keys[cfgs[params].val.i].name;
 				case CFG_AGB_BIOS:
 					return cfgs[params].val.b ? S_ENABLED : S_DISABLED;
 				case CFG_THEME:
@@ -265,8 +264,6 @@ static const char *const runResolve(int key, int params) {
 	{"FUNC_DEC_TK", &DecryptTitleKeys},
 	{"FUNC_DEC_TKF", &DecryptTitleKeyFile},
 	{"FUNC_DMP_NT", &DumpNANDSystemTitles},
-	{"FUNC_DMP_NF", &dumpCoolFiles},
-	{"FUNC_INJ_NF", &restoreCoolFiles},
 	{"FUNC_DG_MSET", &downgradeMSET},
 	{"FUNC_INS_FBI", &installFBI},
 	{"FUNC_INS_HS", &restoreHS},
@@ -280,7 +277,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 	FILINFO fno;
 	UINT size;
 	int i, funcsize;
-	wchar_t str[_MAX_LFN + 1];
+	wchar_t str[_MAX_LFN + 1], str2[_MAX_LFN + 1];
 	size_t hashsize;
 	uint32_t *hash;
 	uint8_t *buf, *filehash, *checkhash;
@@ -333,6 +330,8 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 				case JSMN_ARRAY:
 					if (menuJson.tok[params].size == 0 || !checkNAND(getIntVal(params + 1) - 1)) return 0;
 					if (menuJson.tok[params].size == 1) return 1;
+					if (menuJson.tok[params + 2].type == JSMN_PRIMITIVE)
+						return checkNAND(getIntVal(params + 2) - 1);
 					if (!getStrVal(str, params + 2) || !FileOpen(&fp, str, 0) || (
 						(FileGetSize(&fp) != GetNANDMetrics(getIntVal(params + 1) - 1)->sectors_count * NAND_SECTOR_SIZE ||
 						FileRead2(&fp, &ncsd, NAND_SECTOR_SIZE) != NAND_SECTOR_SIZE) &&
@@ -352,6 +351,8 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 			if (!(partition = GetNANDPartition(getIntVal(params + 1) - 1, (partition_type = getIntVal(params + 2)))))
 				return 0;
 			if (menuJson.tok[params].size == 2) return 1;
+			if (menuJson.tok[params + 3].type == JSMN_PRIMITIVE)
+				return GetNANDPartition(getIntVal(params + 3) - 1, getIntVal(params + 2)) != NULL;
 			buf = __builtin_alloca(NAND_SECTOR_SIZE);
 			if (!getStrVal(str, params + 3) || !FileOpen(&fp, str, 0) || (
 				(FileGetSize(&fp) != partition->sectors_count * NAND_SECTOR_SIZE ||
@@ -387,6 +388,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 					fno.lfname = 0;
 					if (menuJson.tok[params].size == 0 || !getStrVal(str, params + 1) || f_stat(str, &fno) != FR_OK) return 0;
 					if (menuJson.tok[params].size == 1) return 1;
+					if (menuJson.tok[params + 2].type != JSMN_PRIMITIVE) return 1;
 					if (fno.fsize != getIntVal(params + 2)) return 0;
 					if (menuJson.tok[params].size == 2) return 1;
 					if (!FileOpen(&fp, str, 0) || ((FileGetSize(&fp)) != fno.fsize && (FileClose(&fp) || 1)) ||
@@ -459,6 +461,16 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 				}
 			}
 */		}
+	} else if (!memcmp(funckey - 4, "CPY_", 4)) {
+		if (!memcmp(funckey, "NAND", funcsize))
+			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2 &&
+				CopyNand(getIntVal(params + 1) - 1, getIntVal(params + 2) - 1);
+		else if (!memcmp(funckey, "PARTITION", funcsize))
+			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 3 &&
+				CopyPartition(getIntVal(params + 1) - 1, getIntVal(params + 2), getIntVal(params + 3) - 1);
+		else if (!memcmp(funckey, "FILE", funcsize))
+			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2  &&
+				getStrVal(str, params + 1) && getStrVal(str2, params + 2) && CopyFile(str, str2);
 	} else if (!memcmp(funckey - 4, "DMP_", 4)) {
 		if (!memcmp(funckey, "NAND", funcsize))
 			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2 &&

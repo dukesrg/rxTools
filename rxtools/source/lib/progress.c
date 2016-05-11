@@ -13,11 +13,11 @@ static Color progress_done;
 static Color progress_back;
 static uint_fast8_t progress_fontsize;
 static Color progress_textcolor;
-static uint32_t progress_posmax;
-static uint32_t progress_pos;
-static uint32_t progress_offset;
+static uintmax_t progress_posmax;
+static uintmax_t progress_pos;
+static uintmax_t progress_offset;
 
-void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax) {
+void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uintmax_t posmax) {
 	progress_screen = screen;
 	progress_rect = *rect;
 	progress_frame = frame;
@@ -33,7 +33,7 @@ void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color bac
 	timerStart();
 }
 
-void progressSetMax(uint32_t posmax) {
+void progressSetMax(uintmax_t posmax) {
 	if (posmax != progress_posmax) {
 		progress_posmax = posmax;
 	}
@@ -43,7 +43,7 @@ void progressPinOffset() {
 	progress_offset = progress_pos;
 }
 
-uint_fast8_t progressSetPos(uint32_t pos) {
+uint_fast8_t progressSetPos(uintmax_t pos) {
 	uint32_t timeleft = 0;
 	if ((pos += progress_offset) >= progress_posmax) {
 		pos = progress_posmax;
@@ -63,7 +63,7 @@ uint_fast8_t progressSetPos(uint32_t pos) {
 	return (GetInput() & keys[KEY_B].mask) == 0;
 }
 
-void statusInit(uint32_t gaugemax, wchar_t *format, ...) {
+void statusInit(uintmax_t gaugemax, wchar_t *format, ...) {
 	if (*style.activitytop1img) {
 		DrawSplash(&top1Screen, style.activitytop1img);
 //		if (*style.activitytop2img)

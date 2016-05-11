@@ -50,7 +50,7 @@ typedef struct {
     NcchInfoEntry entries[MAX_PAD_ENTRIES];
 } __attribute__((packed, aligned(16))) NcchInfo;
 
-uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size_mb, wchar_t *filename, int index);
+uint_fast8_t CreatePad(aes_ctr *ctr, aes_key *key, uint32_t size, wchar_t *filename, int index);
 uint_fast8_t PadGen(wchar_t *filename);
 
 #endif

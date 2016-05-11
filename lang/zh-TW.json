@@ -1,5 +1,17 @@
 {
 "zh-TW":"正體中文", 
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+
+"obsolete values below":"will be removed",
 "BACKING_UP":"正在備份 %ls...\n", 
 "DELETING":"正在移除 %ls...\n", 
 "DOWNGRADE":"降級 %ls", 

@@ -49,7 +49,7 @@ typedef struct {
 uint_fast8_t decryptFile(File *outfile, File *infile, size_t size, size_t offset, aes_ctr *ctr, aes_key *key, uint32_t mode) {
 	uint8_t outbuf[BUF_SIZE];
 	uint8_t *inbuf = infile ? outbuf : NULL;
-	size_t size_mb = size >> 20;
+	size_t size_todo = size;
 
 	aes_set_key(key);
 	while (size) {
@@ -60,7 +60,7 @@ uint_fast8_t decryptFile(File *outfile, File *infile, size_t size, size_t offset
 		FileWrite(outfile, outbuf, blocksize, offset);
 		size -= blocksize;
 		offset += blocksize;
-		if (!progressSetPos(size_mb - (size >> 20))) //progress in MB, return if canceled
+		if (!progressSetPos(size_todo - size))
 			return 0;
 	}
 	progressPinOffset();

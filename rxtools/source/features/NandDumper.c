@@ -58,12 +58,12 @@ int NandSwitch(){
 uint_fast8_t GenerateNandXorpad(nand_partition_index pidx, wchar_t *path) {
 	aes_ctr ctr;
 	nand_partition_entry *partition = GetNANDPartition(SYSNAND, pidx);
-	size_t size_mb = (partition->sectors_count * NAND_SECTOR_SIZE + ((1 << 20) - 1)) >> 20;
+	size_t size = partition->sectors_count * NAND_SECTOR_SIZE;
 
-	statusInit(size_mb, lang(SF_GENERATING_XORPAD), lang(*nand_partition_names[pidx]));
+	statusInit(size, lang(SF_GENERATING_XORPAD), lang(*nand_partition_names[pidx]));
 	GetNANDCTR(&ctr);
 	aes_add_ctr(&ctr, partition->first_sector * NAND_SECTOR_SIZE / AES_BLOCK_SIZE);
-	return CreatePad(&ctr, &(aes_key){NULL, 0, partition->keyslot, 0}, size_mb, path, 0);
+	return CreatePad(&ctr, &(aes_key){NULL, 0, partition->keyslot, 0}, size, path, 0);
 }
 
 void DumpNANDSystemTitles(){
@@ -125,11 +125,10 @@ uint_fast8_t DumpNand(nand_type type, wchar_t *path) {
 	size_t block, size, offset = 0;
 	nand_metrics *n = GetNANDMetrics(type);
 	uint_fast8_t id = type == SYSNAND ? TMIO_DEV_NAND : TMIO_DEV_SDMC;
-
-	if (!n || !(size = n->sectors_count) || !path || !FileOpen(&f, path, 1))
+	if (!n || !(size = n->sectors_count) || !path || size * NAND_SECTOR_SIZE > FSFreeSpace(path) || !FileOpen(&f, path, 1))
 		return 0;
 
-	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF_DUMPING), lang(*nand_names[type]));
+	statusInit(size, lang(SF_DUMPING), lang(*nand_names[type]));
 	while (size) {
 		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
 		if (offset || n->format != NAND_FORMAT_GW) 
@@ -142,7 +141,8 @@ uint_fast8_t DumpNand(nand_type type, wchar_t *path) {
 		FileWrite2(&f, buf, block * NAND_SECTOR_SIZE);
 		size -= block;
 		offset += block;
-		progressSetPos((offset * NAND_SECTOR_SIZE) >> 20);
+		if (!progressSetPos(offset))
+			return 0;
 	}
 	FileClose(&f);
 	return 1;
@@ -158,7 +158,7 @@ uint_fast8_t InjectNand(nand_type type, wchar_t *path) {
 	if (!n || !path || !FileOpen(&f, path, 0) || (size = n->sectors_count) * NAND_SECTOR_SIZE != FileGetSize(&f))
 		return 0;
 
-	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF_INJECTING), lang(*nand_names[type]));
+	statusInit(size, lang(SF_INJECTING), lang(*nand_names[type]));
 	while (size) {
 		block = FileRead2(&f, buf, BUF_SIZE) / NAND_SECTOR_SIZE;
 		if (offset || n->format != NAND_FORMAT_GW) 
@@ -170,10 +170,42 @@ uint_fast8_t InjectNand(nand_type type, wchar_t *path) {
 		}
 		size -= block;
 		offset += block;
-		if (!progressSetPos((offset * NAND_SECTOR_SIZE) >> 20))
-			return 0;
+		progressSetPos(offset);
 	}
 	FileClose(&f);
+	return 1;
+}
+
+uint_fast8_t CopyNand(nand_type src, nand_type dst) {
+	uint8_t buf[BUF_SIZE];
+	size_t block, size, offset = 0;
+	nand_metrics *srcnand = GetNANDMetrics(src), *dstnand = GetNANDMetrics(dst);
+	uint_fast8_t srcid = src == SYSNAND ? TMIO_DEV_NAND : TMIO_DEV_SDMC, dstid = dst == SYSNAND ? TMIO_DEV_NAND : TMIO_DEV_SDMC;
+
+	if (!srcnand || !dstnand || srcnand == dstnand || !(size = srcnand->sectors_count) || size != dstnand->sectors_count)
+		return 0;
+
+	statusInit(size, lang(SF2_COPYING), lang(*nand_names[src]), lang(*nand_names[dst]));
+	while (size) {
+		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
+		if (offset || srcnand->format != NAND_FORMAT_GW) 
+			tmio_readsectors(srcid, srcnand->first_sector + offset, block, buf);
+		else {
+			tmio_readsectors(srcid, srcnand->first_sector + srcnand->sectors_count, 1, buf);
+			if (block > 1)
+				tmio_readsectors(srcid, srcnand->first_sector + 1, block - 1, buf + NAND_SECTOR_SIZE);
+		}
+		if (offset || dstnand->format != NAND_FORMAT_GW) 
+			tmio_writesectors(dstid, dstnand->first_sector + offset, block, buf);
+		else {
+			tmio_writesectors(dstid, dstnand->first_sector + dstnand->sectors_count, 1, buf);
+			if (block > 1)
+				tmio_writesectors(dstid, dstnand->first_sector + 1, block - 1, buf + NAND_SECTOR_SIZE);
+		}
+		size -= block;
+		offset += block;
+		progressSetPos(offset);
+	}
 	return 1;
 }
 
@@ -183,17 +215,17 @@ uint_fast8_t DumpPartition(nand_type type, nand_partition_index partition, wchar
 	size_t block, size, offset = 0;
 	nand_partition_entry *p = GetNANDPartition(type, partition);
 
-	if (!p || !(size = p->sectors_count) || !path || !FileOpen(&f, path, 1))
+	if (!p || !(size = p->sectors_count) || !path || size * NAND_SECTOR_SIZE > FSFreeSpace(path) || !FileOpen(&f, path, 1))
 		return 0;
 
-	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF2_DUMPING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
+	statusInit(size, lang(SF2_DUMPING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
 	while (size) {
 		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
 		nand_readsectors(offset, block, buf, type, partition);
 		FileWrite2(&f, buf, block * NAND_SECTOR_SIZE);
 		size -= block;
 		offset += block;
-		if (!progressSetPos((offset * NAND_SECTOR_SIZE) >> 20))
+		if (!progressSetPos(offset))
 			return 0;
 	}
 	FileClose(&f);
@@ -209,14 +241,74 @@ uint_fast8_t InjectPartition(nand_type type, nand_partition_index partition, wch
 	if (!p || !path || !FileOpen(&f, path, 0) || (size = p->sectors_count) * NAND_SECTOR_SIZE != FileGetSize(&f))
 		return 0;
 
-	statusInit((size * NAND_SECTOR_SIZE) >> 20, lang(SF2_INJECTING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
+	statusInit(size, lang(SF2_INJECTING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
 	while (size) {
 		block = FileRead2(&f, buf, BUF_SIZE) / NAND_SECTOR_SIZE;
 		nand_writesectors(offset, block, buf, type, partition);
 		size -= block;
 		offset += block;
-		progressSetPos((offset * NAND_SECTOR_SIZE) >> 20);
+		progressSetPos(offset);
 	}
 	FileClose(&f);
+	return 1;
+}
+
+uint_fast8_t CopyPartition(nand_type src, nand_partition_index partition, nand_type dst) {
+	uint8_t buf[BUF_SIZE];
+	size_t block, size, srcoffset, dstoffset;
+	nand_metrics *srcnand = GetNANDMetrics(src), *dstnand = GetNANDMetrics(dst);
+	uint_fast8_t srcid = src == SYSNAND ? TMIO_DEV_NAND : TMIO_DEV_SDMC, dstid = dst == SYSNAND ? TMIO_DEV_NAND : TMIO_DEV_SDMC;
+	nand_partition_entry *srcpartition = GetNANDPartition(src, partition), *dstpartition = GetNANDPartition(dst, partition);
+
+	if (!srcnand || !dstnand || !srcpartition || !dstpartition || src == dst || !(size = srcpartition->sectors_count) || size != dstpartition->sectors_count)
+		return 0;
+
+	statusInit(size, lang(SF3_COPYING_PARTITION), lang(*nand_partition_names[partition]), lang(*nand_names[src]), lang(*nand_names[dst]));
+	srcoffset = srcpartition->first_sector;
+	dstoffset = dstpartition->first_sector;
+	while (size) {
+		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
+		if (srcoffset || srcnand->format != NAND_FORMAT_GW) 
+			tmio_readsectors(srcid, srcnand->first_sector + srcoffset, block, buf);
+		else {
+			tmio_readsectors(srcid, srcnand->first_sector + srcnand->sectors_count, 1, buf);
+			if (block > 1)
+				tmio_readsectors(srcid, srcnand->first_sector + 1, block - 1, buf + NAND_SECTOR_SIZE);
+		}
+		if (dstoffset || dstnand->format != NAND_FORMAT_GW) 
+			tmio_writesectors(dstid, dstnand->first_sector + dstoffset, block, buf);
+		else {
+			tmio_writesectors(dstid, dstnand->first_sector + dstnand->sectors_count, 1, buf);
+			if (block > 1)
+				tmio_writesectors(dstid, dstnand->first_sector + 1, block - 1, buf + NAND_SECTOR_SIZE);
+		}
+		size -= block;
+		srcoffset += block;
+		dstoffset += block;
+		progressSetPos(srcoffset);
+	}
+	return 1;
+}
+
+uint_fast8_t CopyFile(wchar_t *srcpath, wchar_t *dstpath) {
+	uint8_t buf[BUF_SIZE];
+	size_t size, block, offset = 0;
+	File srcfile, dstfile;
+	
+	if (!FileOpen(&srcfile, srcpath, 0) || (
+		(!(size = FileGetSize(&srcfile)) || size > FSFreeSpace(dstpath) || !FileOpen(&dstfile, dstpath, 1)) &&
+		(FileClose(&srcfile) || 1)
+	)) return 0;
+
+	statusInit(size, lang(SF2_COPYING), srcpath, dstpath);
+	while (size) {
+		block = FileRead2(&srcfile, buf, BUF_SIZE);
+		FileWrite2(&dstfile, buf, block);
+		size -= block;
+		offset += block;
+		progressSetPos(offset);
+	}
+	FileClose(&srcfile);
+	FileClose(&dstfile);
 	return 1;
 }

@@ -1,18 +1,33 @@
 ###Feature compatibility check chart
 ||3DS|New 3DS|2DS|2DS Pokemon bundle version|
 |---|---|---|---|---|
-|RX-E (fw9.2/EmuNAND 10.7)|OK||||
-|RX-E (fw9.2/EmuNAND 11.0)|||||
+|RX-E (fw9.2/EmuNAND 11.0)|OK||||
 |RX-S (fw9.2)|OK||||
 |Pasta (fw9.2)|OK||||
 |SysNAND dump|OK||||
 |SysNAND inject|||||
 |SysNAND partition decrypt&dump|OK (except TWL)||||
 |SysNAND partition encrypt&inject|||||
+|SysNAND file dump|||||
+|SysNAND file inject|||||
+|SysNAND to EmuNAND copy|||||
+|SysNAND to EmuNAND partition copy|||||
+|SysNAND to EmuNAND file copy|||||
 |EmuNAND dump|OK||||
-|EmuNAND inject|OK||||
+|EmuNAND inject|||||
 |EmuNAND partition decrypt&dump|OK (except TWL)||||
 |EmuNAND partition encrypt&inject|OK (except TWL)||||
+|EmuNAND file dump|OK||||
+|EmuNAND file inject|OK||||
+|EmuNAND to SysNAND copy|||||
+|EmuNAND to SysNAND partition copy|||||
+|EmuNAND to SysNAND file copy|||||
+|SysNAND to EmuNAND copy|||||
+|SysNAND to EmuNAND copy partition|||||
+|SysNAND to EmuNAND copy file|||||
+|EmuNAND to SysNAND copy|||||
+|EmuNAND to SysNAND copy partition|||||
+|EmuNAND to SysNAND copy file|||||
 |SDinfo.bin XORpad|OK||||
 |ncchinfo.bin XORpad|OK||||
 |NAND partition XORpad|OK (except TWL)||||
@@ -33,6 +48,9 @@ Launch specific function ("func" object)
 |DMP_NAND|Dump NAND (backup to file as is)|drive; full path name|
 |INJ_PARTITION|Inject unencrypted NAND partition|drive; partition; full path name|
 |INJ_NAND|Inject NAND (restore from file as is)|drive; full path name|
+|CPY_PARTITION|Copy NAND partition to corresponding partition on another NAND|source drive; partition; destination drive|
+|CPY_NAND|Copy NAND to NAND|source drive; destination drive|
+|CPY_FILE|Copy file, rewriting destination|source full path name; destination full path name|
 
 ###Status check functions
 Check menu option state ("enabled" object)
@@ -40,9 +58,9 @@ Check menu option state ("enabled" object)
 |Key|Description|Parameters|
 |---|---|---|
 |CHK_CFG|Check rxTools configuration property availability|configuration key|
-|CHK_NAND|Check if NAND exists and compatible with file|drive;full path name(optional)|
-|CHK_PARTITION|Check NAND partition exists and compatible with file|drive;partition;full path name(optional)|
-|CHK_FILE|Check if file exists, have exact size and hash|full path name; size(optional); SSHA-1/SHA-224/SHA-256 hash(optional)|
+|CHK_NAND|Check if NAND(s) exists and compatible with file|drive;full path name(optional) or destination drive (optional)|
+|CHK_PARTITION|Check NAND(s) partition(s) exists and compatible with file|drive;partition;full path name(optional) or destination drive (optional)|
+|CHK_FILE|Check if file exists, have exact size and hash (string parameter at position 2 ignored)|full path name; size(optional); SSHA-1/SHA-224/SHA-256 hash(optional)|
 |CHK_TITLE|Check that .tmd and accompanied encrypted (.app) or decrypted (obtaied from NUS) exists|full path name of the .tmd|
 
 ###Value resolve functions

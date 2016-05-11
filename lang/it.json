@@ -1,5 +1,17 @@
 {
 "it":"Italian",
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+
+"obsolete values below":"will be removed",
 "BACKING_UP":"Sto backuppando %ls...\n",
 "DELETING":"Sto cancellando %ls...\n",
 "DOWNGRADE":"Fai il downgrade di %ls",

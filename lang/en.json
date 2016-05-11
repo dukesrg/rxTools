@@ -1,5 +1,16 @@
 {
 "en":"English",
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+"obsolete values below":"will be removed",
 "BACKING_UP":"Backing up %ls...\n",
 "DELETING":"Deleting %ls...\n",
 "DOWNGRADE":"Downgrade %ls",
@@ -80,15 +91,5 @@
 "REGION":"region",
 "YES":"Yes",
 "NO":"No",
-"RANDOM_THEME":"Random theme",
-"[A]":"",
-"[B]":"",
-"[X]":"",
-"[Y]":"",
-"[L]":"",
-"[R]":"",
-"[RIGHT]":"",
-"[LEFT]":"",
-"[UP]":"",
-"[DOWN]":""
+"RANDOM_THEME":"Random theme"
 }

@@ -1,5 +1,17 @@
 {
 "fr":"Français",
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+
+"obsolete values below":"will be removed",
 "BACKING_UP":"Sauvegarde de %ls...\n",
 "DELETING":"Effacement de %ls...\n",
 "DOWNGRADE":"Downgrade %ls",

@@ -279,7 +279,7 @@ uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t
 	if (info)
 		rect.y += DrawStringRect(&bottomScreen, info, &rect, RED, ALIGN_LEFT, 30);
 	if (action) {
-		swprintf(str, _MAX_LFN + 1, lang(SF_PRESS_BUTTON_ACTION), lang(S_ANY_KEY), action);
+		swprintf(str, _MAX_LFN + 1, lang(SF_PRESS_BUTTON_ACTION), lang(S_ANY_BUTTON), action);
 		rect.y += DrawStringRect(&bottomScreen, str, &rect, RED, ALIGN_LEFT, 30);
 	}
 	DisplayScreen(&bottomScreen);
@@ -289,14 +289,14 @@ uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t
 	return rect.y;
 }
 
-void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uint32_t posmax, uint32_t pos, uint32_t timeleft) {
+void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uintmax_t posmax, uintmax_t pos, uint32_t timeleft) {
 	static uint_fast16_t oldx = -1;
 	uint_fast16_t x;
 	uint_fast8_t h, m, s;
 //	wchar_t percent[5];
 	wchar_t estimated[9];
 	
-	if (!posmax) posmax = UINT32_MAX;
+	if (!posmax) posmax = UINTMAX_MAX;
 	if (pos > posmax) pos = posmax;	
 	if ((x = (rect->w - 2) * pos / posmax) == oldx) return;
 	oldx = x;

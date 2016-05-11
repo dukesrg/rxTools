@@ -1,5 +1,17 @@
 {
 "pt":"Português",
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+
+"obsolete values below":"will be removed",
 "ABSYSN":"Autoboot na sysNAND    %ls",
 "AUTOBOOT":"Autoboot",
 "BACKING_UP":"Fazendo backup de %ls...\n",
