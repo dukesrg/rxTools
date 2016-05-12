@@ -1,5 +1,17 @@
 {
 "hr":"Croatian",
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+
+"obsolete values below":"will be removed",
 "SETTINGS":"Postavke",
 "FORCE_UI_BOOT":"Forsiraj ulazak u UI   %ls",
 "SELECTED_THEME":"Izabrana tema       <%3c  >",

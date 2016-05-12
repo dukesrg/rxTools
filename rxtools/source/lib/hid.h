@@ -58,7 +58,7 @@ enum {
 
 typedef struct {
 	const char *key;
-	const char *name;
+	const char *const *const name;
 	uint32_t mask;
 } Key;
 

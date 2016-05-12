@@ -24,6 +24,6 @@
 
 void timerStart();
 void timerStop();
-uint32_t timerGet();
+uintmax_t timerGet();
 
 #endif

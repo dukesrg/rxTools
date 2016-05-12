@@ -24,8 +24,8 @@ void timerStop() {
 	for (size_t i = TIMER_REG_COUNT ; i--; timerSet(i, 0, 0));
 }
 
-uint32_t timerGet() {
-	uint32_t s = 0;
+uintmax_t timerGet() {
+	uintmax_t s = 0;
 	for (size_t i = TIMER_REG_COUNT ; i--; s = (s << 16) | *timer[i].val);
 	return s / (TIMER_FREQ >> 10);
 }

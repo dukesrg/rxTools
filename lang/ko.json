@@ -1,5 +1,17 @@
 {
 "ko":"한국어",
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+
+"obsolete values below":"will be removed",
 "BACKING_UP":"%ls 백업 중...\n",
 "DELETING":"%ls 삭제 중...\n",
 "DOWNGRADE":"%ls 다운그레이드",

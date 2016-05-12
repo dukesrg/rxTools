@@ -1,5 +1,17 @@
 {
 "no":"Norwegian",
+"[A]":"",
+"[B]":"",
+"[X]":"",
+"[Y]":"",
+"[L]":"",
+"[R]":"",
+"[RIGHT]":"",
+"[LEFT]":"",
+"[UP]":"",
+"[DOWN]":"",
+
+"obsolete values below":"will be removed",
 "SETTINGS":"Innstillinger",
 "FORCE_UI_BOOT":"Tving oppstart av UI   %ls",
 "SELECTED_THEME":"Valgt tema          <%3c  >",

@@ -148,3 +148,12 @@ size_t FileMaxSize(const wchar_t *path, const wchar_t *pattern) {
 
 	return maxSize;
 }
+
+uintmax_t FSFreeSpace(const wchar_t *path) {
+	FATFS *fs;
+	DWORD fre_clust;
+
+	if (f_getfree(path, &fre_clust, &fs) != FR_OK)
+		return 0;
+	return (uintmax_t)fre_clust * fs->csize * _MIN_SS;
+}

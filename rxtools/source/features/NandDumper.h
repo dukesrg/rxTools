@@ -34,7 +34,10 @@ void DumpNANDSystemTitles();
 uint_fast8_t GenerateNandXorpad(nand_partition_index partition, wchar_t *path);
 uint_fast8_t DumpNand(nand_type type, wchar_t *path);
 uint_fast8_t InjectNand(nand_type type, wchar_t *path);
+uint_fast8_t CopyNand(nand_type src, nand_type dst);
 uint_fast8_t DumpPartition(nand_type type, nand_partition_index partition, wchar_t *path);
 uint_fast8_t InjectPartition(nand_type type, nand_partition_index partition, wchar_t *path);
+uint_fast8_t CopyPartition(nand_type src, nand_partition_index partition, nand_type dst);
+uint_fast8_t CopyFile(wchar_t *srcpath, wchar_t *dstpath);
 
 #endif
