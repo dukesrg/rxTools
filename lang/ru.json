@@ -30,6 +30,8 @@
 "continue":"продолжить",
 "reboot":"перезагрузить",
 "cancel":"отменить",
+"Completed!":"Завершено!",
+"Canceled!":"Отменено!",
 "This file with a valid key must exist in the SD card root in order to boot rxMode on New 3DS.":"Этот файл с верным ключом должен быть в корне SD-карты для загрузки rxMode на New 3DS.",
 "This file with a valid key must exist in the SD card root in order to decrypt newer titles on firmware version below 7.0.0 and to use newer gamecard saves on firmware below 6.0.0.":"Этот файл с верным ключом должен быть в корне SD-карты для дешифрования новых тайтлов на прошивке старше 7.0.0 и использования сохранений новых картриджей на прошивке старше 6.0.0",
 "Generating %ls XORpad":"Создаётся %ls XORpad",

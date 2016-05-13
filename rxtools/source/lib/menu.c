@@ -284,7 +284,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 	char *funckey;
 
 	if (activity)
-		statusInit(getIntVal(gauge), langn(menuJson.js + menuJson.tok[activity].start, menuJson.tok[activity].end - menuJson.tok[activity].start));
+		statusInit(getIntVal(gauge), 0, langn(menuJson.js + menuJson.tok[activity].start, menuJson.tok[activity].end - menuJson.tok[activity].start));
 	if (!func)
 		return 1;
 	funckey = menuJson.js + menuJson.tok[func].start + 4;
@@ -549,9 +549,10 @@ void MenuPrevSelection(){
 
 void MenuSelect() {
 	if (enabledsiblings[target.index] > 0) {
-		if (target.func)
+		if (target.func) {
 			runFunc(target.func, siblings[target.index].params, target.activity, target.gauge);
-		else 
+			MenuRefresh();
+		} else 
 			menuPosition = menuNavigate(menuPosition, NAV_DOWN);
 	}
 	MenuShow();

@@ -86,7 +86,7 @@ uint_fast8_t ProcessCTR(wchar_t *path){
 			return 0;
 		}
 
-		statusInit((NCCH.extendedheadersize + (NCCH.exefssize + NCCH.romfssize) * 0x200) >> 20, lang(SF_DECRYPTING), NCCH.productcode);
+		statusInit((NCCH.extendedheadersize + (NCCH.exefssize + NCCH.romfssize) * 0x200) >> 20, 0, lang(SF_DECRYPTING), NCCH.productcode);
 		aes_ctr ctr;
 		aes_key key = {(aes_key_data*)NCCH.signature, AES_CNT_INPUT_BE_NORMAL, 0x2C, KEYY};
 		if (NCCH.extendedheadersize) {

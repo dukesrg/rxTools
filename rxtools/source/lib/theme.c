@@ -46,6 +46,8 @@ themeStyle style = {
 	WHITE,
 	{0, 96, 320, 0},
 	1,
+	{0, 192, 320, 48},
+	1,
 	L"",
 	L"",
 	L"",
@@ -53,7 +55,7 @@ themeStyle style = {
 	{16, 160, 288, 32},
 	WHITE,
 	GREY,
-	BLACK
+	TRANSPARENT
 };
 
 typedef enum {
@@ -64,6 +66,7 @@ typedef enum {
 	OBJ_DESCRIPTION,
 	OBJ_VALUE,
 	OBJ_ACTIVITY,
+	OBJ_STATUS,
 	OBJ_GAUGE
 } objtype;
 
@@ -104,6 +107,11 @@ enum {
 	ACTIVITYW,
 	ACTIVITYH,
 	ACTIVITYALIGN,
+	ACTIVITYSTATUSX,
+	ACTIVITYSTATUSY,
+	ACTIVITYSTATUSW,
+	ACTIVITYSTATUSH,
+	ACTIVITYSTATUSALIGN,
 	ACTIVITYTOP1,
 	ACTIVITYTOP2,
 	ACTIVITYBOTTOM,
@@ -148,6 +156,9 @@ uint32_t themeParse(uint32_t s, objtype type, char *key, uint32_t *idx) {
 							break;
 						case OBJ_ACTIVITY: //"align"
 							idx[ACTIVITYALIGN] = s + ++j;
+							break;
+						case OBJ_STATUS: //"align"
+							idx[ACTIVITYSTATUSALIGN] = s + ++j;
 							break;
 						case OBJ_MENU: //"activity"
 							j += themeParse(s+j+1, OBJ_ACTIVITY, key, idx);
@@ -228,8 +239,17 @@ uint32_t themeParse(uint32_t s, objtype type, char *key, uint32_t *idx) {
 				case 'i': //"items"
 					j += themeParse(s+j+1, OBJ_ITEMS, key, idx);
 					break;
-				case 's': //"selected"
-					idx[ITEMSSELECTED] = s + ++j;
+				case 's':
+					switch(type) {
+						case OBJ_ITEMS: //"selected"
+							idx[ITEMSSELECTED] = s + ++j;
+							break;
+						case OBJ_MENU: //"status"
+							j += themeParse(s+j+1, OBJ_STATUS, key, idx);
+							break;
+						default:
+							j += themeParse(s+j+1, type, key, idx);
+					}
 					break;
 				case 'u': //"unselected"
 					idx[ITEMSUNSELECTED] = s + ++j;
@@ -281,6 +301,9 @@ uint32_t themeParse(uint32_t s, objtype type, char *key, uint32_t *idx) {
 						case OBJ_ACTIVITY:
 							idx[ACTIVITYH] = s + ++j;
 							break;
+						case OBJ_STATUS:
+							idx[ACTIVITYSTATUSH] = s + ++j;
+							break;
 						case OBJ_GAUGE:
 							idx[GAUGEH] = s + ++j;
 							break;
@@ -304,6 +327,9 @@ uint32_t themeParse(uint32_t s, objtype type, char *key, uint32_t *idx) {
 							break;
 						case OBJ_ACTIVITY:
 							idx[ACTIVITYW] = s + ++j;
+							break;
+						case OBJ_STATUS:
+							idx[ACTIVITYSTATUSW] = s + ++j;
 							break;
 						case OBJ_GAUGE:
 							idx[GAUGEW] = s + ++j;
@@ -329,6 +355,9 @@ uint32_t themeParse(uint32_t s, objtype type, char *key, uint32_t *idx) {
 						case OBJ_ACTIVITY:
 							idx[ACTIVITYX] = s + ++j;
 							break;
+						case OBJ_STATUS:
+							idx[ACTIVITYSTATUSX] = s + ++j;
+							break;
 						case OBJ_GAUGE:
 							idx[GAUGEX] = s + ++j;
 							break;
@@ -352,6 +381,9 @@ uint32_t themeParse(uint32_t s, objtype type, char *key, uint32_t *idx) {
 							break;
 						case OBJ_ACTIVITY:
 							idx[ACTIVITYY] = s + ++j;
+							break;
+						case OBJ_STATUS:
+							idx[ACTIVITYSTATUSY] = s + ++j;
 							break;
 						case OBJ_GAUGE:
 							idx[GAUGEY] = s + ++j;
@@ -454,6 +486,11 @@ void themeStyleSet(char *key) {
 	setInt(&style.activityRect.w, idx[ACTIVITYW]);
 	setInt(&style.activityRect.h, idx[ACTIVITYH]);
 	setInt(&style.activityAlign, idx[ACTIVITYALIGN]);
+	setInt(&style.activityStatusRect.x, idx[ACTIVITYSTATUSX]);
+	setInt(&style.activityStatusRect.y, idx[ACTIVITYSTATUSY]);
+	setInt(&style.activityStatusRect.w, idx[ACTIVITYSTATUSW]);
+	setInt(&style.activityStatusRect.h, idx[ACTIVITYSTATUSH]);
+	setInt(&style.activityStatusAlign, idx[ACTIVITYSTATUSALIGN]);
 	setInt(&style.gaugeRect.x, idx[GAUGEX]);
 	setInt(&style.gaugeRect.y, idx[GAUGEY]);
 	setInt(&style.gaugeRect.w, idx[GAUGEW]);

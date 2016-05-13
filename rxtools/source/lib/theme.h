@@ -50,6 +50,8 @@ typedef struct {
 	Color activityColor;
 	Rect activityRect;
 	uint_fast16_t activityAlign;
+	Rect activityStatusRect;
+	uint_fast16_t activityStatusAlign;
 	wchar_t activitytop1img[_MAX_LFN + 1];
 	wchar_t activitytop2img[_MAX_LFN + 1];
 	wchar_t activitybottomimg[_MAX_LFN + 1];

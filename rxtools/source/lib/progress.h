@@ -4,10 +4,16 @@
 #include <stdint.h>
 #include "draw.h"
 
-void progressInit(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uintmax_t posmax);
+enum {
+	STATUS_CANCELABLE = 1,
+	STATUS_WAIT = 2,
+	STATUS_FINISHED = 0x40,
+	STATUS_FAILED = 0x80
+};
+
 uint_fast8_t progressSetPos(uintmax_t pos);
 void progressPinOffset();
 void progressSetMax(uintmax_t posmax);
-void statusInit(uintmax_t gaugemax, wchar_t *format, ...);
+void statusInit(uintmax_t gaugemax, uint_fast8_t features, wchar_t *format, ...);
 
 #endif

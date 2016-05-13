@@ -1,36 +1,36 @@
 ###Feature compatibility check chart
-||3DS|New 3DS|2DS|2DS Pokemon bundle version|
-|---|---|---|---|---|
-|RX-E (fw9.2/EmuNAND 11.0)|OK||||
-|RX-S (fw9.2)|OK||||
-|Pasta (fw9.2)|OK||||
-|SysNAND dump|OK||||
-|SysNAND inject|||||
-|SysNAND partition decrypt&dump|OK (except TWL)||||
-|SysNAND partition encrypt&inject|||||
-|SysNAND file dump|||||
-|SysNAND file inject|||||
-|SysNAND to EmuNAND copy|||||
-|SysNAND to EmuNAND partition copy|||||
-|SysNAND to EmuNAND file copy|||||
-|EmuNAND dump|OK||||
-|EmuNAND inject|||||
-|EmuNAND partition decrypt&dump|OK (except TWL)||||
-|EmuNAND partition encrypt&inject|OK (except TWL)||||
-|EmuNAND file dump|OK||||
-|EmuNAND file inject|OK||||
-|EmuNAND to SysNAND copy|||||
-|EmuNAND to SysNAND partition copy|||||
-|EmuNAND to SysNAND file copy|||||
-|SysNAND to EmuNAND copy|||||
-|SysNAND to EmuNAND copy partition|||||
-|SysNAND to EmuNAND copy file|||||
-|EmuNAND to SysNAND copy|||||
-|EmuNAND to SysNAND copy partition|||||
-|EmuNAND to SysNAND copy file|||||
-|SDinfo.bin XORpad|OK||||
-|ncchinfo.bin XORpad|OK||||
-|NAND partition XORpad|OK (except TWL)||||
+||3DS|New 3DS 1.8GB (2GB Toshiba flash)|New 3DS 1.3GB (4GB Samsung flash)|2DS|2DS Pokemon bundle version|
+|---|---|---|---|---|---|
+|RX-E (fw9.2/EmuNAND 11.0)|OK|||||
+|RX-S (fw9.2)|OK|||||
+|Pasta (fw9.2)|OK|||||
+|SysNAND dump|OK|||||
+|SysNAND inject||||||
+|SysNAND partition decrypt&dump|OK (except TWL)|||||
+|SysNAND partition encrypt&inject||||||
+|SysNAND file dump||||||
+|SysNAND file inject||||||
+|SysNAND to EmuNAND copy||||||
+|SysNAND to EmuNAND partition copy||||||
+|SysNAND to EmuNAND file copy||||||
+|EmuNAND dump|OK|||||
+|EmuNAND inject||||||
+|EmuNAND partition decrypt&dump|OK (except TWL)|||||
+|EmuNAND partition encrypt&inject|OK (except TWL)|||||
+|EmuNAND file dump|OK|||||
+|EmuNAND file inject|OK|||||
+|EmuNAND to SysNAND copy||||||
+|EmuNAND to SysNAND partition copy||||||
+|EmuNAND to SysNAND file copy||||||
+|SysNAND to EmuNAND copy||||||
+|SysNAND to EmuNAND copy partition||||||
+|SysNAND to EmuNAND copy file||||||
+|EmuNAND to SysNAND copy||||||
+|EmuNAND to SysNAND copy partition||||||
+|EmuNAND to SysNAND copy file||||||
+|SDinfo.bin XORpad|OK|||||
+|ncchinfo.bin XORpad|OK|||||
+|NAND partition XORpad|OK (except TWL)|||||
 
 #gui.json format
 

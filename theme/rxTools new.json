@@ -30,6 +30,10 @@
 			"color":"ff93a1ab",
 			"frame":"ff00b6f6",
 			"done":"ff00b6f6"
+		},"status":{
+			"y":208,
+			"height":32,
+			"align":1
 		},"topimg":["rxTools new/top.bgr","rxTools new/top.bgr"],
 		"bottomimg":"rxTools new/bot_descr.bgr",
 		"ITEM_1":{

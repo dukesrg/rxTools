@@ -102,7 +102,7 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 	))) return 0;
 
 	uint8_t romfs[size];
-	statusInit(size * 2, lang("Extracting font"));	
+	statusInit(size * 2, 0, lang("Extracting font"));	
 	
 	uint32_t bytesread;
 	uint8_t *buf = romfs;
