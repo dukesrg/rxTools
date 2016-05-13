@@ -231,8 +231,13 @@ __attribute__((section(".text.start"), noreturn)) void _start() {
 	top2Screen.addr = (uint8_t*)*(uint32_t*)top2Screen.addr;
 
 	if (!nandInit() || !FSInit()) {
-		DrawInfo(NULL, lang(S_REBOOT), lang(SF_FAILED_TO), lang(S_MOUNT), lang(S_FILE_SYSTEM));
-		Shutdown(1);		
+		ClearScreen(&bottomScreen, RED);
+		ClearScreen(&top1Screen, RED);
+//		ClearScreen(&top2Screen, RED);
+		DisplayScreen(&bottomScreen);
+		DisplayScreen(&top1Screen);
+//		DisplayScreen(&top2Screen);
+		while(1);		
 	}
 
 	if (!(finf || (swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
