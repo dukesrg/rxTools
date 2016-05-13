@@ -1,5 +1,5 @@
 ###Feature compatibility check chart
-||3DS|New 3DS|2DS|2DS Pokemon bundle version|
+||3DS|New 3DS|2DS|
 |---|---|---|---|---|
 |RX-E (fw9.2/EmuNAND 11.0)|OK||||
 |RX-S (fw9.2)|OK||||
