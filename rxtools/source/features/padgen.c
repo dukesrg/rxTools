@@ -40,7 +40,7 @@ static uint_fast8_t NcchPadgen(NcchInfo *info) {
 	) return 0;
 	
 	for (i = info->n_entries; i--; size += info->entries[i].size_mb);
-	statusInit(size << 20, lang(SF_GENERATING_XORPAD), lang(S_NCCH));
+	statusInit(size << 20, STATUS_CANCELABLE | STATUS_WAIT, lang(SF_GENERATING_XORPAD), lang(S_NCCH));
 	for (i = info->n_entries; i--;) {
 		if (info->entries[i].uses7xCrypto >> 8 == 0xDEC0DE) // magic value to manually specify keyslot
 			key.slot = info->entries[i].uses7xCrypto & 0x3F;
@@ -97,7 +97,7 @@ static uint_fast8_t SdPadgen(SdInfo *info) {
 	}
 	Key.data = NULL;
 	for (i = info->n_entries; i--; size += info->entries[i].size_mb);
-	statusInit(size << 20, lang(SF_GENERATING_XORPAD), lang(S_SD));
+	statusInit(size << 20, STATUS_CANCELABLE | STATUS_WAIT, lang(SF_GENERATING_XORPAD), lang(S_SD));
 	for (i = info->n_entries; i--;)
 		if (mbstowcs(fname, info->entries[i].filename, sizeof(((SdInfoEntry*)0)->filename)) != (size_t)-1 && !CreatePad(&(aes_ctr){*(aes_ctr_data*)&info->entries[i].CTR, AES_CNT_INPUT_BE_NORMAL}, &Key, info->entries[i].size_mb << 20, fname, i))
 			return 0;

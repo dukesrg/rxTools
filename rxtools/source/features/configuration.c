@@ -337,7 +337,7 @@ static int InstallData() {
 	int r;
 	int p = 0;
 
-	statusInit(getMpInfo() == MPINFO_CTR ? 3 : 1, L"Decrypting firmware");
+	statusInit(getMpInfo() == MPINFO_CTR ? 3 : 1, 0, L"Decrypting firmware");
 
 	f_mkdir(DATA_PATH);
 

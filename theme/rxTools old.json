@@ -25,11 +25,15 @@
 			"x":0,
 			"align":1,
 			"color":"ff008dc5",
-			"bottomimg":"rxTools new/bottom.bgr"
+			"bottomimg":"rxTools old/bottom.bgr"
 		},"gauge":{
 			"color":"ff0080b2",
 			"frame":"ff0080b2",
 			"done":"ffffffff"
+		},"status":{
+			"y":196,
+			"height":32,
+			"align":1
 		},"topimg":["rxTools old/top.bgr","rxTools old/top.bgr"],
 		"bottomimg":"rxTools old/bot_descr.bgr",
 		"ITEM_1":{
@@ -52,87 +56,87 @@
 		},"ITEM_3":{
 			"ITEM_3-1":{
 				"ITEM_3-1-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_3-2":{
 				"ITEM_3-2-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_3-3":{
 				"ITEM_3-3-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_3-4":{
 				"ITEM_3-4-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			}
 		},"ITEM_4":{
 			"ITEM_4-1":{
 				"ITEM_4-1-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_4-2":{
 				"ITEM_4-2-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_4-3":{
 				"ITEM_4-3-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_4-4":{
 				"ITEM_4-4-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			}
 		},"ITEM_5":{
 			"ITEM_5-1":{
 				"ITEM_5-1-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-2":{
 				"ITEM_5-2-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-3":{
 				"ITEM_5-3-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-4":{
 				"ITEM_5-4-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-5":{
 				"ITEM_5-5-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-6":{
 				"ITEM_5-6-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-7":{
 				"ITEM_5-7-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-8":{
 				"ITEM_5-8-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-9":{
 				"ITEM_5-9-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-10":{
 				"ITEM_5-10-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-11":{
 				"ITEM_5-11-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			},"ITEM_5-12":{
 				"ITEM_5-12-3":{
-					"bottomimg":"rxTools new/bottom.bgr"
+					"bottomimg":"rxTools old/bottom.bgr"
 				}
 			}
 		},"ITEM_6":{

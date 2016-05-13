@@ -279,7 +279,7 @@ uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t
 	if (info)
 		rect.y += DrawStringRect(&bottomScreen, info, &rect, RED, ALIGN_LEFT, 30);
 	if (action) {
-		swprintf(str, _MAX_LFN + 1, lang(SF_PRESS_BUTTON_ACTION), lang(S_ANY_BUTTON), action);
+		swprintf(str, _MAX_LFN + 1, lang(SF2_PRESS_BUTTON_ACTION), lang(S_ANY_BUTTON), action);
 		rect.y += DrawStringRect(&bottomScreen, str, &rect, RED, ALIGN_LEFT, 30);
 	}
 	DisplayScreen(&bottomScreen);

@@ -60,7 +60,7 @@ uint_fast8_t GenerateNandXorpad(nand_partition_index pidx, wchar_t *path) {
 	nand_partition_entry *partition = GetNANDPartition(SYSNAND, pidx);
 	size_t size = partition->sectors_count * NAND_SECTOR_SIZE;
 
-	statusInit(size, lang(SF_GENERATING_XORPAD), lang(*nand_partition_names[pidx]));
+	statusInit(size, STATUS_CANCELABLE | STATUS_WAIT, lang(SF_GENERATING_XORPAD), lang(*nand_partition_names[pidx]));
 	GetNANDCTR(&ctr);
 	aes_add_ctr(&ctr, partition->first_sector * NAND_SECTOR_SIZE / AES_BLOCK_SIZE);
 	return CreatePad(&ctr, &(aes_key){NULL, 0, partition->keyslot, 0}, size, path, 0);
@@ -128,7 +128,7 @@ uint_fast8_t DumpNand(nand_type type, wchar_t *path) {
 	if (!n || !(size = n->sectors_count) || !path || size * NAND_SECTOR_SIZE > FSFreeSpace(path) || !FileOpen(&f, path, 1))
 		return 0;
 
-	statusInit(size, lang(SF_DUMPING), lang(*nand_names[type]));
+	statusInit(size, STATUS_CANCELABLE | STATUS_WAIT, lang(SF_DUMPING), lang(*nand_names[type]));
 	while (size) {
 		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
 		if (offset || n->format != NAND_FORMAT_GW) 
@@ -158,7 +158,7 @@ uint_fast8_t InjectNand(nand_type type, wchar_t *path) {
 	if (!n || !path || !FileOpen(&f, path, 0) || (size = n->sectors_count) * NAND_SECTOR_SIZE != FileGetSize(&f))
 		return 0;
 
-	statusInit(size, lang(SF_INJECTING), lang(*nand_names[type]));
+	statusInit(size, STATUS_WAIT, lang(SF_INJECTING), lang(*nand_names[type]));
 	while (size) {
 		block = FileRead2(&f, buf, BUF_SIZE) / NAND_SECTOR_SIZE;
 		if (offset || n->format != NAND_FORMAT_GW) 
@@ -170,7 +170,8 @@ uint_fast8_t InjectNand(nand_type type, wchar_t *path) {
 		}
 		size -= block;
 		offset += block;
-		progressSetPos(offset);
+		if (!progressSetPos(offset))
+			return 0;
 	}
 	FileClose(&f);
 	return 1;
@@ -185,7 +186,7 @@ uint_fast8_t CopyNand(nand_type src, nand_type dst) {
 	if (!srcnand || !dstnand || srcnand == dstnand || !(size = srcnand->sectors_count) || size != dstnand->sectors_count)
 		return 0;
 
-	statusInit(size, lang(SF2_COPYING), lang(*nand_names[src]), lang(*nand_names[dst]));
+	statusInit(size, STATUS_WAIT, lang(SF2_COPYING), lang(*nand_names[src]), lang(*nand_names[dst]));
 	while (size) {
 		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
 		if (offset || srcnand->format != NAND_FORMAT_GW) 
@@ -204,7 +205,8 @@ uint_fast8_t CopyNand(nand_type src, nand_type dst) {
 		}
 		size -= block;
 		offset += block;
-		progressSetPos(offset);
+		if (!progressSetPos(offset))
+			return 0;
 	}
 	return 1;
 }
@@ -218,7 +220,7 @@ uint_fast8_t DumpPartition(nand_type type, nand_partition_index partition, wchar
 	if (!p || !(size = p->sectors_count) || !path || size * NAND_SECTOR_SIZE > FSFreeSpace(path) || !FileOpen(&f, path, 1))
 		return 0;
 
-	statusInit(size, lang(SF2_DUMPING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
+	statusInit(size, STATUS_CANCELABLE | STATUS_WAIT, lang(SF2_DUMPING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
 	while (size) {
 		block = size < BUF_SIZE / NAND_SECTOR_SIZE ? size : BUF_SIZE / NAND_SECTOR_SIZE;
 		nand_readsectors(offset, block, buf, type, partition);
@@ -241,13 +243,14 @@ uint_fast8_t InjectPartition(nand_type type, nand_partition_index partition, wch
 	if (!p || !path || !FileOpen(&f, path, 0) || (size = p->sectors_count) * NAND_SECTOR_SIZE != FileGetSize(&f))
 		return 0;
 
-	statusInit(size, lang(SF2_INJECTING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
+	statusInit(size, STATUS_WAIT, lang(SF2_INJECTING_PARTITION), lang(*nand_names[type]), lang(*nand_partition_names[partition]));
 	while (size) {
 		block = FileRead2(&f, buf, BUF_SIZE) / NAND_SECTOR_SIZE;
 		nand_writesectors(offset, block, buf, type, partition);
 		size -= block;
 		offset += block;
-		progressSetPos(offset);
+		if (!progressSetPos(offset))
+			return 0;
 	}
 	FileClose(&f);
 	return 1;
@@ -263,7 +266,7 @@ uint_fast8_t CopyPartition(nand_type src, nand_partition_index partition, nand_t
 	if (!srcnand || !dstnand || !srcpartition || !dstpartition || src == dst || !(size = srcpartition->sectors_count) || size != dstpartition->sectors_count)
 		return 0;
 
-	statusInit(size, lang(SF3_COPYING_PARTITION), lang(*nand_partition_names[partition]), lang(*nand_names[src]), lang(*nand_names[dst]));
+	statusInit(size, STATUS_WAIT, lang(SF3_COPYING_PARTITION), lang(*nand_partition_names[partition]), lang(*nand_names[src]), lang(*nand_names[dst]));
 	srcoffset = srcpartition->first_sector;
 	dstoffset = dstpartition->first_sector;
 	while (size) {
@@ -285,7 +288,8 @@ uint_fast8_t CopyPartition(nand_type src, nand_partition_index partition, nand_t
 		size -= block;
 		srcoffset += block;
 		dstoffset += block;
-		progressSetPos(srcoffset);
+		if (!progressSetPos(srcoffset))
+			return 0;
 	}
 	return 1;
 }
@@ -300,13 +304,14 @@ uint_fast8_t CopyFile(wchar_t *srcpath, wchar_t *dstpath) {
 		(FileClose(&srcfile) || 1)
 	)) return 0;
 
-	statusInit(size, lang(SF2_COPYING), srcpath, dstpath);
+	statusInit(size, STATUS_WAIT, lang(SF2_COPYING), srcpath, dstpath);
 	while (size) {
 		block = FileRead2(&srcfile, buf, BUF_SIZE);
 		FileWrite2(&dstfile, buf, block);
 		size -= block;
 		offset += block;
-		progressSetPos(offset);
+		if (!progressSetPos(offset))
+			return 0;
 	}
 	FileClose(&srcfile);
 	FileClose(&dstfile);
