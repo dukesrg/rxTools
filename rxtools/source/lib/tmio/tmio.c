@@ -36,6 +36,8 @@
 #include "tmio.h"
 #include "tmio_hardware.h"
 
+#include "configuration.h"
+
 #define DATA32_SUPPORT
 
 void waitcycles(uint32_t val);
@@ -230,6 +232,8 @@ uint32_t tmio_writesectors(enum tmio_dev_id target,
 	uint32_t sector_no, uint32_t numsectors, uint8_t *in)
 {
 	uint32_t error, mask;
+	if (target == TMIO_DEV_NAND && cfgs[CFG_SYSNAND_WRITE_PROTECT].val.i)
+		return 0;
 
 	if(tmio_dev[target].isSDHC == 0) sector_no <<= 9;
 	inittarget(target);
