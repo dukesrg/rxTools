@@ -43,6 +43,7 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "ncsd.h"
 
 #include "movable_sed.h"
+#include "mpcore.h"
 
 static Json menuJson;
 static int menuPosition = 0;
@@ -183,41 +184,42 @@ int prevBoot(int idx) {
 }
 
 typedef struct {
-	uint_fast8_t id;
+	const wchar_t *const id;
 	const char *const *const name;
 } system_region;
 
-#define DRIVE_COUNT 3
-#define REGION_COUNT (sizeof(regions)/sizeof(regions)[0])
-
-static const system_region *const getRegion(uint_fast8_t drive) {
+static const system_region *const getRegion(nand_type type) {
 	static system_region regions[] = {
-		{0, &S_JAPAN},
-		{1, &S_NORTH_AMERICA},
-		{2, &S_EUROPE_AUSTRALIA},
-		{2, &S_EUROPE_AUSTRALIA},
-		{6, &S_CHINA},
-		{7, &S_SOUTH_KOREA},
-		{8, &S_TAIWAN},
-		{0xF, &S_UNKNOWN}
+		{L"0", &S_JAPAN},
+		{L"1", &S_NORTH_AMERICA},
+		{L"2", &S_EUROPE_AUSTRALIA},
+		{L"2", &S_EUROPE_AUSTRALIA},
+		{L"6", &S_CHINA},
+		{L"7", &S_SOUTH_KOREA},
+		{L"8", &S_TAIWAN},
+		{L"x", &S_UNKNOWN}
 	};
+	static system_region *nandregion[NAND_COUNT] = {0};
 	File fp;
-	uint_fast8_t regionid = REGION_COUNT - 1;
-	wchar_t str[_MAX_LFN + 1];
+	uint8_t region_id;
+	wchar_t path[_MAX_LFN + 1];
 
-	if (drive < DRIVE_COUNT) {
-		swprintf(str, _MAX_LFN + 1, L"%u:rw/sys/SecureInfo_A", drive);
-		if (FileOpen(&fp, str, 0) || (str[wcslen(str) - 1] = L'B' && FileOpen(&fp, str, 0))) {
-			if (!FileRead(&fp, &regionid, 1, 0x100) || regionid >= REGION_COUNT)
-				regionid = REGION_COUNT - 1;
-			FileClose(&fp);
-		}
+	if (type >= NAND_COUNT)
+		return NULL;
+
+	if (!nandregion[type]) {
+		swprintf(path, _MAX_LFN + 1, L"%u:rw/sys/SecureInfo_A", type + 1);
+		if (!(FileOpen(&fp, path, 0) || (path[wcslen(path) - 1] = L'B' && FileOpen(&fp, path, 0))) || (
+			(!FileRead(&fp, &region_id, 1, 0x100) || region_id >= sizeof(regions)/sizeof(regions)[0]) &&
+			(FileClose(&fp) || 1)
+		)) region_id = sizeof(regions)/sizeof(regions)[0] - 1;
+		nandregion[type] = &regions[region_id];
 	}
-	return &regions[regionid];
+	return nandregion[type];
 }
 
 static const wchar_t *const getID0(nand_type type) {
-	static const wchar_t ID0[NAND_COUNT][33] = {0};
+	static wchar_t ID0[NAND_COUNT][33] = {0};
 	wchar_t path[_MAX_LFN + 1];
 
 	if (type >= NAND_COUNT)
@@ -230,24 +232,34 @@ static const wchar_t *const getID0(nand_type type) {
 	return ID0[type];
 }
 
+static wchar_t *wcsreplace(wchar_t *dst, const wchar_t *src, const wchar_t *pattern, const wchar_t *text) {
+	wchar_t *ppattern;
+	if (!dst || !src || !pattern || !text)
+		return NULL;
+
+	if ((ppattern = wcsstr(src, pattern))) {
+        	wcsncpy(dst, src, ppattern - src);
+		dst[ppattern - src] = 0;
+		wcscat(dst, text);
+		wcscat(dst, ppattern + wcslen(pattern));
+	} else
+		wcscpy(dst, src);
+	return dst;
+}
+
 static uint_fast8_t getStrVal(wchar_t *s, int i) {
-	wchar_t str1[_MAX_LFN + 1], str2[_MAX_LFN + 1], *psrc = str1, *pdst = str2, *pstr;
+	wchar_t str[_MAX_LFN + 1];
 	uint_fast8_t nand_idx;
 
-	if (i <= 0 || (nand_idx = wcstoul(s, NULL, 10) - 1) >= NAND_COUNT ||
-		swprintf(psrc, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) <= 0
+	if (i <= 0 ||
+		swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) <= 0
 	) return 0;
 
-	if ((pstr = wcsstr(psrc, L"%ID0%"))) {
-		wcsncat(pdst, psrc, psrc - pstr);
-		wcscat(pdst, getID0(nand_idx));
-		wcscat(pdst, pstr + 5);
-		pstr = psrc;
-		psrc = pdst;
-		pdst = pstr;
-	}
-
-	wcscpy(s, psrc);
+	if ((nand_idx = wcstoul(str, NULL, 10) - 1) >= NAND_COUNT)
+		nand_idx = 0;
+	wcsreplace(s, str, L"%SYSTEM%", getMpInfo() == MPINFO_KTR ? L"2" : L"0");
+	wcsreplace(str, s, L"%REGION%", getRegion(nand_idx)->id);
+	wcsreplace(s, str, L"%ID0%", getID0(nand_idx));
 
 	return 1;
 }
@@ -280,7 +292,7 @@ static const char *const runResolve(int key, int params) {
 		} else if (!memcmp(keyname, "RXTOOLS_BUILD", keysize)) {
 			
 		}
-		else if (!memcmp(keyname, "REGION", keysize)) return *(getRegion(getIntVal(params))->name);
+		else if (!memcmp(keyname, "REGION", keysize)) return *(getRegion(getIntVal(params) - 1)->name);
 		else if (!memcmp(keyname, "TITLE_VERSION", keysize)) {
 			tmd_data data;
 			if (getStrVal(str, params) && tmdLoadRecent(&data, str) != 0xFFFFFFFF) {
@@ -478,7 +490,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 					tmd.header.title_id_hi = __builtin_bswap32(p[1]);
 					tmd.header.title_id_lo = __builtin_bswap32(p[2]);
 					if (p[1] != 0 && p[2] != 0 && (// skip titleID check if zero
-						(p[2] >> 12 & 0x0F) != getRegion(p[0]+1) || // region check failed
+						(p[2] >> 12 & 0x0F) != getRegion(p[0]+1) - 1 || // region check failed
 						!tmdLoad(apppath, &tmd, p[0]+1) || // tmd/app failed
 						__builtin_bswap16(tmd.header.title_version) == p[4] // version already installed
 					)) {
