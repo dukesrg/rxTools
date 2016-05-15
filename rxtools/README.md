@@ -118,3 +118,12 @@ Indicates used NAND partition
 |13|CTR logical partition 1 (currently unused)|
 |14|CTR logical partition 2 (currently unused)|
 |15|CTR logical partition 3 (currently unused)|
+
+###String values substitution variables
+Used for path part substitution. If no drive number in the begining of the string, SysNAND is implied where applicable.
+
+|Value|Description|
+|---|---|
+|%REGION%|System Region digit in the title path|
+|%SYSTEM%|System type in the title path (3DS/New 3DS in FIRM path)|
+|%ID0%|System ID0 in nand or sdmc path|

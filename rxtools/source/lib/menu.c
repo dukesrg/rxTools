@@ -42,6 +42,9 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "firm.h"
 #include "ncsd.h"
 
+#include "movable_sed.h"
+#include "mpcore.h"
+
 static Json menuJson;
 static int menuPosition = 0;
 
@@ -181,41 +184,84 @@ int prevBoot(int idx) {
 }
 
 typedef struct {
-	uint32_t title_id_lo;
+	const wchar_t *const id;
 	const char *const *const name;
 } system_region;
 
-#define DRIVE_COUNT 3
-#define REGION_COUNT (sizeof(regions)/sizeof(regions)[0])
-
-static const system_region *const getRegion(uint_fast8_t drive) {
+static const system_region *const getRegion(nand_type type) {
 	static system_region regions[] = {
-		{0x00000000, &S_JAPAN},
-		{0x00001000, &S_NORTH_AMERICA},
-		{0x00002000, &S_EUROPE_AUSTRALIA},
-		{0x00002000, &S_EUROPE_AUSTRALIA},
-		{0x00006000, &S_CHINA},
-		{0x00007000, &S_SOUTH_KOREA},
-		{0x00008000, &S_TAIWAN},
-		{0xFFFFFFFF, &S_UNKNOWN}
+		{L"0", &S_JAPAN},
+		{L"1", &S_NORTH_AMERICA},
+		{L"2", &S_EUROPE_AUSTRALIA},
+		{L"2", &S_EUROPE_AUSTRALIA},
+		{L"6", &S_CHINA},
+		{L"7", &S_SOUTH_KOREA},
+		{L"8", &S_TAIWAN},
+		{L"x", &S_UNKNOWN}
 	};
+	static system_region *nandregion[NAND_COUNT] = {0};
 	File fp;
-	uint_fast8_t regionid = REGION_COUNT - 1;
-	wchar_t str[_MAX_LFN + 1];
+	uint8_t region_id;
+	wchar_t path[_MAX_LFN + 1];
 
-	if (drive < DRIVE_COUNT) {
-		swprintf(str, _MAX_LFN + 1, L"%u:rw/sys/SecureInfo_A", drive);
-		if (FileOpen(&fp, str, 0) || (str[wcslen(str) - 1] = L'B' && FileOpen(&fp, str, 0))) {
-			if (!FileRead(&fp, &regionid, 1, 0x100) || regionid >= REGION_COUNT)
-				regionid = REGION_COUNT - 1;
-			FileClose(&fp);
-		}
+	if (type >= NAND_COUNT)
+		return NULL;
+
+	if (!nandregion[type]) {
+		swprintf(path, _MAX_LFN + 1, L"%u:rw/sys/SecureInfo_A", type + 1);
+		if (!(FileOpen(&fp, path, 0) || (path[wcslen(path) - 1] = L'B' && FileOpen(&fp, path, 0))) || (
+			(!FileRead(&fp, &region_id, 1, 0x100) || region_id >= sizeof(regions)/sizeof(regions)[0]) &&
+			(FileClose(&fp) || 1)
+		)) region_id = sizeof(regions)/sizeof(regions)[0] - 1;
+		nandregion[type] = &regions[region_id];
 	}
-	return &regions[regionid];
+	return nandregion[type];
+}
+
+static const wchar_t *const getID0(nand_type type) {
+	static wchar_t ID0[NAND_COUNT][33] = {0};
+	wchar_t path[_MAX_LFN + 1];
+
+	if (type >= NAND_COUNT)
+		return NULL;
+
+	if (!*ID0[type]) {
+		swprintf(path, _MAX_LFN + 1, L"%u:private/movable.sed", type + 1);
+		movablesedGetID0(ID0[type], path);
+	}
+	return ID0[type];
+}
+
+static wchar_t *wcsreplace(wchar_t *dst, const wchar_t *src, const wchar_t *pattern, const wchar_t *text) {
+	wchar_t *ppattern;
+	if (!dst || !src || !pattern || !text)
+		return NULL;
+
+	if ((ppattern = wcsstr(src, pattern))) {
+        	wcsncpy(dst, src, ppattern - src);
+		dst[ppattern - src] = 0;
+		wcscat(dst, text);
+		wcscat(dst, ppattern + wcslen(pattern));
+	} else
+		wcscpy(dst, src);
+	return dst;
 }
 
 static uint_fast8_t getStrVal(wchar_t *s, int i) {
-	return i > 0 && swprintf(s, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) > 0;
+	wchar_t str[_MAX_LFN + 1];
+	uint_fast8_t nand_idx;
+
+	if (i <= 0 ||
+		swprintf(str, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) <= 0
+	) return 0;
+
+	if ((nand_idx = wcstoul(str, NULL, 10) - 1) >= NAND_COUNT)
+		nand_idx = 0;
+	wcsreplace(s, str, L"%SYSTEM%", getMpInfo() == MPINFO_KTR ? L"2" : L"0");
+	wcsreplace(str, s, L"%REGION%", getRegion(nand_idx)->id);
+	wcsreplace(s, str, L"%ID0%", getID0(nand_idx));
+
+	return 1;
 }
 
 static uint32_t getIntVal(int i) {
@@ -246,7 +292,7 @@ static const char *const runResolve(int key, int params) {
 		} else if (!memcmp(keyname, "RXTOOLS_BUILD", keysize)) {
 			
 		}
-		else if (!memcmp(keyname, "REGION", keysize)) return *(getRegion(getIntVal(params))->name);
+		else if (!memcmp(keyname, "REGION", keysize)) return *(getRegion(getIntVal(params) - 1)->name);
 		else if (!memcmp(keyname, "TITLE_VERSION", keysize)) {
 			tmd_data data;
 			if (getStrVal(str, params) && tmdLoadRecent(&data, str) != 0xFFFFFFFF) {
@@ -419,7 +465,6 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 			getStrVal(str, params);
 			drive = getIntVal(params + 1);
 			if (tmdPreloadHeader(&tmd, str) &&
-				(__builtin_bswap32(tmd.header.title_id_lo) & 0x0000F000) == getRegion(drive)->title_id_lo &&
 				tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive)
 			) return 1;
 		} else if (!memcmp(funckey, "CFG", funcsize)) {
@@ -445,7 +490,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 					tmd.header.title_id_hi = __builtin_bswap32(p[1]);
 					tmd.header.title_id_lo = __builtin_bswap32(p[2]);
 					if (p[1] != 0 && p[2] != 0 && (// skip titleID check if zero
-						(p[2] >> 12 & 0x0F) != getRegion(p[0]+1) || // region check failed
+						(p[2] >> 12 & 0x0F) != getRegion(p[0]+1) - 1 || // region check failed
 						!tmdLoad(apppath, &tmd, p[0]+1) || // tmd/app failed
 						__builtin_bswap16(tmd.header.title_version) == p[4] // version already installed
 					)) {
@@ -775,6 +820,6 @@ int menuTry(int targetposition, int currentposition) {
 			y += DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? style.itemsColor : style.itemsDisabled, style.itemsAlign, 16);
 		}
 	}
-	
+
 	return foundposition;
 }
