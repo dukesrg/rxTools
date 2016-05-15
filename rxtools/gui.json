@@ -203,6 +203,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["1:rw/sys/rand_seed","0:rxTools/rand_seed"]
+					},"ITEM_3-1-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001000F/00000000","0:rxTools/seedsave.bin"]
+					},"ITEM_3-1-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001002C/00000000","0:rxTools/nagsave.bin"]
+					},"ITEM_3-1-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/00010038/00000000","0:rxTools/nnidsave.bin"]
 					}
 				}
 			},"ITEM_3-2":{
@@ -306,6 +318,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["2:rw/sys/rand_seed","0:rxTools/emu_rand_seed"]
+					},"ITEM_3-2-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001000F/00000000","0:rxTools/emu_seedsave.bin"]
+					},"ITEM_3-2-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001002C/00000000","0:rxTools/emu_nagsave.bin"]
+					},"ITEM_3-2-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/00010038/00000000","0:rxTools/emu_nnidsave.bin"]
 					}
 				}
 			},"ITEM_3-3":{
@@ -409,6 +433,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["3:rw/sys/rand_seed","0:rxTools/emu1rand_seed"]
+					},"ITEM_3-3-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001000F/00000000","0:rxTools/emu1seedsave.bin"]
+					},"ITEM_3-3-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001002C/00000000","0:rxTools/emu1nagsave.bin"]
+					},"ITEM_3-3-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/00010038/00000000","0:rxTools/emu1nnidsave.bin"]
 					}
 				}
 			},"ITEM_3-4":{
@@ -512,6 +548,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["4:rw/sys/rand_seed","0:rxTools/emu2rand_seed"]
+					},"ITEM_3-4-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001000F/00000000","0:rxTools/emu2seedsave.bin"]
+					},"ITEM_3-4-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001002C/00000000","0:rxTools/emu2nagsave.bin"]
+					},"ITEM_3-4-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/00010038/00000000","0:rxTools/emu2nnidsave.bin"]
 					}
 				}
 			},"ITEM_3-5":{
@@ -640,6 +688,18 @@
 						"enabled":"CHK_FILE",
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/rand_seed","1:rw/sys/rand_seed"]
+					},"ITEM_4-1-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/seedsave.bin","1:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_4-1-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/nagsave.bin","1:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_4-1-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/nnidsave.bin","1:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_4-2":{
@@ -758,6 +818,18 @@
 						"enabled":"CHK_FILE",
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/emu_rand_seed","2:rw/sys/rand_seed"]
+					},"ITEM_4-2-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu_seedsave.bin","2:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_4-2-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu_nagsave.bin","2:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_4-2-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu_nnidsave.bin","2:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_4-3":{
@@ -876,6 +948,18 @@
 						"enabled":"CHK_FILE",
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/emu1rand_seed","3:rw/sys/rand_seed"]
+					},"ITEM_4-3-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu1seedsave.bin","3:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_4-3-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu1nagsave.bin","3:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_4-3-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu1nnidsave.bin","3:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_4-4":{
@@ -994,6 +1078,18 @@
 						"enabled":"CHK_FILE",
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/emu2rand_seed","4:rw/sys/rand_seed"]
+					},"ITEM_4-4-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu2seedsave.bin","4:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_4-4-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu2nagsave.bin","4:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_4-4-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["0:rxTools/emu2nnidsave.bin","4:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			}
@@ -1109,6 +1205,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["1:rw/sys/rand_seed","2:rw/sys/rand_seed"]
+					},"ITEM_5-1-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001000F/00000000","2:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-1-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001002C/00000000","2:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-1-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/00010038/00000000","2:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-2":{
@@ -1220,6 +1328,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["1:rw/sys/rand_seed","3:rw/sys/rand_seed"]
+					},"ITEM_5-2-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001000F/00000000","3:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-2-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001002C/00000000","3:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-2-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/00010038/00000000","3:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-3":{
@@ -1331,6 +1451,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["1:rw/sys/rand_seed","4:rw/sys/rand_seed"]
+					},"ITEM_5-3-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001000F/00000000","4:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-3-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/0001002C/00000000","4:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-3-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["1:data/%ID0%/sysdata/00010038/00000000","4:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-4":{
@@ -1442,6 +1574,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["2:rw/sys/rand_seed","3:rw/sys/rand_seed"]
+					},"ITEM_5-4-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001000F/00000000","3:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-4-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001002C/00000000","3:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-4-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/00010038/00000000","3:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-5":{
@@ -1553,6 +1697,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["2:rw/sys/rand_seed","4:rw/sys/rand_seed"]
+					},"ITEM_5-5-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001000F/00000000","4:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-5-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001002C/00000000","4:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-5-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/00010038/00000000","4:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-6":{
@@ -1664,6 +1820,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["3:rw/sys/rand_seed","2:rw/sys/rand_seed"]
+					},"ITEM_5-5-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001000F/00000000","2:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-5-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001002C/00000000","2:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-5-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/00010038/00000000","2:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-7":{
@@ -1775,6 +1943,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["3:rw/sys/rand_seed","4:rw/sys/rand_seed"]
+					},"ITEM_5-7-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001000F/00000000","4:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-7-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001002C/00000000","4:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-7-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/00010038/00000000","4:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-8":{
@@ -1886,6 +2066,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["4:rw/sys/rand_seed","2:rw/sys/rand_seed"]
+					},"ITEM_5-8-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001000F/00000000","2:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-8-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001002C/00000000","2:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-8-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/00010038/00000000","2:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-9":{
@@ -1997,6 +2189,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["4:rw/sys/rand_seed","3:rw/sys/rand_seed"]
+					},"ITEM_5-9-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001000F/00000000","3:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-9-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001002C/00000000","3:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-9-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/00010038/00000000","3:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-10":{
@@ -2108,6 +2312,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["2:rw/sys/rand_seed","1:rw/sys/rand_seed"]
+					},"ITEM_5-10-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001000F/00000000","1:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-10-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/0001002C/00000000","1:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-10-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["2:data/%ID0%/sysdata/00010038/00000000","1:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-11":{
@@ -2219,6 +2435,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["3:rw/sys/rand_seed","1:rw/sys/rand_seed"]
+					},"ITEM_5-11-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001000F/00000000","1:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-11-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/0001002C/00000000","1:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-11-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["3:data/%ID0%/sysdata/00010038/00000000","1:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			},"ITEM_5-12":{
@@ -2330,6 +2558,18 @@
 						"caption":"rand_seed",
 						"function":"CPY_FILE",
 						"parameters":["4:rw/sys/rand_seed","1:rw/sys/rand_seed"]
+					},"ITEM_5-12-3-11":{
+						"caption":"seedsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001000F/00000000","1:data/%ID0%/sysdata/0001000F/00000000"]
+					},"ITEM_5-12-3-12":{
+						"caption":"nagsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/0001002C/00000000","1:data/%ID0%/sysdata/0001002C/00000000"]
+					},"ITEM_5-12-3-13":{
+						"caption":"nnidsave.bin",
+						"function":"CPY_FILE",
+						"parameters":["4:data/%ID0%/sysdata/00010038/00000000","1:data/%ID0%/sysdata/00010038/00000000"]
 					}
 				}
 			}
@@ -2505,23 +2745,23 @@
 				},"ITEM_8-3-2":{
 					"caption":"NATIVE_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040138/00000002/content"
+					"parameters":"2:title/00040138/%SYSTEM%0000002/content"
 				},"ITEM_8-3-3":{
 					"caption":"TWL_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040138/00000102/content"
+					"parameters":"2:title/00040138/%SYSTEM%0000102/content"
 				},"ITEM_8-3-4":{
 					"caption":"AGB_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040138/00000202/content"
+					"parameters":"2:title/00040138/%SYSTEM%0000202/content"
 				},"ITEM_8-3-5":{
 					"caption":"MSET version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040010/00022000/content"
+					"parameters":"2:title/00040010/0002%REGION%000/content"
 				},"ITEM_8-3-6":{
 					"caption":"H&S version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040010/00022300/content"
+					"parameters":"2:title/00040010/0002%REGION%300/content"
 				}
 			},"ITEM_8-4":{
 				"caption":"SysNAND",
@@ -2533,23 +2773,23 @@
 				},"ITEM_8-4-2":{
 					"caption":"NATIVE_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040138/00000002/content"
+					"parameters":"1:title/00040138/%SYSTEM%0000002/content"
 				},"ITEM_8-4-3":{
 					"caption":"TWL_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040138/00000102/content"
+					"parameters":"1:title/00040138/%SYSTEM%0000102/content"
 				},"ITEM_8-4-4":{
 					"caption":"AGB_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040138/00000202/content"
+					"parameters":"1:title/00040138/%SYSTEM%0000202/content"
 				},"ITEM_8-4-5":{
 					"caption":"MSET version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040010/00022000/content"
+					"parameters":"1:title/00040010/0002%REGION%000/content"
 				},"ITEM_8-4-6":{
 					"caption":"H&S version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040010/00022300/content"
+					"parameters":"1:title/00040010/0002%REGION%300/content"
 				}
 			}
 		},"ITEM_9":{

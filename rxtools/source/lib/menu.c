@@ -42,6 +42,8 @@ C:\rxTools\rxTools-theme\rxtools\source\lib\menu.c * along with this program; if
 #include "firm.h"
 #include "ncsd.h"
 
+#include "movable_sed.h"
+
 static Json menuJson;
 static int menuPosition = 0;
 
@@ -181,7 +183,7 @@ int prevBoot(int idx) {
 }
 
 typedef struct {
-	uint32_t title_id_lo;
+	uint_fast8_t id;
 	const char *const *const name;
 } system_region;
 
@@ -190,14 +192,14 @@ typedef struct {
 
 static const system_region *const getRegion(uint_fast8_t drive) {
 	static system_region regions[] = {
-		{0x00000000, &S_JAPAN},
-		{0x00001000, &S_NORTH_AMERICA},
-		{0x00002000, &S_EUROPE_AUSTRALIA},
-		{0x00002000, &S_EUROPE_AUSTRALIA},
-		{0x00006000, &S_CHINA},
-		{0x00007000, &S_SOUTH_KOREA},
-		{0x00008000, &S_TAIWAN},
-		{0xFFFFFFFF, &S_UNKNOWN}
+		{0, &S_JAPAN},
+		{1, &S_NORTH_AMERICA},
+		{2, &S_EUROPE_AUSTRALIA},
+		{2, &S_EUROPE_AUSTRALIA},
+		{6, &S_CHINA},
+		{7, &S_SOUTH_KOREA},
+		{8, &S_TAIWAN},
+		{0xF, &S_UNKNOWN}
 	};
 	File fp;
 	uint_fast8_t regionid = REGION_COUNT - 1;
@@ -214,8 +216,40 @@ static const system_region *const getRegion(uint_fast8_t drive) {
 	return &regions[regionid];
 }
 
+static const wchar_t *const getID0(nand_type type) {
+	static const wchar_t ID0[NAND_COUNT][33] = {0};
+	wchar_t path[_MAX_LFN + 1];
+
+	if (type >= NAND_COUNT)
+		return NULL;
+
+	if (!*ID0[type]) {
+		swprintf(path, _MAX_LFN + 1, L"%u:private/movable.sed", type + 1);
+		movablesedGetID0(ID0[type], path);
+	}
+	return ID0[type];
+}
+
 static uint_fast8_t getStrVal(wchar_t *s, int i) {
-	return i > 0 && swprintf(s, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) > 0;
+	wchar_t str1[_MAX_LFN + 1], str2[_MAX_LFN + 1], *psrc = str1, *pdst = str2, *pstr;
+	uint_fast8_t nand_idx;
+
+	if (i <= 0 || (nand_idx = wcstoul(s, NULL, 10) - 1) >= NAND_COUNT ||
+		swprintf(psrc, _MAX_LFN + 1, L"%.*s", menuJson.tok[i].end - menuJson.tok[i].start, menuJson.js + menuJson.tok[i].start) <= 0
+	) return 0;
+
+	if ((pstr = wcsstr(psrc, L"%ID0%"))) {
+		wcsncat(pdst, psrc, psrc - pstr);
+		wcscat(pdst, getID0(nand_idx));
+		wcscat(pdst, pstr + 5);
+		pstr = psrc;
+		psrc = pdst;
+		pdst = pstr;
+	}
+
+	wcscpy(s, psrc);
+
+	return 1;
 }
 
 static uint32_t getIntVal(int i) {
@@ -419,7 +453,6 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 			getStrVal(str, params);
 			drive = getIntVal(params + 1);
 			if (tmdPreloadHeader(&tmd, str) &&
-				(__builtin_bswap32(tmd.header.title_id_lo) & 0x0000F000) == getRegion(drive)->title_id_lo &&
 				tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive)
 			) return 1;
 		} else if (!memcmp(funckey, "CFG", funcsize)) {
@@ -775,6 +808,6 @@ int menuTry(int targetposition, int currentposition) {
 			y += DrawStringRect(&bottomScreen, langn(menuJson.js + menuJson.tok[siblings[i].caption].start, menuJson.tok[siblings[i].caption].end - menuJson.tok[siblings[i].caption].start), &(Rect){style.itemsRect.x, y, style.itemsRect.w, style.itemsRect.h}, enabled ? style.itemsColor : style.itemsDisabled, style.itemsAlign, 16);
 		}
 	}
-	
+
 	return foundposition;
 }
