@@ -49,7 +49,7 @@ CCOBJS := $(addprefix $(BUILD)/,main.o features/CTRDecryptor.o \
 	lib/console.o lib/crypto.o lib/draw.o lib/fs.o lib/hid.o lib/lang.o \
 	lib/log.o lib/i2c.o lib/jsmn/jsmn.o lib/menu.o lib/nand.o lib/ncch.o \
 	features/reboot.o lib/json.o lib/theme.o lib/tmd.o lib/progress.o lib/cfnt.o \
-	lib/timer.o lib/aes.o lib/sha.o lib/rsa.o lib/movable_sed.o)
+	lib/timer.o lib/aes.o lib/sha.o lib/movable_sed.o)
 
 OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o lib/delay.o)
 DEPS	:= $(subst $(BUILD)/,$(DEPS_DIR)/,$(CCOBJS))
