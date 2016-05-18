@@ -86,6 +86,7 @@ Used to display and change rxTools configuration parameters
 |CFG_THEME|Use this theme|Theme name|
 |CFG_AGB_BIOS|Show AGB BIOS logo|true/false|
 |CFG_LANGUAGE|Language name|ex. "en"|
+|CFG_SYSNAND_WRITE_PROTECT|When enabled(true) all SysNAND write access are simulated with no actual flash write performed|true/false|
 
 ###Drive parameter values
 Indicates used NAND

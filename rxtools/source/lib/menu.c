@@ -284,13 +284,14 @@ static const char *const runResolve(int key, int params) {
 				case CFG_PASTA_FORCE:
 					return *keys[cfgs[params].val.i].name;
 				case CFG_AGB_BIOS:
+				case CFG_SYSNAND_WRITE_PROTECT:
 					return cfgs[params].val.b ? S_ENABLED : S_DISABLED;
 				case CFG_THEME:
 				case CFG_LANGUAGE:
 					return cfgs[params].val.s;
 			}
 		} else if (!memcmp(keyname, "RXTOOLS_BUILD", keysize)) {
-			
+			return VERSION;
 		}
 		else if (!memcmp(keyname, "REGION", keysize)) return *(getRegion(getIntVal(params) - 1)->name);
 		else if (!memcmp(keyname, "TITLE_VERSION", keysize)) {
@@ -355,6 +356,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 						themeLoad(cfgs[params].val.s, THEME_NEXT);
 						break;
 					case CFG_AGB_BIOS:
+					case CFG_SYSNAND_WRITE_PROTECT:
 						cfgs[params].val.b = !cfgs[params].val.b;
 						break;
 					case CFG_LANGUAGE:

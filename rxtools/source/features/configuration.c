@@ -30,7 +30,6 @@
 #include "hid.h"
 #include "mpcore.h"
 #include "ncch.h"
-#include "crypto.h"
 #include "firm.h"
 #include "downgradeapp.h"
 #include "menu.h"
@@ -52,7 +51,8 @@ Cfg cfgs[] = {
 	[CFG_PASTA_FORCE] = { "CFG_PASTA_FORCE", CFG_TYPE_INT, { .i = KEY_B } },
 	[CFG_THEME] = { "CFG_THEME", CFG_TYPE_STRING, { .s = cfgTheme } },
 	[CFG_AGB_BIOS] = { "CFG_AGB_BIOS", CFG_TYPE_BOOLEAN, { .i = 0 } },
-	[CFG_LANGUAGE] = { "CFG_LANGUAGE", CFG_TYPE_STRING, { .s = cfgLang } }
+	[CFG_LANGUAGE] = { "CFG_LANGUAGE", CFG_TYPE_STRING, { .s = cfgLang } },
+	[CFG_SYSNAND_WRITE_PROTECT] = { "CFG_SYSNAND_WRITE_PROTECT", CFG_TYPE_BOOLEAN, { .i = 1 } }
 };
 
 static const wchar_t *jsonPath= L"/rxTools/data/system.json";
