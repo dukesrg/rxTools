@@ -114,45 +114,45 @@
 					"parameters":[1,"0:rxTools/nand/NAND.bin"]
 				},"ITEM_3-1-2":{
 					"caption":"Partitions",
-					"description":"Dump decrypted NAND partitions.",
+					"description":"Dump decrypted NAND partitions to file.",
 					"ITEM_3-1-2-1":{
 						"caption":"TWL",
-						"description":"Dump decrypted TWL (DSi) partition.",
+						"description":"Dump decrypted TWL (DSi) partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,0,"0:rxTools/nand/twl.dec"]
 					},"ITEM_3-1-2-2":{
 						"caption":"TWLN",
-						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,8,"0:rxTools/nand/twln.dec"]
 					},"ITEM_3-1-2-3":{
 						"caption":"TWLP",
-						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,9,"0:rxTools/nand/twlp.dec"]
 					},"ITEM_3-1-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"description":"Dump decrypted AGB (GBA) savegame partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,1,"0:rxTools/nand/agb_save.dec"]
 					},"ITEM_3-1-2-5":{
 						"caption":"FIRM0",
-						"description":"Dump decrypted first firmware partition.",
+						"description":"Dump decrypted first firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,2,"0:rxTools/nand/firm0.dec"]
 					},"ITEM_3-1-2-6":{
 						"caption":"FIRM1",
-						"description":"Dump decrypted second firmware partition.",
+						"description":"Dump decrypted second firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,3,"0:rxTools/nand/firm1.dec"]
 					},"ITEM_3-1-2-7":{
 						"caption":"CTR",
-						"description":"Dump decrypted CTR partition.",
+						"description":"Dump decrypted CTR partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,4,"0:rxTools/nand/ctr.dec"]
 					},"ITEM_3-1-2-8":{
 						"caption":"CTRNAND",
-						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[1,12,"0:rxTools/nand/ctrnand.dec"]
 					}
@@ -229,45 +229,45 @@
 					"parameters":[2,"0:rxTools/nand/EmuNAND.bin"]
 				},"ITEM_3-2-2":{
 					"caption":"Partitions",
-					"description":"Dump decrypted NAND partitions.",
+					"description":"Dump decrypted NAND partitions to file.",
 					"ITEM_3-2-2-1":{
 						"caption":"TWL",
-						"description":"Dump decrypted TWL (DSi) partition.",
+						"description":"Dump decrypted TWL (DSi) partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,0,"0:rxTools/nand/emu_twl.dec"]
 					},"ITEM_3-2-2-2":{
 						"caption":"TWLN",
-						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,8,"0:rxTools/nand/emu_twln.dec"]
 					},"ITEM_3-2-2-3":{
 						"caption":"TWLP",
-						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,9,"0:rxTools/nand/emu_twlp.dec"]
 					},"ITEM_3-2-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"description":"Dump decrypted AGB (GBA) savegame partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,1,"0:rxTools/nand/emu_agb_save.dec"]
 					},"ITEM_3-2-2-5":{
 						"caption":"FIRM0",
-						"description":"Dump decrypted first firmware partition.",
+						"description":"Dump decrypted first firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,2,"0:rxTools/nand/emu_firm0.dec"]
 					},"ITEM_3-2-2-6":{
 						"caption":"FIRM1",
-						"description":"Dump decrypted second firmware partition.",
+						"description":"Dump decrypted second firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,3,"0:rxTools/nand/emu_firm1.dec"]
 					},"ITEM_3-2-2-7":{
 						"caption":"CTR",
-						"description":"Dump decrypted CTR partition.",
+						"description":"Dump decrypted CTR partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,4,"0:rxTools/nand/emu_ctr.dec"]
 					},"ITEM_3-2-2-8":{
 						"caption":"CTRNAND",
-						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[2,12,"0:rxTools/nand/emu_ctrnand.dec"]
 					}
@@ -344,45 +344,45 @@
 					"parameters":[3,"0:rxTools/nand/EmuNAND1.bin"]
 				},"ITEM_3-3-2":{
 					"caption":"Partitions",
-					"description":"Dump decrypted NAND partitions.",
+					"description":"Dump decrypted NAND partitions to file.",
 					"ITEM_3-3-2-1":{
 						"caption":"TWL",
-						"description":"Dump decrypted TWL (DSi) partition.",
+						"description":"Dump decrypted TWL (DSi) partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,0,"0:rxTools/nand/emu1twl.dec"]
 					},"ITEM_3-3-2-2":{
 						"caption":"TWLN",
-						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,8,"0:rxTools/nand/emu1twln.dec"]
 					},"ITEM_3-3-2-3":{
 						"caption":"TWLP",
-						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,9,"0:rxTools/nand/emu1twlp.dec"]
 					},"ITEM_3-3-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"description":"Dump decrypted AGB (GBA) savegame partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,1,"0:rxTools/nand/emu1agb_save.dec"]
 					},"ITEM_3-3-2-5":{
 						"caption":"FIRM0",
-						"description":"Dump decrypted first firmware partition.",
+						"description":"Dump decrypted first firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,2,"0:rxTools/nand/emu1firm0.dec"]
 					},"ITEM_3-3-2-6":{
 						"caption":"FIRM1",
-						"description":"Dump decrypted second firmware partition.",
+						"description":"Dump decrypted second firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,3,"0:rxTools/nand/emu1firm1.dec"]
 					},"ITEM_3-3-2-7":{
 						"caption":"CTR",
-						"description":"Dump decrypted CTR partition.",
+						"description":"Dump decrypted CTR partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,4,"0:rxTools/nand/emu1ctr.dec"]
 					},"ITEM_3-3-2-8":{
 						"caption":"CTRNAND",
-						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[3,12,"0:rxTools/nand/emu1ctrnand.dec"]
 					}
@@ -459,45 +459,45 @@
 					"parameters":[4,"0:rxTools/nand/EmuNAND2.bin"]
 				},"ITEM_3-4-2":{
 					"caption":"Partitions",
-					"description":"Dump decrypted NAND partitions.",
+					"description":"Dump decrypted NAND partitions to file.",
 					"ITEM_3-4-2-1":{
 						"caption":"TWL",
-						"description":"Dump decrypted TWL (DSi) partition.",
+						"description":"Dump decrypted TWL (DSi) partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,0,"0:rxTools/nand/emu2twl.dec"]
 					},"ITEM_3-4-2-2":{
 						"caption":"TWLN",
-						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Dump decrypted TWL (DSi) FAT16 partition (TWL logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,8,"0:rxTools/nand/emu2twln.dec"]
 					},"ITEM_3-4-2-3":{
 						"caption":"TWLP",
-						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Dump decrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,9,"0:rxTools/nand/emu2twlp.dec"]
 					},"ITEM_3-4-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Dump decrypted AGB (GBA) savegame partition.",
+						"description":"Dump decrypted AGB (GBA) savegame partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,1,"0:rxTools/nand/emu2agb_save.dec"]
 					},"ITEM_3-4-2-5":{
 						"caption":"FIRM0",
-						"description":"Dump decrypted first firmware partition.",
+						"description":"Dump decrypted first firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,2,"0:rxTools/nand/emu2firm0.dec"]
 					},"ITEM_3-4-2-6":{
 						"caption":"FIRM1",
-						"description":"Dump decrypted second firmware partition.",
+						"description":"Dump decrypted second firmware partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,3,"0:rxTools/nand/emu2firm1.dec"]
 					},"ITEM_3-4-2-7":{
 						"caption":"CTR",
-						"description":"Dump decrypted CTR partition.",
+						"description":"Dump decrypted CTR partition to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,4,"0:rxTools/nand/emu2ctr.dec"]
 					},"ITEM_3-4-2-8":{
 						"caption":"CTRNAND",
-						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Dump decrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) to file.",
 						"function":"DMP_PARTITION",
 						"parameters":[4,12,"0:rxTools/nand/emu2ctrnand.dec"]
 					}
@@ -585,52 +585,52 @@
 					"parameters":[1,"0:rxTools/nand/NAND.bin"]
 				},"ITEM_4-1-2":{
 					"caption":"Partitions",
-					"description":"Inject unencrypted NAND partitions.",
+					"description":"Inject unencrypted NAND partitions from file.",
 					"ITEM_4-1-2-1":{
 						"caption":"TWL",
-						"description":"Inject unencrypted TWL (DSi) partition.",
+						"description":"Inject unencrypted TWL (DSi) partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,0,"0:rxTools/nand/twl.dec"]
 					},"ITEM_4-1-2-2":{
 						"caption":"TWLN",
-						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,8,"0:rxTools/nand/twln.dec"]
 					},"ITEM_4-1-2-3":{
 						"caption":"TWLP",
-						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,9,"0:rxTools/nand/twlp.dec"]
 					},"ITEM_4-1-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"description":"Inject unencrypted AGB (GBA) savegame partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,1,"0:rxTools/nand/agb_save.dec"]
 					},"ITEM_4-1-2-5":{
 						"caption":"FIRM0",
-						"description":"Inject unencrypted first firmware partition.",
+						"description":"Inject unencrypted first firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,2,"0:rxTools/nand/firm0.dec"]
 					},"ITEM_4-1-2-6":{
 						"caption":"FIRM1",
-						"description":"Inject unencrypted second firmware partition.",
+						"description":"Inject unencrypted second firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,3,"0:rxTools/nand/firm1.dec"]
 					},"ITEM_4-1-2-7":{
 						"caption":"CTR",
-						"description":"Inject unencrypted CTR partition.",
+						"description":"Inject unencrypted CTR partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,4,"0:rxTools/nand/ctr.dec"]
 					},"ITEM_4-1-2-8":{
 						"caption":"CTRNAND",
-						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[1,12,"0:rxTools/nand/ctrnand.dec"]
@@ -715,52 +715,52 @@
 					"parameters":[2,"0:rxTools/nand/EmuNAND.bin"]
 				},"ITEM_4-2-2":{
 					"caption":"Partitions",
-					"description":"Inject unencrypted NAND partitions.",
+					"description":"Inject unencrypted NAND partitions from file.",
 					"ITEM_4-2-2-1":{
 						"caption":"TWL",
-						"description":"Inject unencrypted TWL (DSi) partition.",
+						"description":"Inject unencrypted TWL (DSi) partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,0,"0:rxTools/nand/emu_twl.dec"]
 					},"ITEM_4-2-2-2":{
 						"caption":"TWLN",
-						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,8,"0:rxTools/nand/emu_twln.dec"]
 					},"ITEM_4-2-2-3":{
 						"caption":"TWLP",
-						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,9,"0:rxTools/nand/emu_twlp.dec"]
 					},"ITEM_4-2-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"description":"Inject unencrypted AGB (GBA) savegame partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,1,"0:rxTools/nand/emu_agb_save.dec"]
 					},"ITEM_4-2-2-5":{
 						"caption":"FIRM0",
-						"description":"Inject unencrypted first firmware partition.",
+						"description":"Inject unencrypted first firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,2,"0:rxTools/nand/emu_firm0.dec"]
 					},"ITEM_4-2-2-6":{
 						"caption":"FIRM1",
-						"description":"Inject unencrypted second firmware partition.",
+						"description":"Inject unencrypted second firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,3,"0:rxTools/nand/emu_firm1.dec"]
 					},"ITEM_4-2-2-7":{
 						"caption":"CTR",
-						"description":"Inject unencrypted CTR partition.",
+						"description":"Inject unencrypted CTR partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,4,"0:rxTools/nand/emu_ctr.dec"]
 					},"ITEM_4-2-2-8":{
 						"caption":"CTRNAND",
-						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[2,12,"0:rxTools/nand/emu_ctrnand.dec"]
@@ -845,52 +845,52 @@
 					"parameters":[3,"0:rxTools/nand/EmuNAND1.bin"]
 				},"ITEM_4-3-2":{
 					"caption":"Partitions",
-					"description":"Inject unencrypted NAND partitions.",
+					"description":"Inject unencrypted NAND partitions from file.",
 					"ITEM_4-3-2-1":{
 						"caption":"TWL",
-						"description":"Inject unencrypted TWL (DSi) partition.",
+						"description":"Inject unencrypted TWL (DSi) partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,0,"0:rxTools/nand/emu1twl.dec"]
 					},"ITEM_4-3-2-2":{
 						"caption":"TWLN",
-						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,8,"0:rxTools/nand/emu1twln.dec"]
 					},"ITEM_4-3-2-3":{
 						"caption":"TWLP",
-						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,9,"0:rxTools/nand/emu1twlp.dec"]
 					},"ITEM_4-3-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"description":"Inject unencrypted AGB (GBA) savegame partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,1,"0:rxTools/nand/emu1agb_save.dec"]
 					},"ITEM_4-3-2-5":{
 						"caption":"FIRM0",
-						"description":"Inject unencrypted first firmware partition.",
+						"description":"Inject unencrypted first firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,2,"0:rxTools/nand/emu1firm0.dec"]
 					},"ITEM_4-3-2-6":{
 						"caption":"FIRM1",
-						"description":"Inject unencrypted second firmware partition.",
+						"description":"Inject unencrypted second firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,3,"0:rxTools/nand/emu1firm1.dec"]
 					},"ITEM_4-3-2-7":{
 						"caption":"CTR",
-						"description":"Inject unencrypted CTR partition.",
+						"description":"Inject unencrypted CTR partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,4,"0:rxTools/nand/emu1ctr.dec"]
 					},"ITEM_4-3-2-8":{
 						"caption":"CTRNAND",
-						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[3,12,"0:rxTools/nand/emu1ctrnand.dec"]
@@ -975,52 +975,52 @@
 					"parameters":[4,"0:rxTools/nand/EmuNAND2.bin"]
 				},"ITEM_4-4-2":{
 					"caption":"Partitions",
-					"description":"Inject unencrypted NAND partitions.",
+					"description":"Inject unencrypted NAND partitions from file.",
 					"ITEM_4-4-2-1":{
 						"caption":"TWL",
-						"description":"Inject unencrypted TWL (DSi) partition.",
+						"description":"Inject unencrypted TWL (DSi) partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,0,"0:rxTools/nand/emu2twl.dec"]
 					},"ITEM_4-4-2-2":{
 						"caption":"TWLN",
-						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0).",
+						"description":"Inject unencrypted TWL (DSi) FAT16 partition (TWL logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,8,"0:rxTools/nand/emu2twln.dec"]
 					},"ITEM_4-4-2-3":{
 						"caption":"TWLP",
-						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1).",
+						"description":"Inject unencrypted TWL (DSi) FAT12 photo partition (TWL logical partition 1) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,9,"0:rxTools/nand/emu2twlp.dec"]
 					},"ITEM_4-4-2-4":{
 						"caption":"AGB_SAVE",
-						"description":"Inject unencrypted AGB (GBA) savegame partition.",
+						"description":"Inject unencrypted AGB (GBA) savegame partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,1,"0:rxTools/nand/emu2agb_save.dec"]
 					},"ITEM_4-4-2-5":{
 						"caption":"FIRM0",
-						"description":"Inject unencrypted first firmware partition.",
+						"description":"Inject unencrypted first firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,2,"0:rxTools/nand/emu2firm0.dec"]
 					},"ITEM_4-4-2-6":{
 						"caption":"FIRM1",
-						"description":"Inject unencrypted second firmware partition.",
+						"description":"Inject unencrypted second firmware partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,3,"0:rxTools/nand/emu2firm1.dec"]
 					},"ITEM_4-4-2-7":{
 						"caption":"CTR",
-						"description":"Inject unencrypted CTR partition.",
+						"description":"Inject unencrypted CTR partition from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,4,"0:rxTools/nand/emu2ctr.dec"]
 					},"ITEM_4-4-2-8":{
 						"caption":"CTRNAND",
-						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0).",
+						"description":"Inject unencrypted CTR (3DS) FAT 16 partition (CTR logical partition 0) from file.",
 						"enabled":"CHK_PARTITION",
 						"function":"INJ_PARTITION",
 						"parameters":[4,12,"0:rxTools/nand/emu2ctrnand.dec"]
@@ -1098,7 +1098,7 @@
 			"description":"Copy options.",
 			"ITEM_5-1":{
 				"caption":"SysNAND to EmuNAND",
-				"description":"Copy NAND image, separate partitions or files from SysNAND to EmuNAND.",
+				"description":"Copy NAND image, separate partitions or files from SysNAND to first EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[1,2],
 				"ITEM_5-1-1":{
@@ -1135,13 +1135,13 @@
 						"parameters":[1,1,2]
 					},"ITEM_5-1-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[1,2,2]
 					},"ITEM_5-1-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[1,3,2]
@@ -1221,7 +1221,7 @@
 				}
 			},"ITEM_5-2":{
 				"caption":"SysNAND to EmuNAND1",
-				"description":"Copy NAND image, separate partitions or files from SysNAND to EmuNAND1.",
+				"description":"Copy NAND image, separate partitions or files from SysNAND to second EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[1,3],
 				"ITEM_5-2-1":{
@@ -1258,13 +1258,13 @@
 						"parameters":[1,1,3]
 					},"ITEM_5-2-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[1,2,3]
 					},"ITEM_5-2-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[1,3,3]
@@ -1344,7 +1344,7 @@
 				}
 			},"ITEM_5-3":{
 				"caption":"SysNAND to EmuNAND2",
-				"description":"Copy NAND image, separate partitions or files from SysNAND to EmuNAND2.",
+				"description":"Copy NAND image, separate partitions or files from SysNAND to third EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[1,4],
 				"ITEM_5-3-1":{
@@ -1381,13 +1381,13 @@
 						"parameters":[1,1,4]
 					},"ITEM_5-3-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[1,2,4]
 					},"ITEM_5-3-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[1,3,4]
@@ -1467,7 +1467,7 @@
 				}
 			},"ITEM_5-4":{
 				"caption":"EmuNAND to EmuNAND1",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND to EmuNAND1.",
+				"description":"Copy NAND image, separate partitions or files from first EmuNAND to second EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[2,3],
 				"ITEM_5-4-1":{
@@ -1504,13 +1504,13 @@
 						"parameters":[2,1,3]
 					},"ITEM_5-4-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[2,2,3]
 					},"ITEM_5-4-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[2,3,3]
@@ -1590,7 +1590,7 @@
 				}
 			},"ITEM_5-5":{
 				"caption":"EmuNAND to EmuNAND2",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND to EmuNAND2.",
+				"description":"Copy NAND image, separate partitions or files from first EmuNAND to third EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[2,4],
 				"ITEM_5-5-1":{
@@ -1627,13 +1627,13 @@
 						"parameters":[2,1,4]
 					},"ITEM_5-5-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[2,2,4]
 					},"ITEM_5-5-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[2,3,4]
@@ -1713,7 +1713,7 @@
 				}
 			},"ITEM_5-6":{
 				"caption":"EmuNAND1 to EmuNAND",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND1 to EmuNAND.",
+				"description":"Copy NAND image, separate partitions or files from second EmuNAND to first EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[3,2],
 				"ITEM_5-6-1":{
@@ -1750,13 +1750,13 @@
 						"parameters":[3,1,2]
 					},"ITEM_5-6-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[3,2,2]
 					},"ITEM_5-6-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[3,3,2]
@@ -1836,7 +1836,7 @@
 				}
 			},"ITEM_5-7":{
 				"caption":"EmuNAND1 to EmuNAND2",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND1 to EmuNAND2.",
+				"description":"Copy NAND image, separate partitions or files from second EmuNAND to third EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[3,4],
 				"ITEM_5-7-1":{
@@ -1873,13 +1873,13 @@
 						"parameters":[3,1,4]
 					},"ITEM_5-7-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[3,2,4]
 					},"ITEM_5-7-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[3,3,4]
@@ -1959,7 +1959,7 @@
 				}
 			},"ITEM_5-8":{
 				"caption":"EmuNAND2 to EmuNAND",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND2 to EmuNAND.",
+				"description":"Copy NAND image, separate partitions or files from third EmuNAND to first EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[4,2],
 				"ITEM_5-8-1":{
@@ -1996,13 +1996,13 @@
 						"parameters":[4,1,2]
 					},"ITEM_5-8-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[4,2,2]
 					},"ITEM_5-8-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[4,3,2]
@@ -2082,7 +2082,7 @@
 				}
 			},"ITEM_5-9":{
 				"caption":"EmuNAND2 to EmuNAND1",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND2 to EmuNAND1.",
+				"description":"Copy NAND image, separate partitions or files from third EmuNAND to second EmuNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[4,3],
 				"ITEM_5-9-1":{
@@ -2119,13 +2119,13 @@
 						"parameters":[4,1,3]
 					},"ITEM_5-9-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[4,2,3]
 					},"ITEM_5-9-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[4,3,3]
@@ -2205,7 +2205,7 @@
 				}
 			},"ITEM_5-10":{
 				"caption":"EmuNAND to SysNAND",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND to SysNAND.",
+				"description":"Copy NAND image, separate partitions or files from first EmuNAND to SysNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[2,1],
 				"ITEM_5-10-1":{
@@ -2242,13 +2242,13 @@
 						"parameters":[2,1,1]
 					},"ITEM_5-10-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[2,2,1]
 					},"ITEM_5-10-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[2,3,1]
@@ -2328,7 +2328,7 @@
 				}
 			},"ITEM_5-11":{
 				"caption":"EmuNAND1 to SysNAND",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND1 to SysNAND.",
+				"description":"Copy NAND image, separate partitions or files from second EmuNAND to SysNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[3,1],
 				"ITEM_5-11-1":{
@@ -2365,13 +2365,13 @@
 						"parameters":[3,1,1]
 					},"ITEM_5-11-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[3,2,1]
 					},"ITEM_5-11-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[3,3,1]
@@ -2451,7 +2451,7 @@
 				}
 			},"ITEM_5-12":{
 				"caption":"EmuNAND2 to SysNAND",
-				"description":"Copy NAND image, separate partitions or files from EmuNAND2 to SysNAND.",
+				"description":"Copy NAND image, separate partitions or files from third EmuNAND to SysNAND.",
 				"enabled":"CHK_NAND",
 				"parameters":[4,1],
 				"ITEM_5-12-1":{
@@ -2488,13 +2488,13 @@
 						"parameters":[4,1,1]
 					},"ITEM_5-12-2-5":{
 						"caption":"FIRM0",
-						"description":"Copy first first firmware partition.",
+						"description":"Copy first firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[4,2,1]
 					},"ITEM_5-12-2-6":{
 						"caption":"FIRM1",
-						"description":"Copy second second firmware partition.",
+						"description":"Copy second firmware partition.",
 						"enabled":"CHK_PARTITION",
 						"function":"CPY_PARTITION",
 						"parameters":[4,3,1]
@@ -2698,6 +2698,12 @@
 				"resolve":"VAL_CFG",
 				"function":"RUN_CFG_NEXT",
 				"parameters":"CFG_LANGUAGE"
+			},"ITEM_7-9":{
+				"caption":"SysNAND write protection",
+				"enabled":"CHK_CFG",
+				"resolve":"VAL_CFG",
+				"function":"RUN_CFG_NEXT",
+				"parameters":"CFG_SYSNAND_WRITE_PROTECT"
 			}
 		},"ITEM_8":{
 			"caption":"Diagnostics",
@@ -2734,62 +2740,122 @@
 					"parameters":["0:key_0x1B.bin",16,"1e96be527ac64e6f6929b38760b1a4873d051b96"]
 				}
 			},"ITEM_8-3":{
-				"caption":"EmuNAND",
-				"description":"Check EmuNAND firmware and system titles versions.",
-				"enabled":"CHK_NAND",
-				"parameters":2,
+				"caption":"SysNAND",
+				"description":"Check SysNAND firmware and system titles versions.",
 				"ITEM_8-3-1":{
 					"caption":"Region",
 					"resolve":"VAL_REGION",
-					"parameters":2
+					"parameters":1
 				},"ITEM_8-3-2":{
 					"caption":"NATIVE_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040138/%SYSTEM%0000002/content"
+					"parameters":"1:title/00040138/%SYSTEM%0000002/content"
 				},"ITEM_8-3-3":{
 					"caption":"TWL_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040138/%SYSTEM%0000102/content"
+					"parameters":"1:title/00040138/%SYSTEM%0000102/content"
 				},"ITEM_8-3-4":{
 					"caption":"AGB_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040138/%SYSTEM%0000202/content"
+					"parameters":"1:title/00040138/%SYSTEM%0000202/content"
 				},"ITEM_8-3-5":{
 					"caption":"MSET version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"2:title/00040010/0002%REGION%000/content"
+					"parameters":"1:title/00040010/0002%REGION%000/content"
 				},"ITEM_8-3-6":{
+					"caption":"H&S version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"1:title/00040010/0002%REGION%300/content"
+				}
+			},"ITEM_8-4":{
+				"caption":"EmuNAND",
+				"description":"Check first EmuNAND firmware and system titles versions.",
+				"enabled":"CHK_NAND",
+				"parameters":2,
+				"ITEM_8-4-1":{
+					"caption":"Region",
+					"resolve":"VAL_REGION",
+					"parameters":2
+				},"ITEM_8-4-2":{
+					"caption":"NATIVE_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040138/%SYSTEM%0000002/content"
+				},"ITEM_8-4-3":{
+					"caption":"TWL_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040138/%SYSTEM%0000102/content"
+				},"ITEM_8-4-4":{
+					"caption":"AGB_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040138/%SYSTEM%0000202/content"
+				},"ITEM_8-4-5":{
+					"caption":"MSET version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"2:title/00040010/0002%REGION%000/content"
+				},"ITEM_8-4-6":{
 					"caption":"H&S version",
 					"resolve":"VAL_TITLE_VERSION",
 					"parameters":"2:title/00040010/0002%REGION%300/content"
 				}
-			},"ITEM_8-4":{
-				"caption":"SysNAND",
-				"description":"Check SysNAND firmware and system titles versions.",
-				"ITEM_8-4-1":{
+			},"ITEM_8-5":{
+				"caption":"EmuNAND1",
+				"description":"Check second EmuNAND firmware and system titles versions.",
+				"enabled":"CHK_NAND",
+				"parameters":3,
+				"ITEM_8-5-1":{
 					"caption":"Region",
 					"resolve":"VAL_REGION",
-					"parameters":1
-				},"ITEM_8-4-2":{
+					"parameters":3
+				},"ITEM_8-5-2":{
 					"caption":"NATIVE_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040138/%SYSTEM%0000002/content"
-				},"ITEM_8-4-3":{
+					"parameters":"3:title/00040138/%SYSTEM%0000002/content"
+				},"ITEM_8-5-3":{
 					"caption":"TWL_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040138/%SYSTEM%0000102/content"
-				},"ITEM_8-4-4":{
+					"parameters":"3:title/00040138/%SYSTEM%0000102/content"
+				},"ITEM_8-5-4":{
 					"caption":"AGB_FIRM version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040138/%SYSTEM%0000202/content"
-				},"ITEM_8-4-5":{
+					"parameters":"3:title/00040138/%SYSTEM%0000202/content"
+				},"ITEM_8-5-5":{
 					"caption":"MSET version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040010/0002%REGION%000/content"
-				},"ITEM_8-4-6":{
+					"parameters":"3:title/00040010/0002%REGION%000/content"
+				},"ITEM_8-5-6":{
 					"caption":"H&S version",
 					"resolve":"VAL_TITLE_VERSION",
-					"parameters":"1:title/00040010/0002%REGION%300/content"
+					"parameters":"3:title/00040010/0002%REGION%300/content"
+				}
+			},"ITEM_8-6":{
+				"caption":"EmuNAND2",
+				"description":"Check third EmuNAND firmware and system titles versions.",
+				"enabled":"CHK_NAND",
+				"parameters":4,
+				"ITEM_8-6-1":{
+					"caption":"Region",
+					"resolve":"VAL_REGION",
+					"parameters":4
+				},"ITEM_8-6-2":{
+					"caption":"NATIVE_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"4:title/00040138/%SYSTEM%0000002/content"
+				},"ITEM_8-6-3":{
+					"caption":"TWL_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"4:title/00040138/%SYSTEM%0000102/content"
+				},"ITEM_8-6-4":{
+					"caption":"AGB_FIRM version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"4:title/00040138/%SYSTEM%0000202/content"
+				},"ITEM_8-6-5":{
+					"caption":"MSET version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"4:title/00040010/0002%REGION%000/content"
+				},"ITEM_8-6-6":{
+					"caption":"H&S version",
+					"resolve":"VAL_TITLE_VERSION",
+					"parameters":"4:title/00040010/0002%REGION%300/content"
 				}
 			}
 		},"ITEM_9":{

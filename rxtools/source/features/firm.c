@@ -35,7 +35,6 @@
 #include "TitleKeyDecrypt.h"
 #include "configuration.h"
 #include "lang.h"
-#include "crypto.h"
 #include "aes.h"
 #include "progress.h"
 
@@ -277,16 +276,6 @@ patchFail:
 	msg = L"Failed to load the patch: %d\n"
 		L"Check your installation.\n";
 	goto fail;
-}
-
-void rxModeWithSplash(int_fast8_t drive)
-{
-//	wchar_t s[_MAX_LFN];
-
-//	swprintf(s, _MAX_LFN, L"/rxTools/Theme/%u/boot.bin",
-//		cfgs[CFG_THEME].val.i);
-//	DrawSplash(&bottomScreen, s);
-	rxMode(drive);
 }
 
 //Just patches signatures check, loads in sysnand

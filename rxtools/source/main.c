@@ -176,16 +176,17 @@ static uint_fast8_t extractFont(wchar_t *dst, wchar_t *src) {
 	return 1;
 }
 
-uint_fast8_t initKeyX(uint_fast8_t slot, const wchar_t *path) {
-	uint8_t buf[AES_BLOCK_SIZE];
+uint_fast8_t initKeyX(uint_fast8_t keyslot, const wchar_t *path) {
+	aes_key_data key;
 	FIL f;
 
 	if (!FileOpen(&f, path, 0) ||
-		(FileRead2(&f, buf, AES_BLOCK_SIZE) != AES_BLOCK_SIZE &&
+		(FileRead2(&f, &key, sizeof(key)) != sizeof(key) &&
 		(FileClose(&f) || 1)
 	)) return 0;
 	FileClose(&f);
-	setup_aeskeyX(slot, buf);
+	aes_set_key(&(aes_key){&key, AES_CNT_INPUT_BE_NORMAL, keyslot, KEYX});
+
 	return 1;
 }
 

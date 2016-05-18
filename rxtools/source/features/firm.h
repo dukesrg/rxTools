@@ -48,7 +48,6 @@ extern const wchar_t *firmPatchPathFmt;
 
 int PastaMode();
 void FirmLoader();
-void rxModeWithSplash(int_fast8_t drive);
 int rxMode(int_fast8_t drive);
 uint8_t* decryptFirmTitleNcch(uint8_t* title, size_t *size);
 uint8_t *decryptFirmTitle(uint8_t *title, size_t size, size_t *firmSize, uint8_t key[16]);

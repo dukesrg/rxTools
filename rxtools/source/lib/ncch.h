@@ -20,7 +20,6 @@
 
 #include <stdint.h>
 #include "aes.h"
-#include "crypto.h"
 
 #define NCCH_MAGIC 'HCCN'
 #define NCCH_MEDIA_UNIT_SIZE 0x200
