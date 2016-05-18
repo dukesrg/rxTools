@@ -130,7 +130,7 @@ uint_fast8_t nandInit() {
 	if (!nand[EMUNAND].sectors_count &&
 		sd_mbr.partition_table.partition[1].type == MBR_PARTITION_TYPE_NONE &&
 		sd_mbr.partition_table.magic == MBR_BOOT_MAGIC &&
-		getPartitions(EMUNAND, 1, nand[SYSNAND].sectors_count)
+		(getPartitions(EMUNAND, 1, nand[SYSNAND].sectors_count) || getPartitions(EMUNAND, 1, tmio_dev_id[TMIO_DEV_NAND].total_size))
 	) {
 		sd_mbr.partition_table.partition[1].type = MBR_PARTITION_TYPE_3DS_NAND;
 		sd_mbr.partition_table.partition[1].lba_first_sector = 1;
