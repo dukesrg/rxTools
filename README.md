@@ -32,10 +32,6 @@ I do not support piracy in any way, all the data and information in my software 
 - Support for TWL (DS/DSi cartridges and DSiWare) **only on sysNAND**
 - Dynamic RAM dumping (just for debug purposes)
 
-## Nightlies
-Nightly builds of rxTools are a thing, again! :D https://lavanoid.github.io/
-
-
 ## How to build
 
 Requirements for Windows:
