@@ -75,6 +75,7 @@ static uint_fast8_t getPartitions(nand_type nidx, uint32_t first_sector, uint32_
 	} else if (!tmio_readsectors(id, first_sector + sectors_count - 1, 1, (uint8_t*)&ncsd) && ncsd.magic == NCSD_MAGIC) {
 		nand[nidx].format = NAND_FORMAT_GW;
 		nand[nidx].first_sector = first_sector - 1;
+		nand[nidx].sectors_count = sectors_count;
 	} else {
 		for (size_t i = NCSD_PARTITION_COUNT; i--; nand[nidx].partition[i] = (nand_partition_entry){0});
 		return 0;
@@ -128,10 +129,9 @@ uint_fast8_t nandInit() {
 				getPartitions(i, sd_mbr.partition_table.partition[i].lba_first_sector, sd_mbr.partition_table.partition[i].lba_sectors_count);
 
 	if (!nand[EMUNAND].sectors_count &&
-		(getPartitions(EMUNAND, 1, nand[SYSNAND].sectors_count) || 
-		getPartitions(EMUNAND, 1, tmio_dev[TMIO_DEV_NAND].total_size)) &&
+		(getPartitions(EMUNAND, 1, nand[SYSNAND].sectors_count) || getPartitions(EMUNAND, 1, tmio_dev[TMIO_DEV_NAND].total_size)) &&
 		sd_mbr.partition_table.magic == MBR_BOOT_MAGIC &&
-		sd_mbr.partition_table.partition[1].type == MBR_PARTITION_TYPE_NONE
+		(sd_mbr.partition_table.partition[1].type == MBR_PARTITION_TYPE_NONE || sd_mbr.partition_table.partition[1].type == MBR_PARTITION_TYPE_3DS_NAND)
 	) {
 		sd_mbr.partition_table.partition[1].type = MBR_PARTITION_TYPE_3DS_NAND;
 		sd_mbr.partition_table.partition[1].lba_first_sector = 1;
