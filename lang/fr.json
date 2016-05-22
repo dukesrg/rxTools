@@ -237,7 +237,7 @@
 "FAILED": "Échec!\n",
 "COMPLETED": "Complété!\n",
 "SETTINGS": "Options",
-"FORCE_UI_BOOT": "Forcer le démarrage d l'UI    %ls",
+"FORCE_UI_BOOT": "Forcer le démarrage de l'UI    %ls",
 "SELECTED_THEME": "Thème choisi        <%3c  >",
 "SHOW_AGB": "Afficher le BIOS GBA   %ls",
 "ENABLE_3D_UI": "Activer l'UI 3D          %ls",
