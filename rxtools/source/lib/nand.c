@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The PASTA Team
+ * Copyright (C) 2015-2016 The PASTA Team, dukesrg
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@
 #include "CTRDecryptor.h"
 #include "tmio/tmio.h"
 #include "fatfs/diskio.h"
-#include "mbr.h"
+#include "bootsector.h"
 #include "nand.h"
 #include "ncsd.h"
 #include "aes.h"
@@ -52,13 +52,13 @@ static uint_fast8_t getLogicalPartitions(nand_type nidx, nand_partition_index pa
 	mbr mbr_in;
 
 	nand_readsectors(0, 1, (uint8_t*)&mbr_in, nidx, partition);
-	if (mbr_in.partition_table.magic != MBR_BOOT_MAGIC) {
-		for (size_t i = MBR_PARTITION_COUNT; i--; nand[nidx].partition[NCSD_PARTITION_COUNT + partition + i] = (nand_partition_entry){0});
+	if (mbr_in.partition_table.marker != END_OF_SECTOR_MARKER) {
+		for (size_t i = PARTITION_MAX_COUNT; i--; nand[nidx].partition[NCSD_PARTITION_COUNT + partition + i] = (nand_partition_entry){0});
 		return 0;
 	} else
-		for (size_t i = MBR_PARTITION_COUNT; i--;) {
-			nand[nidx].partition[NCSD_PARTITION_COUNT + partition + i].first_sector = nand[nidx].partition[partition].first_sector + mbr_in.partition_table.partition[i].lba_first_sector;
-			nand[nidx].partition[NCSD_PARTITION_COUNT + partition + i].sectors_count = mbr_in.partition_table.partition[i].lba_sectors_count;
+		for (size_t i = PARTITION_MAX_COUNT; i--;) {
+			nand[nidx].partition[NCSD_PARTITION_COUNT + partition + i].first_sector = nand[nidx].partition[partition].first_sector + mbr_in.partition_table.partition[i].relative_sectors;
+			nand[nidx].partition[NCSD_PARTITION_COUNT + partition + i].sectors_count = mbr_in.partition_table.partition[i].total_sectors;
 			nand[nidx].partition[NCSD_PARTITION_COUNT + partition + i].keyslot = nand[nidx].partition[partition].keyslot;
 		}
 	return 1;
@@ -123,19 +123,19 @@ uint_fast8_t nandInit() {
 		return 0;
 
 	tmio_readsectors(TMIO_DEV_SDMC, 0, 1, (uint8_t*)&sd_mbr);
-	if (sd_mbr.partition_table.magic == MBR_BOOT_MAGIC)
-		for (size_t i = MBR_PARTITION_COUNT; --i;)
-			if (sd_mbr.partition_table.partition[i].type == MBR_PARTITION_TYPE_3DS_NAND)
-				getPartitions(i, sd_mbr.partition_table.partition[i].lba_first_sector, sd_mbr.partition_table.partition[i].lba_sectors_count);
+	if (sd_mbr.partition_table.marker == END_OF_SECTOR_MARKER)
+		for (size_t i = PARTITION_MAX_COUNT; --i;)
+			if (sd_mbr.partition_table.partition[i].system_id == PARTITION_TYPE_3DS_NAND)
+				getPartitions(i, sd_mbr.partition_table.partition[i].relative_sectors, sd_mbr.partition_table.partition[i].total_sectors);
 
 	if (!nand[EMUNAND].sectors_count &&
 		(getPartitions(EMUNAND, 1, nand[SYSNAND].sectors_count) || getPartitions(EMUNAND, 1, tmio_dev[TMIO_DEV_NAND].total_size)) &&
-		sd_mbr.partition_table.magic == MBR_BOOT_MAGIC &&
-		(sd_mbr.partition_table.partition[1].type == MBR_PARTITION_TYPE_NONE || sd_mbr.partition_table.partition[1].type == MBR_PARTITION_TYPE_3DS_NAND)
+		sd_mbr.partition_table.marker == END_OF_SECTOR_MARKER &&
+		(sd_mbr.partition_table.partition[1].system_id == PARTITION_TYPE_NONE || sd_mbr.partition_table.partition[1].system_id == PARTITION_TYPE_3DS_NAND)
 	) {
-		sd_mbr.partition_table.partition[1].type = MBR_PARTITION_TYPE_3DS_NAND;
-		sd_mbr.partition_table.partition[1].lba_first_sector = 1;
-		sd_mbr.partition_table.partition[1].lba_sectors_count = nand[EMUNAND].sectors_count;
+		sd_mbr.partition_table.partition[1].system_id = PARTITION_TYPE_3DS_NAND;
+		sd_mbr.partition_table.partition[1].relative_sectors = 1;
+		sd_mbr.partition_table.partition[1].total_sectors = nand[EMUNAND].sectors_count;
 		tmio_writesectors(TMIO_DEV_SDMC, 0, 1, (uint8_t*)&sd_mbr);
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The PASTA Team
+ * Copyright (C) 2015-2016 The PASTA Team, dukesrg
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -425,7 +425,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 				case NAND_PARTITION_TWL:
 				case NAND_PARTITION_CTR:
 				check_boot_magic:
-					return ((mbr*)buf)->partition_table.magic == MBR_BOOT_MAGIC;
+					return ((mbr*)buf)->partition_table.marker == END_OF_SECTOR_MARKER;
 			}
 		} else if (!memcmp(funckey, "FILE", funcsize)) {
 			if (params <= 0) return 0;
