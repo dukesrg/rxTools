@@ -170,7 +170,7 @@
 
 "obsolete values below":"will be removed",
 "BACKING_UP": "Sauvegarde de %ls...\n",
-"DELETING": "Effacement de %ls...\n",
+"DELETING": "Suppression de %ls...\n",
 "DOWNGRADE": "Downgrade %ls",
 "DOWNGRADING": "Downgrade de %ls...\n",
 "DOWNGRADING_NOT_NEEDED": "Le downgrade de %ls n'est pas nécessaire.\n",
