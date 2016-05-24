@@ -72,6 +72,8 @@ Upon building, there will be a folder called release/mset that contains the file
 Alternatively, you can install the MSET ROP with FBI. Press select and use left and right on the D-pad to select "rxTools3.x 4.x" or "rxTools3.x 6.x", depending on the version of MSET you are using. 
 * Do NOT install 4.x MSET on a 2ds. Formatting in this configuration will cause a soft brick!
 
+## NUS files
+[here](magnet:?xt=urn:btih:700dcc8d7dba8e345c7c0e0c8d71ea6973c26491&dn=nus&tr=http%3A%2F%2Ftracker.tfile.me%2Fannounce)
 
 ## Credits
 - All the documentation on http://3dbrew.org, and to all the devs who contributed
