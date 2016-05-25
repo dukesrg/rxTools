@@ -114,9 +114,8 @@ release-theme: all-target-theme $(THEMES)
 	cp $(subst +,\ ,$@) release/rxTools/theme
 
 release-tools:
-	@mkdir -p release/Tools/fbi_injection release/Tools/scripts
+	@mkdir -p release/Tools/scripts
 	@cp tools/o3ds_cdn_firm.py tools/n3ds_cdn_firm.py tools/readme.txt release/Tools
-	@cp -r tools/fbi_injection/* release/Tools/fbi_injection/
 	@cp tools/scripts/* release/Tools/scripts/
 
 release-mset: all-target-mset

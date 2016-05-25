@@ -337,7 +337,7 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 	funckey = menuJson.js + menuJson.tok[func].start + 4;
 	funcsize = menuJson.tok[func].end - menuJson.tok[func].start - 4;
 	if (!memcmp(funckey - 4, "RUN_", 4)) {
-		if (!memcmp(funckey, "RXMODE", funcsize)) rxMode(getIntVal(params));
+		if (!memcmp(funckey, "RXMODE", funcsize)) rxMode(getIntVal(params) - 1);
 		else if (!memcmp(funckey, "PASTA", funcsize)) PastaMode();
 		else if (!memcmp(funckey, "SHUTDOWN", funcsize)) Shutdown(getIntVal(params));
 		else if (!memcmp(funckey, "CFG_NEXT", funcsize)) {
