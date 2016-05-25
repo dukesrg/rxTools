@@ -183,8 +183,8 @@ int rxMode(int_fast8_t drive)
 	FIL fd;
 	UINT br, fsz;
 
-	if (drive > 1) {
-		sector = checkEmuNAND();
+	if (drive > 0) {
+		sector = checkNAND(drive);
 		if (sector == 0) {
 			ConsoleInit();
 			ConsoleSetTitle(L"EMUNAND NOT FOUND!");

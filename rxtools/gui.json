@@ -2637,7 +2637,77 @@
 			},"ITEM_6-3":{
 				"caption":"Install FBI",
 				"description":"Install FBI (a legal .cia installed) over Health&Safety application in SysNAND.",
-				"function":"FUNC_INS_FBI"
+				"ITEM_6-3-1":{
+					"caption":"Japan 1",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000020300/tmd.0",1]
+				},"ITEM_6-3-2":{
+					"caption":"North America 1",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000021300/tmd.0",1]
+				},"ITEM_6-3-3":{
+					"caption":"Europe/Australia 1",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000022300/tmd.0",1]
+				},"ITEM_6-3-4":{
+					"caption":"Europe/Australia 3",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000022300/tmd.1024",1]
+				},"ITEM_6-3-5":{
+					"caption":"Japan 4",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000020300/tmd.1024",1]
+				},"ITEM_6-3-6":{
+					"caption":"North America 4",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000021300/tmd.1026",1]
+				},"ITEM_6-3-7":{
+					"caption":"Europe/Australia 4",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000022300/tmd.2050",1]
+				},"ITEM_6-3-8":{
+					"caption":"China 4",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000026300/tmd.5",1]
+				},"ITEM_6-3-9":{
+					"caption":"South Korea 4",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000027300/tmd.2",1]
+				},"ITEM_6-3-10":{
+					"caption":"Taiwan 4",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000028300/tmd.5",1]
+				},"ITEM_6-3-11":{
+					"caption":"Japan 6",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000020300/tmd.2050",1]
+				},"ITEM_6-3-12":{
+					"caption":"North America 6",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000021300/tmd.2051",1]
+				},"ITEM_6-3-13":{
+					"caption":"Europe/Australia 6",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000022300/tmd.3077",1]
+				},"ITEM_6-3-14":{
+					"caption":"South Korea 6",
+					"enabled":"CHK_TITLE",
+					"function":"FUNC_INS_FBI",
+					"parameters":["0:nus/0004001000027300/tmd.1027",1]
+				}
 			},"ITEM_6-4":{
 				"caption":"Restore H&S App",
 				"description":"Uninstall FBI .cia installer and restore the original Health&Safety application.",
