@@ -216,6 +216,22 @@
 						"function":"CPY_FILE",
 						"parameters":["1:data/%ID0%/sysdata/00010038/00000000","0:rxTools/nnidsave.bin"]
 					}
+				},"ITEM_3-1-4":{
+					"caption":"Titles",
+					"description":"Dump titles from the CTRNAND FAT16 partition.",
+					"ITEM_3-1-4-1":{
+						"caption":"MSET",
+						"description":"Dump System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["1:title/00040010/0002%REGION%000/content/","0:rxTools/000400100002%REGION%000"]
+					},"ITEM_3-1-4-2":{
+						"caption":"H&S",
+						"description":"Dump Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["1:title/00040010/0002%REGION%300/content/","0:rxTools/000400100002%REGION%300"]
+					}
 				}
 			},"ITEM_3-2":{
 				"caption":"EmuNAND",
@@ -330,6 +346,22 @@
 						"caption":"nnidsave.bin",
 						"function":"CPY_FILE",
 						"parameters":["2:data/%ID0%/sysdata/00010038/00000000","0:rxTools/emu_nnidsave.bin"]
+					}
+				},"ITEM_3-2-4":{
+					"caption":"Titles",
+					"description":"Dump titles from the CTRNAND FAT16 partition.",
+					"ITEM_3-2-4-1":{
+						"caption":"MSET",
+						"description":"Dump System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["2:title/00040010/0002%REGION%000/content/","0:rxTools/emu_000400100002%REGION%000"]
+					},"ITEM_3-2-4-2":{
+						"caption":"H&S",
+						"description":"Dump Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["2:title/00040010/0002%REGION%300/content/","0:rxTools/emu_000400100002%REGION%300"]
 					}
 				}
 			},"ITEM_3-3":{
@@ -446,6 +478,22 @@
 						"function":"CPY_FILE",
 						"parameters":["3:data/%ID0%/sysdata/00010038/00000000","0:rxTools/emu1nnidsave.bin"]
 					}
+				},"ITEM_3-3-4":{
+					"caption":"Titles",
+					"description":"Dump titles from the CTRNAND FAT16 partition.",
+					"ITEM_3-3-4-1":{
+						"caption":"MSET",
+						"description":"Dump System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["3:title/00040010/0002%REGION%000/content/","0:rxTools/emu1000400100002%REGION%000"]
+					},"ITEM_3-3-4-2":{
+						"caption":"H&S",
+						"description":"Dump Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["3:title/00040010/0002%REGION%300/content/","0:rxTools/emu1000400100002%REGION%300"]
+					}
 				}
 			},"ITEM_3-4":{
 				"caption":"EmuNAND2",
@@ -560,6 +608,22 @@
 						"caption":"nnidsave.bin",
 						"function":"CPY_FILE",
 						"parameters":["4:data/%ID0%/sysdata/00010038/00000000","0:rxTools/emu2nnidsave.bin"]
+					}
+				},"ITEM_3-4-4":{
+					"caption":"Titles",
+					"description":"Dump titles from the CTRNAND FAT16 partition.",
+					"ITEM_3-4-4-1":{
+						"caption":"MSET",
+						"description":"Dump System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["4:title/00040010/0002%REGION%000/content/","0:rxTools/emu2000400100002%REGION%000"]
+					},"ITEM_3-4-4-2":{
+						"caption":"H&S",
+						"description":"Dump Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["4:title/00040010/0002%REGION%300/content/","0:rxTools/emu2000400100002%REGION%300"]
 					}
 				}
 			},"ITEM_3-5":{
@@ -701,6 +765,22 @@
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/nnidsave.bin","1:data/%ID0%/sysdata/00010038/00000000"]
 					}
+				},"ITEM_4-1-4":{
+					"caption":"Titles",
+					"description":"Inject titles to the CTRNAND FAT16 partition.",
+					"ITEM_4-1-4-1":{
+						"caption":"MSET",
+						"description":"Inject System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/000400100002%REGION%000","1:title/00040010/0002%REGION%000/content/"]
+					},"ITEM_4-1-4-2":{
+						"caption":"H&S",
+						"description":"Inject Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/000400100002%REGION%300","1:title/00040010/0002%REGION%300/content/"]
+					}
 				}
 			},"ITEM_4-2":{
 				"caption":"EmuNAND",
@@ -830,6 +910,22 @@
 						"caption":"nnidsave.bin",
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/emu_nnidsave.bin","2:data/%ID0%/sysdata/00010038/00000000"]
+					}
+				},"ITEM_4-2-4":{
+					"caption":"Titles",
+					"description":"Inject titles to the CTRNAND FAT16 partition.",
+					"ITEM_4-2-4-1":{
+						"caption":"MSET",
+						"description":"Inject System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/emu_000400100002%REGION%000","2:title/00040010/0002%REGION%000/content/"]
+					},"ITEM_4-2-4-2":{
+						"caption":"H&S",
+						"description":"Inject Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/emu_000400100002%REGION%300","2:title/00040010/0002%REGION%300/content/"]
 					}
 				}
 			},"ITEM_4-3":{
@@ -961,6 +1057,22 @@
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/emu1nnidsave.bin","3:data/%ID0%/sysdata/00010038/00000000"]
 					}
+				},"ITEM_4-3-4":{
+					"caption":"Titles",
+					"description":"Inject titles to the CTRNAND FAT16 partition.",
+					"ITEM_4-3-4-1":{
+						"caption":"MSET",
+						"description":"Inject System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/emu1000400100002%REGION%000","3:title/00040010/0002%REGION%000/content/"]
+					},"ITEM_4-3-4-2":{
+						"caption":"H&S",
+						"description":"Inject Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/emu1000400100002%REGION%300","3:title/00040010/0002%REGION%300/content/"]
+					}
 				}
 			},"ITEM_4-4":{
 				"caption":"EmuNAND2",
@@ -1090,6 +1202,22 @@
 						"caption":"nnidsave.bin",
 						"function":"CPY_FILE",
 						"parameters":["0:rxTools/emu2nnidsave.bin","4:data/%ID0%/sysdata/00010038/00000000"]
+					}
+				},"ITEM_4-4-4":{
+					"caption":"Titles",
+					"description":"Inject titles to the CTRNAND FAT16 partition.",
+					"ITEM_4-4-4-1":{
+						"caption":"MSET",
+						"description":"Inject System Settings application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/emu2000400100002%REGION%000","4:title/00040010/0002%REGION%000/content/"]
+					},"ITEM_4-4-4-2":{
+						"caption":"H&S",
+						"description":"Inject Health and Safety Information application.",
+						"enabled":"CHK_TITLE",
+						"function":"CPY_TITLE",
+						"parameters":["0:rxTools/emu2000400100002%REGION%300","4:title/00040010/0002%REGION%300/content/"]
 					}
 				}
 			}
