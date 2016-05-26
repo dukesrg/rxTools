@@ -51,6 +51,7 @@ Launch specific function ("func" object)
 |CPY_PARTITION|Copy NAND partition to corresponding partition on another NAND|source drive; partition; destination drive|
 |CPY_NAND|Copy NAND to NAND|source drive; destination drive|
 |CPY_FILE|Copy file, rewriting destination|source full path name; destination full path name|
+|CHK_TITLE|Copy title data (.tmd + .app), rewriting destination|source full path name (directory name ending with '/' forces to seek for the latest version); destination full path name|
 
 ###Status check functions
 Check menu option state ("enabled" object)
