@@ -460,15 +460,20 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 					break;
 			}
 		} else if (!memcmp(funckey, "TITLE", funcsize)) {
-			if (params <= 0 || menuJson.tok[params].type != JSMN_ARRAY || menuJson.tok[params].size < 2) return 0;
-			tmd_data tmd;
-			uint_fast8_t drive;
-			params++;
-			getStrVal(str, params);
-			drive = getIntVal(params + 1);
-			if (tmdPreloadHeader(&tmd, str) &&
-				tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive)
-			) return 1;
+			if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2 &&
+				getStrVal(str, params + 1)
+			) {
+				tmd_data tmd;
+				uint32_t tmdid;
+				wchar_t tmdfile[13];
+				if (str[wcslen(str) - 1] == L'/') {
+					if ((tmdid = tmdLoadRecent(&tmd, str)) == CONTENT_ID_UNDEFINED)
+						return 0;
+					swprintf(tmdfile, sizeof(tmdfile)/sizeof(tmdfile[0]), L"%08x.tmd", tmdid);
+					wcscat(str, tmdfile);
+				}
+				return tmdLoadHeader(&tmd, str);
+			}
 		} else if (!memcmp(funckey, "CFG", funcsize)) {
 			if ((params = getConfig(params)) >= 0) {
 				switch (cfgs[params].type) {
@@ -518,6 +523,31 @@ static uint_fast8_t runFunc(int func, int params, int activity, int gauge) {
 		else if (!memcmp(funckey, "FILE", funcsize))
 			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2  &&
 				getStrVal(str, params + 1) && getStrVal(str2, params + 2) && CopyFile(str, str2);
+		else if (!memcmp(funckey, "TITLE", funcsize)) {
+			if (params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2 &&
+				getStrVal(str, params + 1) && getStrVal(str2, params + 2)
+			) {
+				tmd_data tmd;
+				uint32_t tmdid;
+				wchar_t tmdfile[13];
+				if (str[wcslen(str) - 1] == L'/') {
+					if ((tmdid = tmdLoadRecent(&tmd, str)) == CONTENT_ID_UNDEFINED)
+						return 0;
+					swprintf(tmdfile, sizeof(tmdfile)/sizeof(tmdfile[0]), L"%08x.tmd", tmdid);
+					wcscat(str, tmdfile);
+				}
+				if (!tmdValidateChunk(&tmd, str, CONTENT_INDEX_MAIN, drive))
+					return 0;
+
+
+				if (str2[wcslen(str) - 1] == L'/') {
+					if ((tmdid = tmdLoadRecent(&tmd, str2)) == CONTENT_ID_UNDEFINED)
+						return 0;
+					swprintf(tmdfile, sizeof(tmdfile)/sizeof(tmdfile[0]), L"%08x.tmd", tmdid);
+					wcscat(str, tmdfile);
+				}
+			}
+		}
 	} else if (!memcmp(funckey - 4, "DMP_", 4)) {
 		if (!memcmp(funckey, "NAND", funcsize))
 			return params > 0 && menuJson.tok[params].type == JSMN_ARRAY && menuJson.tok[params].size >= 2 &&

@@ -22,6 +22,7 @@
 #include <wchar.h>
 
 #define TMD_MAX_CHUNKS 0x40
+#define CONTENT_ID_UNDEFINED 0xFFFFFFFF
 
 typedef enum {
 	RSA_4096_SHA1	= 0x00000100,

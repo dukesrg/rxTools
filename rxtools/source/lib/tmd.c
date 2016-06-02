@@ -62,14 +62,14 @@ uint32_t tmdPreloadRecent(tmd_data *data, wchar_t *path) { //returns tmd file na
 	fno.lfname = NULL;
 	wchar_t *filename;
 	tmd_data data_tmp;
-	uint32_t contentid = 0xFFFFFFFF;
+	uint32_t contentid = CONTENT_ID_UNDEFINED;
 
 	if (f_findfirst(&dir, &fno, path, L"*.tmd") == FR_OK) {
 		filename = path + wcslen(wcscat(path, L"/"));
 		do {
 			wcscat(filename, fno.fname);
 			if (tmdPreloadHeader(&data_tmp, path) &&
-				(contentid == 0xFFFFFFFF ||
+				(contentid == CONTENT_ID_UNDEFINED ||
 				__builtin_bswap16(data_tmp.header.title_version) > __builtin_bswap16(data->header.title_version))
 			) {
 				*data = data_tmp;
