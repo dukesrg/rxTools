@@ -22,9 +22,10 @@
 #include <wchar.h>
 
 //Colors Macros
-#define ARGB(a, r, g, b)	(Color){(uint32_t)(a<<24|r<<16|g<<8|b)} //console asks for B,G,R in bytes
+//#define ARGB(a, r, g, b)	(Color){(uint32_t)(a<<24|r<<16|g<<8|b)} //console asks for B,G,R in bytes
 //#define ARGB(a, r, g, b)	(Color){(uint32_t)(a<<24|r<<16|g<<8|b)}
-//#define ARGB(a, r, g, b)	(Color){.b=b, .g=g, .r=r, .a=a}
+#define COLOR(a)	(Color){(uint32_t)a}
+#define ARGB(a, r, g, b)	COLOR(a<<24|r<<16|g<<8|b)
 #define RGB(r, g, b)	ARGB(255, r, g, b)
 #define COLOR_MASK	ARGB(0, 255, 255, 255)
 #define ALPHA_MASK	ARGB(255, 0, 0, 0)

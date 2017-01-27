@@ -28,7 +28,7 @@ include $(RXTOOLSMK)
 LD := $(CC)
 
 INCDIR += -Isource -Isource/features -Isource/lib
-CPPDEFS	:= -DSYS_PATH=\"$(SYS_PATH)\" -DPATCHES_PATH=\"$(PATCHES_PATH)\"
+CPPDEFS	:= -DSYS_PATH=\"$(SYS_PATH)\" -DPATCHES_PATH=\"$(PATCHES_PATH)\" -D_POSIX_C_SOURCE=200809L
 CPPFLAGS := $(INCDIR) $(CPPDEFS)
 
 CFORCE := -fomit-frame-pointer -ffast-math
