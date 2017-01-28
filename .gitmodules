@@ -15,7 +15,7 @@
 
 [submodule "CakeHax"]
 	path = rxtools/CakeHax
-	url = https://github.com/mid-kid/CakeHax
+	url = https://github.com/dukesrg/CakeHax
 [submodule "CakesROP"]
 	path = CakesROP
 	url = https://github.com/mid-kid/CakesROP.git
