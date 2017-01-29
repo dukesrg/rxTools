@@ -233,11 +233,11 @@ void toolsmain() {
 	top2Screen.addr = (uint8_t*)*(uint32_t*)top2Screen.addr;
 
 	if (!nandInit() || !FSInit()) {
-		ClearScreen(&bottomScreen, RED);
-		ClearScreen(&top1Screen, RED);
+//		ClearScreen(&bottomScreen, RED);
+//		ClearScreen(&top1Screen, RED);
 //		ClearScreen(&top2Screen, RED);
-		DisplayScreen(&bottomScreen);
-		DisplayScreen(&top1Screen);
+//		DisplayScreen(&bottomScreen);
+//		DisplayScreen(&top1Screen);
 //		DisplayScreen(&top2Screen);
 		while(1);		
 	}

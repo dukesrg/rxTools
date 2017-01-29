@@ -24,6 +24,7 @@
 #include "nand.h"
 #include "ncsd.h"
 #include "aes.h"
+#include "draw.h"
 
 static nand_metrics nand[NAND_COUNT];
 static aes_ctr NANDCTR;
@@ -110,17 +111,46 @@ uint_fast8_t nandInit() {
 		if (*ctrptr == FS_COUNTER_MAGIC && *(ctrptr + 1) == FS_COUNTER_MAGIC2)
 			ctr = (aes_ctr_data *)(ctrptr + FS_COUNTER_DISPLACEMENT32);
 
-	if (!ctr)
+	if (!ctr) {
+		ClearScreen(&bottomScreen, CYAN);
+		ClearScreen(&top1Screen, CYAN);
+//		ClearScreen(&top2Screen, CYAN);
+		DisplayScreen(&bottomScreen);
+		DisplayScreen(&top1Screen);
+//		DisplayScreen(&top2Screen);
 		return 0;
+	}
 	
 	NANDCTR = (aes_ctr){*ctr, AES_CNT_INPUT_LE_REVERSE}; //Reverse LE is optimal for AES CTR mode
 
 	tmio_init();
-	tmio_init_nand();
-	tmio_init_sdmc();
-
-	if (!getPartitions(SYSNAND, 0, 0))
+	if (tmio_init_nand()) {
+		ClearScreen(&bottomScreen, NAVY);
+		ClearScreen(&top1Screen, NAVY);
+//		ClearScreen(&top2Screen, NAVY);
+		DisplayScreen(&bottomScreen);
+		DisplayScreen(&top1Screen);
+//		DisplayScreen(&top2Screen);
 		return 0;
+	}
+	if (tmio_init_sdmc()) {
+		ClearScreen(&bottomScreen, SALMON);
+		ClearScreen(&top1Screen, SALMON);
+//		ClearScreen(&top2Screen, SALMON);
+		DisplayScreen(&bottomScreen);
+		DisplayScreen(&top1Screen);
+//		DisplayScreen(&top2Screen);
+		return 0;
+	}
+	if (!getPartitions(SYSNAND, 0, 0)) {
+		ClearScreen(&bottomScreen, PURPLE);
+		ClearScreen(&top1Screen, NAVY);
+//		ClearScreen(&top2Screen, NAVY);
+		DisplayScreen(&bottomScreen);
+		DisplayScreen(&top1Screen);
+//		DisplayScreen(&top2Screen);
+		return 0;
+	}
 
 	tmio_readsectors(TMIO_DEV_SDMC, 0, 1, (uint8_t*)&sd_mbr);
 	if (sd_mbr.partition_table.marker == END_OF_SECTOR_MARKER)

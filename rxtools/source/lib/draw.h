@@ -36,6 +36,12 @@
 #define BLUE		RGB(0, 0, 255)
 #define YELLOW		RGB(255, 255, 0)
 #define GREY		RGB(0x77, 0x77, 0x77) //GW Gray shade
+//Colors for initialization error encoding
+#define CYAN		RGB(0, 255, 255) //is for AES CTR init vector
+#define NAVY		RGB(0, 0, 128) //is for NAND
+#define SALMON		RGB(250, 128, 114) //is for SD
+#define PURPLE		RGB(128, 0, 128) //is for Partition table
+#define FUCHSIA		RGB(255, 0, 255) //is for File system
 
 typedef struct{
 	uint_fast16_t w;

@@ -16,6 +16,7 @@
  */
 
 #include "fs.h"
+#include "draw.h"
 
 ////////////////////////////////////////////////////////////////Basic FileSystem Operations
 static FATFS fs[3];
@@ -23,7 +24,15 @@ static FATFS fs[3];
 uint_fast8_t FSInit(void) {
 	if (f_mount(&fs[0], L"0:", 0) != FR_OK //|| //SDCard
 //		f_mount(&fs[1], L"1:", 1) != FR_OK //NAND
-	) return 0;
+	) {
+		ClearScreen(&bottomScreen, FUCHSIA);
+		ClearScreen(&top1Screen, SALMON);
+//		ClearScreen(&top2Screen, SALMON);
+		DisplayScreen(&bottomScreen);
+		DisplayScreen(&top1Screen);
+//		DisplayScreen(&top2Screen);
+		return 0;
+	}
 	f_mount(&fs[1], L"1:", 1);
 
 	f_mount(&fs[2], L"2:", 0); //EmuNAND, Sometimes it doesn't exist
