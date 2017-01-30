@@ -536,3 +536,44 @@ uint32_t tmio_wrprotected(enum tmio_dev_id target)
 	inittarget(target);
 	return tmio_read32(REG_SDSTATUS) & TMIO_STAT_WRPROTECT;
 }
+
+uint32_t tmio_get_cid(enum tmio_dev_id target, uint32_t *cid)
+{
+/*	struct mmcdevice *device;
+	if(isNand)
+		device = &handelNAND;
+	else
+		device = &handelSD;
+*/
+//	inittarget(device);
+	inittarget(target);
+	// use cmd7 to put sd card in standby mode
+	// CMD7
+	{
+//		sdmmc_send_command(device,0x10507,0);
+		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1B, 0, 0);
+		//if((device->error & 0x4)) return -1;
+	}
+
+	// get sd card info
+	// use cmd10 to read CID
+	{
+//		sdmmc_send_command(device,0x1060A,device->initarg << 0x10);
+		//if((device->error & 0x4)) return -2;
+		tmio_send_command(MMC_SEND_CID | TMIO_CMD_RESP_R2, tmio_dev[target].initarg << 0x10, 0);
+		for( int i = 0; i < 4; ++i ) {
+//			info[i] = device->ret[i];
+			cid[i] = tmio_read32(REG_SDRESP0 + i * 4);
+		}
+	}
+
+	// put sd card back to transfer mode
+	// CMD7
+	{
+//		sdmmc_send_command(device,0x10507,device->initarg << 0x10);
+		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1B, tmio_dev[target].initarg << 0x10, 0);
+		//if((device->error & 0x4)) return -3;
+	}
+
+	return 0;
+}

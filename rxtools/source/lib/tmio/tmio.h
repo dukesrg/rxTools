@@ -49,6 +49,8 @@ void tmio_init(void);
 uint32_t tmio_init_sdmc(void);
 uint32_t tmio_init_nand(void);
 
+uint32_t tmio_get_cid(enum tmio_dev_id target, uint32_t *cid);
+
 uint32_t tmio_readsectors(enum tmio_dev_id target,
 	uint32_t sector_no, uint32_t numsectors, uint8_t *out);
 

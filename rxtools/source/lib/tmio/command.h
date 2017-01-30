@@ -34,6 +34,7 @@ enum {
 	MMC_SWITCH = 6,
 	MMC_SELECT_CARD = 7,
 	MMC_SEND_CSD = 9,
+	MMC_SEND_CID = 10,
 	MMC_SEND_STATUS = 13,
 
 	// Class 2
