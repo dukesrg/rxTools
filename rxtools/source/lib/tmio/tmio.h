@@ -43,13 +43,20 @@ struct tmio_dev {
 	uint32_t res;
 };
 
+typedef union {
+	uint8_t as8[16];
+	uint32_t as32[4];
+} tmio_response;
+
+#define REG_TMIO_RESP	((volatile tmio_response*)0x1000600C)
+
 extern struct tmio_dev tmio_dev[TMIO_DEV_NUM];
 
 void tmio_init(void);
 uint32_t tmio_init_sdmc(void);
 uint32_t tmio_init_nand(void);
 
-uint32_t tmio_get_cid(enum tmio_dev_id target, uint32_t *cid);
+uint32_t tmio_get_cid(enum tmio_dev_id target, tmio_response *cid);
 
 uint32_t tmio_readsectors(enum tmio_dev_id target,
 	uint32_t sector_no, uint32_t numsectors, uint8_t *out);

@@ -28,7 +28,7 @@
 #include "draw.h"
 
 static nand_metrics nand[NAND_COUNT];
-static aes_ctr NANDCTR;
+static aes_ctr NANDCTR = {{{0}}, AES_CNT_INPUT_BE_NORMAL}; //Reverse LE is optimal for AES CTR mode
 int sysver;
 /*
 #define FS_COUNTER_DISPLACEMENT32 0x0C
@@ -98,6 +98,7 @@ uint_fast8_t nandInit() {
 	mbr sd_mbr;
 //	aes_ctr_data *ctr = NULL;
 	uint8_t hash[SHA_256_SIZE];
+	tmio_response cid;
 /*
 	if (getMpInfo() == MPINFO_CTR) {
 		for (size_t i = 0; !ctr && i < sizeof(fsCountersCtr) / sizeof(fsCountersCtr[0]); i++)
@@ -125,11 +126,6 @@ uint_fast8_t nandInit() {
 
 	NANDCTR = (aes_ctr){*ctr, AES_CNT_INPUT_LE_REVERSE}; //Reverse LE is optimal for AES CTR mode
 */
-	tmio_get_cid(TMIO_DEV_NAND, NANDCTR.data.as32);
-	sha(hash, NANDCTR.data.as32, sizeof(NANDCTR.data), SHA_256_MODE);
-	memcpy(NANDCTR.data.as32, hash, sizeof(NANDCTR.data));
-	NANDCTR.mode = AES_CNT_INPUT_BE_REVERSE;
-	
 	tmio_init();
 	if (tmio_init_nand()) {
 		ClearScreen(&bottomScreen, NAVY);
@@ -158,6 +154,10 @@ uint_fast8_t nandInit() {
 //		DisplayScreen(&top2Screen);
 		return 0;
 	}
+
+	tmio_get_cid(TMIO_DEV_NAND, &cid);
+	sha(hash, &cid, sizeof(NANDCTR.data), SHA_256_MODE);
+	memcpy(&NANDCTR.data, hash, sizeof(NANDCTR.data));
 
 	tmio_readsectors(TMIO_DEV_SDMC, 0, 1, (uint8_t*)&sd_mbr);
 	if (sd_mbr.partition_table.marker == END_OF_SECTOR_MARKER)
