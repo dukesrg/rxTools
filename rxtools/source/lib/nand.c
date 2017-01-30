@@ -24,12 +24,13 @@
 #include "nand.h"
 #include "ncsd.h"
 #include "aes.h"
+#include "sha.h"
 #include "draw.h"
 
 static nand_metrics nand[NAND_COUNT];
 static aes_ctr NANDCTR;
 int sysver;
-
+/*
 #define FS_COUNTER_DISPLACEMENT32 0x0C
 #define FS_COUNTER_MAGIC 0x0005C980
 #define FS_COUNTER_MAGIC2 0x800005C9
@@ -48,7 +49,7 @@ static const uint32_t *fsCountersCtr[] = {
 
 // The counter offset of 9.x on new 3DS
 static const uint32_t *fsCounter9Ktr = (uint32_t*)0x080D8B8C;
-
+*/
 static uint_fast8_t getLogicalPartitions(nand_type nidx, nand_partition_index partition) {
 	mbr mbr_in;
 
@@ -95,8 +96,9 @@ static uint_fast8_t getPartitions(nand_type nidx, uint32_t first_sector, uint32_
 
 uint_fast8_t nandInit() {
 	mbr sd_mbr;
-	aes_ctr_data *ctr = NULL;
-
+//	aes_ctr_data *ctr = NULL;
+	uint8_t hash[SHA_256_SIZE];
+/*
 	if (getMpInfo() == MPINFO_CTR) {
 		for (size_t i = 0; !ctr && i < sizeof(fsCountersCtr) / sizeof(fsCountersCtr[0]); i++)
 			if (*fsCountersCtr[i] == FS_COUNTER_MAGIC) {
@@ -120,9 +122,13 @@ uint_fast8_t nandInit() {
 //		DisplayScreen(&top2Screen);
 		return 0;
 	}
-	
-	NANDCTR = (aes_ctr){*ctr, AES_CNT_INPUT_LE_REVERSE}; //Reverse LE is optimal for AES CTR mode
 
+	NANDCTR = (aes_ctr){*ctr, AES_CNT_INPUT_LE_REVERSE}; //Reverse LE is optimal for AES CTR mode
+*/
+	tmio_get_cid(TMIO_DEV_NAND, NANDCTR.data.as32);
+	sha(hash, NANDCTR.data.as32, sizeof(NANDCTR.data), SHA_256_MODE);
+	memcpy(NANDCTR.data.as32, hash, sizeof(NANDCTR.data));
+	
 	tmio_init();
 	if (tmio_init_nand()) {
 		ClearScreen(&bottomScreen, NAVY);
