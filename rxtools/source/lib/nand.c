@@ -128,6 +128,7 @@ uint_fast8_t nandInit() {
 	tmio_get_cid(TMIO_DEV_NAND, NANDCTR.data.as32);
 	sha(hash, NANDCTR.data.as32, sizeof(NANDCTR.data), SHA_256_MODE);
 	memcpy(NANDCTR.data.as32, hash, sizeof(NANDCTR.data));
+	NANDCTR.mode = AES_CNT_INPUT_BE_REVERSE;
 	
 	tmio_init();
 	if (tmio_init_nand()) {
