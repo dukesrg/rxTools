@@ -42,10 +42,7 @@
 
 void waitcycles(uint32_t val);
 
-struct tmio_dev tmio_dev[TMIO_DEV_NUM] = {
-	{ .total_size = 0 },
-	{ .total_size = 0 }
-};
+tmio_device tmio_dev[TMIO_DEV_NUM] = {0};
 
 _Static_assert(TMIO_DEV_NUM == 2,
 	"TMIO device numer doesn't accord with the driver context.");
@@ -365,11 +362,7 @@ uint32_t tmio_init_nand()
 		return 0;
 
 	//NAND
-	tmio_dev[TMIO_DEV_NAND].isSDHC = 0;
-	tmio_dev[TMIO_DEV_NAND].SDOPT = 0;
-	tmio_dev[TMIO_DEV_NAND].res = 0;
-	tmio_dev[TMIO_DEV_NAND].initarg = 1;
-	tmio_dev[TMIO_DEV_NAND].clk = 0x80;
+	tmio_dev[TMIO_DEV_NAND] = (tmio_device){1, 0, 0x80, 0, 0, 0};
 
 	inittarget(TMIO_DEV_NAND);
 	waitcycles(0xF000);
@@ -442,11 +435,7 @@ uint32_t tmio_init_sdmc()
 		return 0;
 
 	//SD
-	tmio_dev[TMIO_DEV_SDMC].isSDHC = 0;
-	tmio_dev[TMIO_DEV_SDMC].SDOPT = 0;
-	tmio_dev[TMIO_DEV_SDMC].res = 0;
-	tmio_dev[TMIO_DEV_SDMC].initarg = 0;
-	tmio_dev[TMIO_DEV_SDMC].clk = 0x80;
+	tmio_dev[TMIO_DEV_SDMC] = (tmio_device){0, 0, 0x80, 0, 0, 0};
 
 	inittarget(TMIO_DEV_SDMC);
 	waitcycles(0xF000);

@@ -145,6 +145,11 @@ uint_fast8_t nandInit() {
 //		DisplayScreen(&top2Screen);
 		return 0;
 	}
+
+	tmio_get_cid(TMIO_DEV_NAND, &cid);
+	sha(hash, &cid, sizeof(NANDCTR.data), SHA_256_MODE);
+	memcpy(&NANDCTR.data, hash, sizeof(NANDCTR.data));
+
 	if (!getPartitions(SYSNAND, 0, 0)) {
 		ClearScreen(&bottomScreen, PURPLE);
 		ClearScreen(&top1Screen, NAVY);
@@ -154,10 +159,6 @@ uint_fast8_t nandInit() {
 //		DisplayScreen(&top2Screen);
 		return 0;
 	}
-
-	tmio_get_cid(TMIO_DEV_NAND, &cid);
-	sha(hash, &cid, sizeof(NANDCTR.data), SHA_256_MODE);
-	memcpy(&NANDCTR.data, hash, sizeof(NANDCTR.data));
 
 	tmio_readsectors(TMIO_DEV_SDMC, 0, 1, (uint8_t*)&sd_mbr);
 	if (sd_mbr.partition_table.marker == END_OF_SECTOR_MARKER)

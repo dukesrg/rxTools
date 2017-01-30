@@ -34,14 +34,14 @@ enum tmio_dev_id {
 	TMIO_DEV_NUM
 };
 
-struct tmio_dev {
+typedef struct {
 	uint32_t initarg;
 	uint32_t isSDHC;
 	uint32_t clk;
 	uint32_t SDOPT;
 	uint32_t total_size; //size in sectors of the device
 	uint32_t res;
-};
+} tmio_device;
 
 typedef union {
 	uint8_t as8[16];
@@ -50,7 +50,7 @@ typedef union {
 
 #define REG_TMIO_RESP	((volatile tmio_response*)0x1000600C)
 
-extern struct tmio_dev tmio_dev[TMIO_DEV_NUM];
+extern tmio_device tmio_dev[TMIO_DEV_NUM];
 
 void tmio_init(void);
 uint32_t tmio_init_sdmc(void);
