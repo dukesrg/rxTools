@@ -48,7 +48,7 @@ DSTATUS disk_status (
 			return RES_PARERR;
 	}
 
-	return tmio_dev[d].total_size > 0 ? RES_OK : STA_NOINIT;
+	return tmio_get_size(d) > 0 ? RES_OK : STA_NOINIT;
 }
 
 

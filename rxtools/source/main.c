@@ -290,16 +290,20 @@ void toolsmain() {
 	) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 /*	char tmpstr[100];
 	aes_ctr ctr;
-	GetNANDCTROLD(&ctr);
-	sprintf(tmpstr, "%08lX %08lX %08lX %08lX", ctr.data.as32[0], ctr.data.as32[1], ctr.data.as32[2], ctr.data.as32[3]);
-	DrawStringRect(&bottomScreen, lang(tmpstr), &(Rect){0, 0, 240, 32}, GREEN, style.valueAlign, 16);
-	GetNANDCTR(&ctr);
-	sprintf(tmpstr, "%08lX %08lX %08lX %08lX", ctr.data.as32[0], ctr.data.as32[1], ctr.data.as32[2], ctr.data.as32[3]);
-	DrawStringRect(&bottomScreen, lang(tmpstr), &(Rect){0, 32, 240, 32}, RED, style.valueAlign, 16);
 	GetNANDCTRCID(&ctr);
 	sprintf(tmpstr, "%08lX %08lX %08lX %08lX", ctr.data.as32[0], ctr.data.as32[1], ctr.data.as32[2], ctr.data.as32[3]);
-	DrawStringRect(&bottomScreen, lang(tmpstr), &(Rect){0, 64, 240, 32}, CYAN, style.valueAlign, 16);
-	DisplayScreen(&bottomScreen);
+	DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, RED, style.valueAlign, 16);
+	GetNANDCTRCSD(&ctr);
+	sprintf(tmpstr, "%08lX %08lX %08lX %08lX", ctr.data.as32[0], ctr.data.as32[1], ctr.data.as32[2], ctr.data.as32[3]);
+	DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 32, 400, 32}, CYAN, style.valueAlign, 16);
+	GetSDMCCTRCID(&ctr);
+	sprintf(tmpstr, "%08lX %08lX %08lX %08lX", ctr.data.as32[0], ctr.data.as32[1], ctr.data.as32[2], ctr.data.as32[3]);
+	DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 64, 400, 32}, GREEN, style.valueAlign, 16);
+	GetSDMCCTRCSD(&ctr);
+	sprintf(tmpstr, "%08lX %08lX %08lX %08lX", ctr.data.as32[0], ctr.data.as32[1], ctr.data.as32[2], ctr.data.as32[3]);
+	sprintf(tmpstr, "%lu %u", tmio_get_size(TMIO_DEV_NAND), tmio_get_csd(TMIO_DEV_NAND)->sd1.CSD_STRUCTURE);
+	DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 96, 400, 32}, BLUE, style.valueAlign, 16);
+	DisplayScreen(&top1Screen);
 	while(1);		
 */
 	pad = GetInput();

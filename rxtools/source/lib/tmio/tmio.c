@@ -42,10 +42,13 @@
 
 void waitcycles(uint32_t val);
 
-tmio_device tmio_dev[TMIO_DEV_NUM] = {0};
-
 _Static_assert(TMIO_DEV_NUM == 2,
 	"TMIO device numer doesn't accord with the driver context.");
+
+tmio_device tmio_dev[TMIO_DEV_NUM] = {
+	(tmio_device){1, 0, 0x80, 0, {{0}}, {{0}}},
+	(tmio_device){0, 0, 0x80, 0, {{0}}, {{0}}}
+};
 
 static int waitDataend = 0;
 
@@ -290,7 +293,7 @@ uint32_t tmio_writesectors(enum tmio_dev_id target,
 	waitDataend = 1;
 	return 0;
 }
-
+/*
 static uint32_t calcSDSize(uint8_t* csd, int type)
 {
   uint32_t result=0;
@@ -319,6 +322,16 @@ static uint32_t calcSDSize(uint8_t* csd, int type)
   return result;
 }
 
+uint32_t sd_get_size(sd_csd csd) {
+	switch(csd.v1.CSD_STRUCTURE) {
+		case CSD_STRUCTURE_V1:
+			return (csd.v1.C_SIZE_L + (csd.v1.C_SIZE_H << 2) + 1) << (csd.v1.C_SIZE_MULT + csd.v1.READ_BL_LEN - 7); //2 from mult, -9 from sector size=512
+		case CSD_STRUCTURE_V2:
+			return (csd.v2.C_SIZE + 1) << 10;
+	}
+	return 0;
+}
+*/
 void tmio_init()
 {
 	tmio_mask16(REG_DATACTL32, 0x0800, 0x0000);
@@ -358,11 +371,11 @@ uint32_t tmio_init_nand()
 {
 	uint32_t r;
 
-	if (tmio_dev[TMIO_DEV_NAND].total_size > 0)
+	if (tmio_dev[TMIO_DEV_NAND].csd.emmc.CCC) //Already initialised if card class defined in CSD
 		return 0;
 
 	//NAND
-	tmio_dev[TMIO_DEV_NAND] = (tmio_device){1, 0, 0x80, 0, 0, 0};
+	tmio_dev[TMIO_DEV_NAND] = (tmio_device){1, 0, 0x80, 0, {{0}}, {{0}}}; //WTF? don't work with pre-initialized values
 
 	inittarget(TMIO_DEV_NAND);
 	waitcycles(0xF000);
@@ -379,6 +392,8 @@ uint32_t tmio_init_nand()
 	while((tmio_read32(REG_SDRESP0) & 0x80000000) == 0);
 	
 	tmio_send_command(MMC_ALL_SEND_CID | TMIO_CMD_RESP_R2,0x0,0);
+tmio_wait_respend();
+tmio_dev[TMIO_DEV_NAND].cid = ((tmio_response*)((uint8_t*)TMIO_BASE + REG_SDRESP0))->cid;
 	r = tmio_send_command(MMC_SET_RELATIVE_ADDR | TMIO_CMD_RESP_R1,
 		tmio_dev[TMIO_DEV_NAND].initarg << 0x10,1);
 	if(r)
@@ -393,7 +408,7 @@ uint32_t tmio_init_nand()
 	if(r)
 		return r;
 	
-	tmio_dev[TMIO_DEV_NAND].total_size = calcSDSize((uint8_t*)TMIO_BASE + REG_SDRESP0,0);
+tmio_dev[TMIO_DEV_NAND].csd = ((tmio_response*)((uint8_t*)TMIO_BASE + REG_SDRESP0))->csd;
 	tmio_dev[TMIO_DEV_NAND].clk = 1;
 	setckl(1);
 	
@@ -431,11 +446,11 @@ uint32_t tmio_init_sdmc()
 	uint32_t resp;
 	uint32_t r;
 
-	if (tmio_dev[TMIO_DEV_SDMC].total_size > 0)
+	if (tmio_dev[TMIO_DEV_SDMC].csd.sd1.CCC)
 		return 0;
 
 	//SD
-	tmio_dev[TMIO_DEV_SDMC] = (tmio_device){0, 0, 0x80, 0, 0, 0};
+	tmio_dev[TMIO_DEV_SDMC] = (tmio_device){0, 0, 0x80, 0, {{0}}, {{0}}};
 
 	inittarget(TMIO_DEV_SDMC);
 	waitcycles(0xF000);
@@ -473,7 +488,8 @@ uint32_t tmio_init_sdmc()
 	tmio_dev[TMIO_DEV_SDMC].isSDHC = temp2;
 	
 	tmio_send_command(MMC_ALL_SEND_CID | TMIO_CMD_RESP_R2,0,0);
-	
+	tmio_wait_respend();
+	tmio_dev[TMIO_DEV_SDMC].cid = ((tmio_response*)((uint8_t*)TMIO_BASE + REG_SDRESP0))->cid;
 	r = tmio_send_command(MMC_SET_RELATIVE_ADDR | TMIO_CMD_RESP_R1,0,1);
 	if(r)
 		return r;
@@ -488,8 +504,7 @@ uint32_t tmio_init_sdmc()
 	r = tmio_wait_respend();
 	if(r)
 		return r;
-
-	tmio_dev[TMIO_DEV_SDMC].total_size = calcSDSize((uint8_t*)TMIO_BASE + REG_SDRESP0,-1);
+	tmio_dev[TMIO_DEV_SDMC].csd = ((tmio_response*)((uint8_t*)TMIO_BASE + REG_SDRESP0))->csd;
 	tmio_dev[TMIO_DEV_SDMC].clk = 1;
 	setckl(1);
 	
@@ -520,19 +535,29 @@ uint32_t tmio_init_sdmc()
 	return 0;
 }
 
-uint32_t tmio_wrprotected(enum tmio_dev_id target)
-{
+uint32_t tmio_wrprotected(enum tmio_dev_id target) {
 	inittarget(target);
 	return tmio_read32(REG_SDSTATUS) & TMIO_STAT_WRPROTECT;
 }
 
-uint32_t tmio_get_cid(enum tmio_dev_id target, tmio_response *cid)
-{
-	inittarget(target);
-	tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1B, 0, 0);
-	tmio_send_command(MMC_SEND_CID | TMIO_CMD_RESP_R2, tmio_dev[target].initarg << 0x10, 0);
-	tmio_wait_respend();
-	*cid = *REG_TMIO_RESP;
-	tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1B, tmio_dev[target].initarg << 0x10, 0);
+card_csd *tmio_get_csd(enum tmio_dev_id target) {
+	return &tmio_dev[target].csd;
+}
+
+uint32_t tmio_get_size(enum tmio_dev_id target) {
+	card_csd *csd = &tmio_dev[target].csd;
+	switch(csd->sd1.CSD_STRUCTURE) {
+		case CSD_STRUCTURE_EMMC4:
+			if (csd->emmc.SPEC_VERS != SPEC_VERS_EMMC4)
+				return 0;
+		case CSD_STRUCTURE_SD1:
+			return (csd->sd1.C_SIZE_L + (csd->sd1.C_SIZE_H << 2) + 1) << (csd->sd1.C_SIZE_MULT + csd->sd1.READ_BL_LEN - 7); //2 from mult, -9 from sector size=512
+		case CSD_STRUCTURE_SD2:
+			return (csd->sd2.C_SIZE + 1) << 10;
+	}
 	return 0;
+}
+
+card_cid *tmio_get_cid(enum tmio_dev_id target) {
+	return &tmio_dev[target].cid;
 }

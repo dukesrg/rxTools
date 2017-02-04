@@ -96,9 +96,7 @@ static uint_fast8_t getPartitions(nand_type nidx, uint32_t first_sector, uint32_
 
 uint_fast8_t nandInit() {
 	mbr sd_mbr;
-//	aes_ctr_data *ctr = NULL;
 	uint8_t hash[SHA_256_SIZE];
-	tmio_response cid;
 /*
 	if (getMpInfo() == MPINFO_CTR) {
 		for (size_t i = 0; !ctr && i < sizeof(fsCountersCtr) / sizeof(fsCountersCtr[0]); i++)
@@ -146,8 +144,7 @@ uint_fast8_t nandInit() {
 		return 0;
 	}
 
-	tmio_get_cid(TMIO_DEV_NAND, &cid);
-	sha(hash, &cid, sizeof(NANDCTR.data), SHA_256_MODE);
+	sha(hash, tmio_get_cid(TMIO_DEV_NAND), sizeof(card_cid), SHA_256_MODE);
 	memcpy(&NANDCTR.data, hash, sizeof(NANDCTR.data));
 
 	if (!getPartitions(SYSNAND, 0, 0)) {
@@ -167,7 +164,7 @@ uint_fast8_t nandInit() {
 				getPartitions(i, sd_mbr.partition_table.partition[i].relative_sectors, sd_mbr.partition_table.partition[i].total_sectors);
 
 	if (!nand[EMUNAND].sectors_count &&
-		(getPartitions(EMUNAND, 1, nand[SYSNAND].sectors_count) || getPartitions(EMUNAND, 1, tmio_dev[TMIO_DEV_NAND].total_size)) &&
+		(getPartitions(EMUNAND, 1, nand[SYSNAND].sectors_count) || getPartitions(EMUNAND, 1, tmio_get_size(TMIO_DEV_NAND))) &&
 		sd_mbr.partition_table.marker == END_OF_SECTOR_MARKER &&
 		(sd_mbr.partition_table.partition[1].system_id == PARTITION_TYPE_NONE || sd_mbr.partition_table.partition[1].system_id == PARTITION_TYPE_3DS_NAND)
 	) {
