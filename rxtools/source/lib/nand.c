@@ -125,7 +125,7 @@ uint_fast8_t nandInit() {
 	NANDCTR = (aes_ctr){*ctr, AES_CNT_INPUT_LE_REVERSE}; //Reverse LE is optimal for AES CTR mode
 */
 	tmio_init();
-	if (tmio_init_nand()) {
+	if (tmio_init_dev(TMIO_DEV_NAND)) {
 		ClearScreen(&bottomScreen, NAVY);
 		ClearScreen(&top1Screen, NAVY);
 //		ClearScreen(&top2Screen, NAVY);
@@ -134,7 +134,7 @@ uint_fast8_t nandInit() {
 //		DisplayScreen(&top2Screen);
 		return 0;
 	}
-	if (tmio_init_sdmc()) {
+	if (tmio_init_dev(TMIO_DEV_SDMC)) {
 		ClearScreen(&bottomScreen, SALMON);
 		ClearScreen(&top1Screen, SALMON);
 //		ClearScreen(&top2Screen, SALMON);

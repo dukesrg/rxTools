@@ -121,9 +121,11 @@ typedef struct {
 #define REG_TMIO_RESP	((volatile sd_cid*)0x1000600C)
 
 void tmio_init(void);
+/*
 uint32_t tmio_init_sdmc(void);
 uint32_t tmio_init_nand(void);
-
+*/
+uint32_t tmio_init_dev(enum tmio_dev_id target);
 card_cid *tmio_get_cid(enum tmio_dev_id target);
 uint32_t tmio_get_size(enum tmio_dev_id target);
 card_csd *tmio_get_csd(enum tmio_dev_id target);
