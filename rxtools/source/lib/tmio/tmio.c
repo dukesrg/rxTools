@@ -37,6 +37,7 @@
 #include "tmio_hardware.h"
 
 #include "configuration.h"
+#include "draw.h"
 
 #define DATA32_SUPPORT
 
@@ -45,9 +46,9 @@ void waitcycles(uint32_t val);
 _Static_assert(TMIO_DEV_NUM == 2,
 	"TMIO device numer doesn't accord with the driver context.");
 
-tmio_device tmio_dev[TMIO_DEV_NUM] = {
-	(tmio_device){1, 0, 0x80, 0, {{0}}, {{0}}},
-	(tmio_device){0, 1, 0x80, 0, {{0}}, {{0}}}
+tmio_device tmio_dev[] = {
+	{0, 1, 0x80, 0, {}, {}},
+	{1, 0, 0x80, 0, {}, {}}
 };
 
 static int waitDataend = 0;
@@ -378,7 +379,6 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 	tmio_send_command(MMC_IDLE, 0, 0);
 	
 	if (target == TMIO_DEV_NAND) {
-		*dev = (tmio_device){1, 0, 0x80, 0, {{0}}, {{0}}}; //WTF? don't work with pre-initialized values
 		while (
 			tmio_send_command(MMC_SEND_OP_COND | TMIO_CMD_RESP_R3, 0x100000, 0) ||
 			tmio_wait_respend() ||
@@ -388,8 +388,6 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 		if ((error = tmio_send_command(SD_SEND_IF_COND | TMIO_CMD_RESP_R1, 0x1AA, 1)))
 			return error;
 
-		*dev = (tmio_device){0, 1, 0x80, 0, {{0}}, {{0}}};
-
 		uint32_t resp;
 		uint32_t temp = tmio_wait_respend() ? 0 : 0x40000000;
 		while (
@@ -398,7 +396,7 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 			tmio_wait_respend() ||
 			!((resp = tmio_read32(REG_SDRESP0)) & 0x80000000)
 		);
-		if (!(resp & 0x40000000) || !temp)
+		if (!(resp & 0x40000000 & temp))
 			dev->isSDHC = 0;
 	}
 
