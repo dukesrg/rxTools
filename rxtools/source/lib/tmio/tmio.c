@@ -47,7 +47,7 @@ _Static_assert(TMIO_DEV_NUM == 2,
 
 tmio_device tmio_dev[TMIO_DEV_NUM] = {
 	(tmio_device){1, 0, 0x80, 0, {{0}}, {{0}}},
-	(tmio_device){0, 0, 0x80, 0, {{0}}, {{0}}}
+	(tmio_device){0, 1, 0x80, 0, {{0}}, {{0}}}
 };
 
 static int waitDataend = 0;
@@ -379,35 +379,33 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 	
 	if (target == TMIO_DEV_NAND) {
 		*dev = (tmio_device){1, 0, 0x80, 0, {{0}}, {{0}}}; //WTF? don't work with pre-initialized values
-		while (tmio_send_command(MMC_SEND_OP_COND | TMIO_CMD_RESP_R3, 0x100000, 0) ||
-			 tmio_wait_respend() ||
-			 (tmio_read32(REG_SDRESP0) & 0x80000000) == 0);
+		while (
+			tmio_send_command(MMC_SEND_OP_COND | TMIO_CMD_RESP_R3, 0x100000, 0) ||
+			tmio_wait_respend() ||
+			!(tmio_read32(REG_SDRESP0) & 0x80000000)
+		);
 	} else {
 		if ((error = tmio_send_command(SD_SEND_IF_COND | TMIO_CMD_RESP_R1, 0x1AA, 1)))
 			return error;
 
-		*dev = (tmio_device){0, 0, 0x80, 0, {{0}}, {{0}}};
+		*dev = (tmio_device){0, 1, 0x80, 0, {{0}}, {{0}}};
 
 		uint32_t resp;
 		uint32_t temp = tmio_wait_respend() ? 0 : 0x40000000;
-		uint32_t temp2 = 0;
-		do {
-			while (1) {
-				tmio_send_command(MMC_APP_CMD | TMIO_CMD_RESP_R1, dev->initarg << 0x10, 0);
-				temp2 = 1;
-				if (tmio_send_command(SD_APP_OP_COND | TMIO_CMD_APP | TMIO_CMD_RESP_R3, 0x00FF8000 | temp,1))
-					continue;
-				if (!tmio_wait_respend())
-					break;
-			}
-			resp = tmio_read32(REG_SDRESP0);
-		} while((resp & 0x80000000) == 0);
-		if(!((resp >> 30) & 1) || !temp)
-			temp2 = 0;
-		dev->isSDHC = temp2;			
+		while (
+			tmio_send_command(MMC_APP_CMD | TMIO_CMD_RESP_R1, dev->initarg << 0x10, 0) ||
+			tmio_send_command(SD_APP_OP_COND | TMIO_CMD_APP | TMIO_CMD_RESP_R3, 0x00FF8000 | temp, 1) ||
+			tmio_wait_respend() ||
+			!((resp = tmio_read32(REG_SDRESP0)) & 0x80000000)
+		);
+		if (!(resp & 0x40000000) || !temp)
+			dev->isSDHC = 0;
 	}
-	tmio_send_command(MMC_ALL_SEND_CID | TMIO_CMD_RESP_R2, 0, 0);
-	tmio_wait_respend();
+
+	if (
+		(error = tmio_send_command(MMC_ALL_SEND_CID | TMIO_CMD_RESP_R2, 0, 0)) ||
+		(error = tmio_wait_respend())
+	) return error;
 	dev->cid = ((tmio_response*)((uint8_t*)TMIO_BASE + REG_SDRESP0))->cid;
 
 	if (
@@ -422,12 +420,11 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 		(error = tmio_send_command(MMC_SEND_CSD | TMIO_CMD_RESP_R2, dev->initarg << 0x10, target != TMIO_DEV_NAND)) ||
 		(error = tmio_wait_respend())
 	) return error;
-
 	dev->csd = ((tmio_response*)((uint8_t*)TMIO_BASE + REG_SDRESP0))->csd;
 	setckl(dev->clk = 1);
 	
 	tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->initarg << 0x10, 0);
-	
+
 	if (
 		target == TMIO_DEV_SDMC &&
 		(error = tmio_send_command(MMC_APP_CMD | TMIO_CMD_RESP_R1, dev->initarg << 0x10, 1))
@@ -436,13 +433,13 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 	dev->SDOPT = 1;
 	
 	if (
-		((target == TMIO_DEV_NAND && (
+		(target == TMIO_DEV_NAND && (
 			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_RESP_R1B, 0x03B70100, 1)) ||
 			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_RESP_R1B, 0x03B90100, 1))
 		)) || (
 			target == TMIO_DEV_SDMC &&
 			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_APP | TMIO_CMD_RESP_R1, 2, 1))
-		)) ||
+		) ||
 		(error = tmio_send_command(MMC_SEND_STATUS | TMIO_CMD_RESP_R1, dev->initarg << 0x10, 1)) ||
 		(error = tmio_send_command(MMC_SET_BLOCKLEN | TMIO_CMD_RESP_R1, TMIO_BBS, 1))
 	) return error;
