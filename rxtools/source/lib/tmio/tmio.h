@@ -103,19 +103,19 @@ typedef union {
 } card_csd;
 
 typedef union {
-	card_cid cid;
-	card_csd csd;
+	card_cid CID;
+	card_csd CSD;
 	uint8_t as8[16];
 	uint32_t as32[4];
 } tmio_response;
 
 typedef struct {
-	uint32_t initarg;
-	uint32_t isSDHC;
-	uint32_t clk;
-	uint32_t SDOPT;
-	card_cid cid;
-	card_csd csd;
+	uint32_t RCA;
+	uint_fast16_t clk;
+	uint_fast8_t addr_mul;
+	uint_fast8_t SDOPT;
+	card_cid CID;
+	card_csd CSD;
 } tmio_device;
 
 #define REG_TMIO_RESP	((volatile sd_cid*)0x1000600C)
