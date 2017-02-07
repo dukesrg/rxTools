@@ -47,7 +47,7 @@ _Static_assert(TMIO_DEV_NUM == 2,
 	"TMIO device numer doesn't accord with the driver context.");
 
 tmio_device tmio_dev[] = {
-	{0, 1, 0x80, 0, {}, {}},
+	{0, 0, 0x80, 0, {}, {}},
 	{1, 0, 0x80, 0, {}, {}}
 };
 
@@ -380,24 +380,24 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 	
 	if (target == TMIO_DEV_NAND) {
 		while (
-			tmio_send_command(MMC_SEND_OP_COND | TMIO_CMD_RESP_R3, 0x100000, 0) ||
+			tmio_send_command(MMC_SEND_OP_COND | TMIO_CMD_RESP_R3, MMC_OCR_32_33, 0) ||
 			tmio_wait_respend() ||
-			!(tmio_read32(REG_SDRESP0) & 0x80000000)
+			!(tmio_read32(REG_SDRESP0) & MMC_READY)
 		);
 	} else {
-		if ((error = tmio_send_command(SD_SEND_IF_COND | TMIO_CMD_RESP_R1, 0x1AA, 1)))
+		if ((error = tmio_send_command(SD_SEND_IF_COND | TMIO_CMD_RESP_R1, SD_VHS_27_36 | SD_CHECK_PATTERN, 1)))
 			return error;
 
 		uint32_t resp;
-		uint32_t temp = tmio_wait_respend() ? 0 : 0x40000000;
+		uint32_t hcs = tmio_wait_respend() ? SD_HCS_SDSC : SD_HCS_SDHC;
 		while (
 			tmio_send_command(MMC_APP_CMD | TMIO_CMD_RESP_R1, dev->initarg << 0x10, 0) ||
-			tmio_send_command(SD_APP_OP_COND | TMIO_CMD_APP | TMIO_CMD_RESP_R3, 0x00FF8000 | temp, 1) ||
+			tmio_send_command(SD_APP_OP_COND | TMIO_CMD_APP | TMIO_CMD_RESP_R3, MMC_OCR_27_36 | hcs, 1) ||
 			tmio_wait_respend() ||
-			!((resp = tmio_read32(REG_SDRESP0)) & 0x80000000)
+			!((resp = tmio_read32(REG_SDRESP0)) & MMC_READY)
 		);
-		if (!(resp & 0x40000000 & temp))
-			dev->isSDHC = 0;
+		if (resp & hcs & SD_HCS_MASK)
+			dev->isSDHC = 1;
 	}
 
 	if (
@@ -432,8 +432,8 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 	
 	if (
 		(target == TMIO_DEV_NAND && (
-			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_RESP_R1B, 0x03B70100, 1)) ||
-			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_RESP_R1B, 0x03B90100, 1))
+			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_RESP_R1B, MMC_EXT_CSD_ACCESS_MODE_WRITE_BYTE | MMC_EXT_CSD_BUS_WIDTH | MMC_BUS_WIDTH_4, 1)) ||
+			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_RESP_R1B, MMC_EXT_CSD_ACCESS_MODE_WRITE_BYTE | MMC_EXT_CSD_HS_TIMING | MMC_HS_TIMING, 1))
 		)) || (
 			target == TMIO_DEV_SDMC &&
 			(error = tmio_send_command(MMC_SWITCH | TMIO_CMD_APP | TMIO_CMD_RESP_R1, 2, 1))
