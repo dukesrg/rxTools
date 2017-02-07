@@ -222,9 +222,6 @@ void toolsmain() {
 	uint32_t pad;
 	uint_fast8_t themeFailed = 0;
 
-	// Enable TMIO IRQ
-	*(volatile uint32_t *)0x10001000 = 0x00010000;
-
 	preloadStringsA();
 
 	// init screen buffer addresses from const vectors

@@ -37,7 +37,7 @@
 #include "tmio_hardware.h"
 
 #include "configuration.h"
-#include "draw.h"
+#include "irq.h"
 
 #define DATA32_SUPPORT
 
@@ -83,13 +83,9 @@ static void setckl(uint_fast16_t data)
 	tmio_mask16(REG_SDCLKCTL,0x0,0x100);
 }
 
-static uint_fast8_t tmio_wfi() {
-	// Acknowledge the previous TMIO IRQ
-	*(volatile uint32_t *)0x10001004 = 0x00010000;
-
-	// Wait for interrupt
-	__asm__ volatile ("mcr p15, 0, %0, c7, c0, 4" :: "r"(0));
-
+static inline uint_fast8_t tmio_wfi() {
+	IRQ_ACK(IRQ_SDIO_1);
+	IRQ_WAIT();
 	return 1;
 }
 
@@ -272,6 +268,8 @@ uint32_t sd_get_size(sd_csd csd) {
 */
 void tmio_init()
 {
+	IRQ_ENABLE(IRQ_SDIO_1);
+
 	tmio_mask16(REG_DATACTL32, 0x0800, 0x0000);
 	tmio_mask16(REG_DATACTL32, 0x1000, 0x0000);
 	tmio_mask16(REG_DATACTL32, 0x0000, 0x0402);
