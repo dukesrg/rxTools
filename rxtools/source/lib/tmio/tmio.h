@@ -105,8 +105,6 @@ typedef union {
 typedef union {
 	card_cid CID;
 	card_csd CSD;
-	uint8_t as8[16];
-	uint32_t as32[4];
 } tmio_response;
 
 typedef struct {
@@ -118,23 +116,48 @@ typedef struct {
 	card_csd CSD;
 } tmio_device;
 
-#define REG_TMIO_RESP	((volatile sd_cid*)0x1000600C)
+#define IO_REG_BASE		0x10000000
+#define IO_REG(x)		(IO_REG_BASE + x)
+#define IO_REG_8(x)		*(volatile uint8_t*)IO_REG(x)
+#define IO_REG_16(x)		*(volatile uint16_t*)IO_REG(x)
+#define IO_REG_32(x)		*(volatile uint32_t*)IO_REG(x)
+
+#define REG_MMC_BASE		0x6000
+#define REG_MMC_16(x)		IO_REG_16(REG_MMC_BASE + x)
+#define REG_MMC_32(x)		IO_REG_32(REG_MMC_BASE + x)
+#define REG_MMC_128(x)		(*(volatile tmio_response*)IO_REG(REG_MMC_BASE + x))
+
+#define REG_MMC_CMD		REG_MMC_16(0x00)
+#define REG_MMC_PORTSEL		REG_MMC_16(0x02)
+#define REG_MMC_CMDARG		REG_MMC_32(0x04)
+#define REG_MMC_STOP		REG_MMC_16(0x08)
+#define REG_MMC_BLKCOUNT	REG_MMC_16(0x0A)
+#define REG_MMC_RESP0		REG_MMC_32(0x0C)
+#define REG_MMC_RESP		REG_MMC_128(0x0C)
+#define REG_MMC_STATUS		REG_MMC_32(0x1C)
+#define REG_MMC_IRMASK		REG_MMC_32(0x20)
+#define REG_MMC_CLKCTL		REG_MMC_16(0x24)
+#define REG_MMC_BLKLEN		REG_MMC_16(0x26)
+#define REG_MMC_OPT		REG_MMC_16(0x28)
+#define REG_MMC_FIFO		REG_MMC_16(0x30)
+#define REG_MMC_DATACTL 	REG_MMC_16(0xD8)
+#define REG_MMC_RESET		REG_MMC_16(0xE0)
+//#define REG_MMC_PROTECTED	REG_MMC_16(0xF6) //bit 0 determines if sd is protected or not?
+#define REG_MMC_FC		REG_MMC_16(0xFC)
+#define REG_MMC_FE		REG_MMC_16(0xFE)
+#define REG_MMC_DATACTL32 	REG_MMC_16(0x100)
+#define REG_MMC_BLKLEN32	REG_MMC_16(0x104)
+#define REG_MMC_BLKCOUNT32	REG_MMC_16(0x108)
+#define REG_MMC_FIFO32		REG_MMC_32(0x10C)
+//#define REG_MMC_CLK_AND_WAIT_CTL	REG_MMC_32(0x138)
+//#define REG_MMC_RESET_SDIO	REG_MMC_32(0x1E0)
 
 void tmio_init(void);
-/*
-uint32_t tmio_init_sdmc(void);
-uint32_t tmio_init_nand(void);
-*/
 uint32_t tmio_init_dev(enum tmio_dev_id target);
 card_cid *tmio_get_cid(enum tmio_dev_id target);
 uint32_t tmio_get_size(enum tmio_dev_id target);
-card_csd *tmio_get_csd(enum tmio_dev_id target);
-
-uint32_t tmio_readsectors(enum tmio_dev_id target,
-	uint32_t sector_no, uint32_t numsectors, uint8_t *out);
-
-uint32_t tmio_writesectors(enum tmio_dev_id target,
-	uint32_t sector_no, uint32_t numsectors, uint8_t *in);
+uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint32_t numsectors, uint8_t *out);
+uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint32_t numsectors, uint8_t *in);
 
 #define TMIO_BBS 512
 
