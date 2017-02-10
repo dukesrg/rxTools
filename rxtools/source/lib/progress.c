@@ -72,23 +72,24 @@ static void statusDrawStart() {
 		DrawSplash(&bottomScreen, style.bottomimg);
 	else
 		ClearScreen(&bottomScreen, BLACK);
-	DrawStringRect(&bottomScreen, status_caption, &style.activityRect, style.activityColor, style.activityAlign, 30);
+	DrawStringRect(progress_screen, status_caption, &style.activityRect, style.activityColor, style.activityAlign, 30);
 }
 
 static void statusDrawFinish() {
 	DisplayScreen(&bottomScreen);
 	DisplayScreen(&top1Screen);
 //	DisplayScreen(&top2Screen);
-	TryScreenShot();
 }
 
 uint_fast8_t progressSetPos(uintmax_t pos) {
-	statusDrawStart();
+	static uint32_t oldtimeleft = -1;
 	uint32_t timeleft = 0;
+	uint_fast8_t redraw = 0;
 	if ((pos += progress_offset) >= progress_posmax) {
 		pos = progress_posmax;
 		timerStop();
 		wcscpy(status_value, lang(S_COMPLETED));
+		redraw = !(status_features & STATUS_FINISHED);
 		status_features |= STATUS_FINISHED;
 	}
 	if (pos != progress_pos || !pos) {
@@ -96,18 +97,27 @@ uint_fast8_t progressSetPos(uintmax_t pos) {
 			timeleft = timerGet();
 			timeleft = progress_posmax * timeleft / progress_pos - timeleft;
 		}
+		if (!pos || timeleft != oldtimeleft) {
+			oldtimeleft = timeleft;
+			redraw = 1;
+		}
+	}
+
+	if (redraw) {
+		statusDrawStart();
 		DrawProgress(progress_screen, &progress_rect, progress_frame, progress_done, progress_back, progress_textcolor, progress_fontsize, progress_posmax, progress_pos, timeleft);
+		if (pos != progress_posmax && status_features & STATUS_CANCELABLE && GetInput() & keys[KEY_B].mask) {
+			wcscpy(status_value, lang(S_CANCELED));
+			status_features |= STATUS_WAIT | STATUS_FINISHED | STATUS_FAILED;
+		}
+		if (status_features & STATUS_FINISHED) {
+			wcscat(status_value, L" ");
+			swprintf(status_value + wcslen(status_value), _MAX_LFN + 1, lang(SF2_PRESS_BUTTON_ACTION), lang(S_ANY_BUTTON), lang(S_CONTINUE));
+		}
+		DrawStringRect(progress_screen, status_value, &style.activityStatusRect, style.activityColor, style.activityStatusAlign, 16);
+		statusDrawFinish();
 	}
-	if (pos != progress_posmax && status_features & STATUS_CANCELABLE && GetInput() & keys[KEY_B].mask) {
-		wcscpy(status_value, lang(S_CANCELED));
-		status_features |= STATUS_WAIT | STATUS_FINISHED | STATUS_FAILED;
-	}
-	if (status_features & STATUS_FINISHED) {
-		wcscat(status_value, L" ");
-		swprintf(status_value + wcslen(status_value), _MAX_LFN + 1, lang(SF2_PRESS_BUTTON_ACTION), lang(S_ANY_BUTTON), lang(S_CONTINUE));
-	}
-	DrawStringRect(&bottomScreen, status_value, &style.activityStatusRect, style.activityColor, style.activityStatusAlign, 16);
-	statusDrawFinish();
+	TryScreenShot();
 	if (status_features & STATUS_WAIT && status_features & STATUS_FINISHED)
 		InputWait();
 	return !(status_features & STATUS_FAILED);
@@ -138,5 +148,6 @@ void statusInit(uintmax_t gaugemax, uint_fast8_t features, wchar_t *format, ...)
 	} else {
 		statusDrawStart();
 		statusDrawFinish();
+		TryScreenShot();
 	}
 }
