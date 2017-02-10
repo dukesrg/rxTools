@@ -290,7 +290,7 @@ uint_fast16_t DrawInfo(const wchar_t *info, const wchar_t *action, const wchar_t
 }
 
 void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color back, Color textcolor, uint_fast8_t fontsize, uintmax_t posmax, uintmax_t pos, uint32_t timeleft) {
-	static uint_fast16_t oldx = -1;
+//	static uint_fast16_t oldx = -1;
 	uint_fast16_t x;
 	uint_fast8_t h, m, s;
 //	wchar_t percent[5];
@@ -298,8 +298,9 @@ void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color bac
 	
 	if (!posmax) posmax = UINTMAX_MAX;
 	if (pos > posmax) pos = posmax;	
-	if ((x = (rect->w - 2) * pos / posmax) == oldx) return;
-	oldx = x;
+	x = (rect->w - 2) * pos / posmax;
+//	if ((x = (rect->w - 2) * pos / posmax) == oldx) return;
+//	oldx = x;
 	DrawRect(screen, rect, frame);
 	FillRect(screen, &(Rect){rect->x + 1, rect->y + 1, x, rect->h - 2}, done);
 	FillRect(screen, &(Rect){rect->x + 1 + x, rect->y + 1, rect->w - 2 - x, rect->h - 2}, back);
