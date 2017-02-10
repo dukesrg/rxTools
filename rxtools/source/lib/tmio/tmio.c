@@ -114,56 +114,13 @@ static uint32_t tmio_send_command(uint16_t cmd, uint32_t args, uint_fast8_t cap_
 }
 
 uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *out) {
-/*	uint32_t error = 0;
-	uint16_t *dataPtr = (uint16_t*)out;
-
-	inittarget(target);
-	REG_MMC_STOP = 0x0100;
-#ifdef DATA32_SUPPORT
-	uint32_t *dataPtr32 = (uint32_t*)out;
-	REG_MMC_BLKCOUNT32 = numsectors;
-	REG_MMC_BLKLEN32 = TMIO_BBS;
-	REG_MMC_BLKCOUNT = numsectors;
-	REG_MMC_DATACTL32 = TMIO32_ENABLE | TMIO32_IRQ_RXRDY;
-	REG_MMC_IRQ_MASK = ~TMIO_MASK_GW;
-#else
-	REG_MMC_BLKCOUNT = numsectors;
-	REG_MMC_IRQ_MASK = ~(TMIO_MASK_GW | TMIO_STAT_RXRDY);
-#endif
-
-	if (numsectors > 1)
-		tmio_send_command(MMC_READ_MULTIPLE_BLOCK | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT | TMIO_CMD_TRANSFER_READ | TMIO_CMD_TRANSFER_MULTI, sector_no << tmio_dev[target].addr_mul, 0);
-	else
-		tmio_send_command(MMC_READ_SINGLE_BLOCK | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT | TMIO_CMD_TRANSFER_READ, sector_no << tmio_dev[target].addr_mul, 0);
-
-#ifdef DATA32_SUPPORT
-	if (!((uint32_t)dataPtr & 3))
-		while (
-			numsectors-- &&
-			tmio_wfi() &&
-			!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
-		)
-			if (REG_MMC_DATACTL32 & TMIO32_STAT_RXRDY)
-				for (size_t i = TMIO_BBS; i; i-=sizeof(dataPtr32[0]))
-					*dataPtr32++ = REG_MMC_FIFO32;
-	else
-#endif
-		while (
-			numsectors-- &&
-			tmio_wfi() &&
-			!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
-		)
-#ifdef DATA32_SUPPORT
-			if (REG_MMC_DATACTL32 & TMIO32_STAT_RXRDY)
-#endif
-				for (size_t i = TMIO_BBS; i; i-=sizeof(dataPtr[0]))
-					*dataPtr++ = REG_MMC_FIFO;
-*/
 	uint32_t error = 0;
+	uint16_t *dataPtr = (uint16_t*)out;
 
 	inittarget(target);
-	REG_MMC_STOP = 0x0100;
+	REG_MMC_STOP = TMIO_STOP_AUTO;
 #ifdef DATA32_SUPPORT
+	uint32_t *dataPtr32 = (uint32_t*)out;
 	REG_MMC_BLKCOUNT32 = numsectors;
 	REG_MMC_BLKLEN32 = TMIO_BBS;
 	REG_MMC_BLKCOUNT = numsectors;
@@ -174,59 +131,47 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 	REG_MMC_IRQ_MASK = ~(TMIO_MASK_GW | TMIO_STAT_RXRDY);
 #endif
 
-	tmio_send_command(MMC_READ_MULTIPLE_BLOCK
-		| TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT
-		| TMIO_CMD_TRANSFER_READ | TMIO_CMD_TRANSFER_MULTI,
-		sector_no << tmio_dev[target].addr_mul, 0);
-
-	uint16_t *dataPtr = (uint16_t*)out;
-	uint32_t *dataPtr32 = (uint32_t*)out;
-	int useBuf32 = 0 == (3 & ((uint32_t)dataPtr));
-
-	while(numsectors > 0)
-	{
-		tmio_wfi();
-
-		error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW;
-		if(error)
-			return error;
+	tmio_send_command((numsectors > 1 ? (MMC_READ_MULTIPLE_BLOCK | TMIO_CMD_TRANSFER_MULTI) : MMC_READ_SINGLE_BLOCK) | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT | TMIO_CMD_TRANSFER_READ, sector_no << tmio_dev[target].addr_mul, 0);
 
 #ifdef DATA32_SUPPORT
-		if(!(REG_MMC_DATACTL32 & TMIO32_STAT_RXRDY))
-			continue;
+	if (!((uint32_t)dataPtr & 3)) {
+		while (
+			numsectors &&
+			tmio_wfi() &&
+			!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
+		) {
+			if (REG_MMC_DATACTL32 & TMIO32_STAT_RXRDY) {
+				for (size_t i = TMIO_BBS; i; i -= sizeof(dataPtr32[0]), *dataPtr32++ = REG_MMC_FIFO32);
+				numsectors--;
+			}
+		}
+	} else {
 #endif
-
-		#ifdef DATA32_SUPPORT
-		if(useBuf32)
-		{
-			for(int i = 0; i<TMIO_BBS; i+=4)
-			{
-				*dataPtr32++ = REG_MMC_FIFO32;
+		while (
+			numsectors &&
+			tmio_wfi() &&
+			!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
+		) {
+#ifdef DATA32_SUPPORT
+			if (REG_MMC_DATACTL32 & TMIO32_STAT_RXRDY) {
+#endif
+				for (size_t i = TMIO_BBS; i; i -= sizeof(dataPtr[0]), *dataPtr++ = REG_MMC_FIFO);
+				numsectors--;
 			}
+#ifdef DATA32_SUPPORT
 		}
-		else
-		{
-		#endif
-			for(int i = 0; i<TMIO_BBS; i+=2)
-			{
-				*dataPtr++ = REG_MMC_FIFO;
-			}
-		#ifdef DATA32_SUPPORT
-		}
-		#endif
-		numsectors--;
 	}
-
+#endif
 	return error;
 }
 
 uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *in) {
-/*	uint32_t error = 0;
+	uint32_t error = 0;
 	if (target == TMIO_DEV_NAND && cfgs[CFG_SYSNAND_WRITE_PROTECT].val.i)
 		return 0;
 
 	inittarget(target);
-	REG_MMC_STOP = 0x0100;
+	REG_MMC_STOP = TMIO_STOP_AUTO;
 #ifdef DATA32_SUPPORT
 	uint32_t *dataPtr = (uint32_t*)in;
 	volatile uint32_t *fifo = &REG_MMC_FIFO32;
@@ -242,77 +187,21 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 	REG_MMC_IRQ_MASK = ~(TMIO_MASK_GW | TMIO_STAT_TXRQ);
 #endif
 
-	if (numsectors > 1)
-		tmio_send_command(MMC_WRITE_MULTIPLE_BLOCK | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT | TMIO_CMD_TRANSFER_MULTI, sector_no << tmio_dev[target].addr_mul, 0);
-	else
-		tmio_send_command(MMC_WRITE_BLOCK | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT, sector_no << tmio_dev[target].addr_mul, 0);
+	tmio_send_command((numsectors > 1 ? (MMC_WRITE_MULTIPLE_BLOCK | TMIO_CMD_TRANSFER_MULTI) : MMC_WRITE_BLOCK) | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT, sector_no << tmio_dev[target].addr_mul, 0);
 
 	while (
-		numsectors-- &&
+		numsectors &&
 		tmio_wfi() &&
 		!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
 	)
 #ifdef DATA32_SUPPORT
-		if (!(REG_MMC_DATACTL32 & TMIO32_STAT_BUSY))
+		if (!(REG_MMC_DATACTL32 & TMIO32_STAT_BUSY)) {
 #endif
-			for (size_t i = TMIO_BBS; i; i-=sizeof(dataPtr[0]))
-				*fifo = *dataPtr++;
-*/
-	uint32_t error;
-	if (target == TMIO_DEV_NAND && cfgs[CFG_SYSNAND_WRITE_PROTECT].val.i)
-		return 0;
-
-	inittarget(target);
-	REG_MMC_STOP = 0x0100;
+			for (size_t i = TMIO_BBS; i; i -= sizeof(dataPtr[0]), *fifo = *dataPtr++);
+			numsectors--;
 #ifdef DATA32_SUPPORT
-	REG_MMC_BLKCOUNT32 = numsectors;
-	REG_MMC_BLKLEN32 = TMIO_BBS;
-	REG_MMC_BLKCOUNT = numsectors;
-	REG_MMC_DATACTL32 = TMIO32_ENABLE | TMIO32_IRQ_TXRQ;
-	REG_MMC_IRQ_MASK = ~TMIO_MASK_GW;
-#else
-	REG_MMC_BLKCOUNT = numsectors;
-	REG_MMC_IRQ_MASK = ~(TMIO_MASK_GW | TMIO_STAT_TXRQ);
-#endif
-
-	tmio_send_command(MMC_WRITE_MULTIPLE_BLOCK
-		| TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT
-		| TMIO_CMD_TRANSFER_MULTI,
-		sector_no << tmio_dev[target].addr_mul, 0);
-
-#ifdef DATA32_SUPPORT
-	uint32_t *dataPtr32 = (uint32_t*)in;
-#else
-	uint16_t *dataPtr = (uint16_t*)in;
-#endif
-
-	while(numsectors > 0)
-	{
-		tmio_wfi();
-
-		error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW;
-		if(error)
-			return error;
-
-#ifdef DATA32_SUPPORT
-		if((REG_MMC_DATACTL32 & TMIO32_STAT_BUSY))
-			continue;
-#endif
-
-		#ifdef DATA32_SUPPORT
-		for(int i = 0; i<TMIO_BBS; i+=4)
-		{
-			REG_MMC_FIFO32 = *dataPtr32++;
 		}
-		#else
-		for(int i = 0; i<TMIO_BBS; i+=2)
-		{
-			REG_MMC_FIFO = *dataPtr++;
-		}
-		#endif
-		numsectors--;
-	}
-
+#endif
 	waitDataend = 1;
 	return error;
 }
@@ -320,10 +209,8 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 void tmio_init() {
 	IRQ_ENABLE(IRQ_SDIO_1);
 
-	REG_MMC_DATACTL32 &= ~0x0800;
-	REG_MMC_DATACTL32 &= ~0x1000;
-	REG_MMC_DATACTL32 |= 0x0402;
-	REG_MMC_DATACTL = (REG_MMC_DATACTL & ~0x2200) | 0x0002;
+	REG_MMC_DATACTL32 = (REG_MMC_DATACTL32 & ~(TMIO32_IRQ_RXRDY | TMIO32_IRQ_TXRQ)) | TMIO32_ENABLE | TMIO32_ABORT;
+	REG_MMC_DATACTL = (REG_MMC_DATACTL & ~0x2200) | TMIO32_ENABLE;
 #ifdef DATA32_SUPPORT
 	REG_MMC_DATACTL &= ~0x0020;
 	REG_MMC_BLKLEN32 = TMIO_BBS;
@@ -333,8 +220,8 @@ void tmio_init() {
 	REG_MMC_BLKLEN32 = 0;
 #endif
 	REG_MMC_BLKCOUNT32 = 1;
-	REG_MMC_RESET &= ~0x0001;
-	REG_MMC_RESET |= 0x0001;
+	REG_MMC_RESET &= ~TMIO_RESET;
+	REG_MMC_RESET |= TMIO_RESET;
 	REG_MMC_IRQ_MASK = ~TMIO_MASK_ALL;
 	REG_MMC_FC |= 0x00DB;
 	REG_MMC_FE |= 0x00DB;
