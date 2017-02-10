@@ -56,6 +56,7 @@ enum {
 	SD_SEND_IF_COND = 8,
 
 	// Application command
+	SD_APP_SET_BUS_WIDTH = 6,
 	SD_APP_OP_COND = 41
 };
 
@@ -93,6 +94,8 @@ enum {
 //#define SD_VHS_LV	0x00000200
 #define SD_CHECK_PATTERN	0x000000AA
 
+#define SD_BUS_WIDTH_1	0x00000000
+#define SD_BUS_WIDTH_4	0x00000002
 
 #define SD_HCS_MASK	0x40000000
 #define SD_HCS_SDSC	0

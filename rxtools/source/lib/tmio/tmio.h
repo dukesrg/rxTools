@@ -111,7 +111,7 @@ typedef struct {
 	uint32_t RCA;
 	uint_fast16_t clk;
 	uint_fast8_t addr_mul;
-	uint_fast8_t SDOPT;
+	uint_fast8_t OPT;
 	card_cid CID;
 	card_csd CSD;
 } tmio_device;
@@ -134,8 +134,8 @@ typedef struct {
 #define REG_MMC_BLKCOUNT	REG_MMC_16(0x0A)
 #define REG_MMC_RESP0		REG_MMC_32(0x0C)
 #define REG_MMC_RESP		REG_MMC_128(0x0C)
-#define REG_MMC_STATUS		REG_MMC_32(0x1C)
-#define REG_MMC_IRMASK		REG_MMC_32(0x20)
+#define REG_MMC_IRQ_STATUS	REG_MMC_32(0x1C)
+#define REG_MMC_IRQ_MASK	REG_MMC_32(0x20)
 #define REG_MMC_CLKCTL		REG_MMC_16(0x24)
 #define REG_MMC_BLKLEN		REG_MMC_16(0x26)
 #define REG_MMC_OPT		REG_MMC_16(0x28)
@@ -156,8 +156,8 @@ void tmio_init(void);
 uint32_t tmio_init_dev(enum tmio_dev_id target);
 card_cid *tmio_get_cid(enum tmio_dev_id target);
 uint32_t tmio_get_size(enum tmio_dev_id target);
-uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint32_t numsectors, uint8_t *out);
-uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint32_t numsectors, uint8_t *in);
+uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *out);
+uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *in);
 
 #define TMIO_BBS 512
 
