@@ -321,9 +321,11 @@ void DrawSplash(Screen *screen, wchar_t *splash_file) {
 	if (!FileOpen(&Splash, splash_file, 0) ||
 		(FileRead2(&Splash, (void*)(screen->buf2), Splash.fsize) != Splash.fsize &&
 		(FileClose(&Splash) || 1)
-	))
-		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), splash_file);
-	else
+	)) {
+//		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), splash_file);
+		DrawInfo(NULL, lang(S_CONTINUE), lang("Failed to %ls %ls - %u!"), lang(S_LOAD), splash_file, FSGetLastError());
+
+	} else
 		FileClose(&Splash);
 	screen->updated = 1;
 }

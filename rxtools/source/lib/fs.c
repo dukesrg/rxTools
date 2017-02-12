@@ -20,6 +20,7 @@
 
 ////////////////////////////////////////////////////////////////Basic FileSystem Operations
 static FATFS fs[3];
+static FRESULT lasterror;
 /**Init FileSystems.*/
 uint_fast8_t FSInit(void) {
 	if (f_mount(&fs[0], L"0:", 0) != FR_OK //|| //SDCard
@@ -47,11 +48,12 @@ void FSDeInit(void) {
 }
 
 uint_fast8_t FileOpen(File *Handle, const wchar_t *path, uint_fast8_t truncate) {
-	return f_open(Handle, path, FA_READ | FA_WRITE | (truncate ? FA_CREATE_ALWAYS : FA_OPEN_EXISTING)) == FR_OK && FileSeek(Handle, 0) && (f_sync(Handle) || 1);
+	return (lasterror = f_open(Handle, path, FA_READ | FA_WRITE | (truncate ? FA_CREATE_ALWAYS : FA_OPEN_EXISTING))) == FR_OK && FileSeek(Handle, 0) && (f_sync(Handle) || 1);
+
 }
 
 uint_fast8_t FileSeek(File *Handle, size_t foffset) {
-	return f_tell(Handle) == foffset || f_lseek(Handle, foffset) == FR_OK;
+	return (lasterror = FR_OK) || f_tell(Handle) == foffset || (lasterror = f_lseek(Handle, foffset)) == FR_OK;
 }
 
 size_t FileRead(File *Handle, void *buf, size_t size, size_t foffset) {
@@ -63,7 +65,7 @@ size_t FileRead(File *Handle, void *buf, size_t size, size_t foffset) {
 
 size_t FileRead2(File *Handle, void *buf, size_t size) {
 	UINT bytes_read = 0;
-	f_read(Handle, buf, size, &bytes_read);
+	lasterror = f_read(Handle, buf, size, &bytes_read);
 	return bytes_read;
 }
 
@@ -166,4 +168,8 @@ uintmax_t FSFreeSpace(const wchar_t *path) {
 	if (f_getfree(path, &fre_clust, &fs) != FR_OK)
 		return 0;
 	return (uintmax_t)fre_clust * fs->csize * _MIN_SS;
+}
+
+FRESULT FSGetLastError() {
+	return lasterror;
 }
