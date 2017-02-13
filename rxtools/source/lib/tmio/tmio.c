@@ -115,40 +115,42 @@ static uint32_t tmio_send_command(uint16_t cmd, uint32_t args, uint_fast8_t cap_
 
 uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *out) {
 	uint32_t error = 0;
+	uint_fast16_t count;
+	{
+	count = numsectors;
 	uint16_t *dataPtr = (uint16_t*)out;
-
 	inittarget(target);
 	REG_MMC_STOP = TMIO_STOP_AUTO;
 #ifdef DATA32_SUPPORT
 	uint32_t *dataPtr32 = (uint32_t*)out;
-	REG_MMC_BLKCOUNT32 = numsectors;
+	REG_MMC_BLKCOUNT32 = count;
 	REG_MMC_BLKLEN32 = TMIO_BBS;
-	REG_MMC_BLKCOUNT = numsectors;
+	REG_MMC_BLKCOUNT = count;
 	REG_MMC_DATACTL32 = TMIO32_ENABLE | TMIO32_IRQ_RXRDY;
 	REG_MMC_IRQ_MASK = ~TMIO_MASK_GW;
 #else
-	REG_MMC_BLKCOUNT = numsectors;
+	REG_MMC_BLKCOUNT = count;
 	REG_MMC_IRQ_MASK = ~(TMIO_MASK_GW | TMIO_STAT_RXRDY);
 #endif
 
-	tmio_send_command((numsectors > 1 ? (MMC_READ_MULTIPLE_BLOCK | TMIO_CMD_TRANSFER_MULTI) : MMC_READ_SINGLE_BLOCK) | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT | TMIO_CMD_TRANSFER_READ, sector_no << tmio_dev[target].addr_mul, 0);
+	tmio_send_command((count > 1 ? (MMC_READ_MULTIPLE_BLOCK | TMIO_CMD_TRANSFER_MULTI) : MMC_READ_SINGLE_BLOCK) | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT | TMIO_CMD_TRANSFER_READ, sector_no << tmio_dev[target].addr_mul, 0);
 
 #ifdef DATA32_SUPPORT
 	if (!((uint32_t)dataPtr & 3)) {
 		while (
-			numsectors &&
+			count &&
 			tmio_wfi() &&
 			!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
 		) {
 			if (REG_MMC_DATACTL32 & TMIO32_STAT_RXRDY) {
 				for (size_t i = TMIO_BBS; i; i -= sizeof(dataPtr32[0]), *dataPtr32++ = REG_MMC_FIFO32);
-				numsectors--;
+				count--;
 			}
 		}
 	} else {
 #endif
 		while (
-			numsectors &&
+			count &&
 			tmio_wfi() &&
 			!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
 		) {
@@ -156,41 +158,49 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 			if (REG_MMC_DATACTL32 & TMIO32_STAT_RXRDY) {
 #endif
 				for (size_t i = TMIO_BBS; i; i -= sizeof(dataPtr[0]), *dataPtr++ = REG_MMC_FIFO);
-				numsectors--;
+				count--;
 			}
 #ifdef DATA32_SUPPORT
 		}
 	}
 #endif
+	if (error) {
+		tmio_dev[target].CSD.sd1.CCC = 0;
+		tmio_dev[target].clk = TMIO_CLK_DIV_512;
+		tmio_init_dev(target);
+	}
+	} while (error);
 	return error;
 }
 
 uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *in) {
 	uint32_t error = 0;
+	uint_fast16_t count;
 	if (target == TMIO_DEV_NAND && cfgs[CFG_SYSNAND_WRITE_PROTECT].val.i)
 		return 0;
-
+	{
+	count = numsectors;
 	inittarget(target);
 	REG_MMC_STOP = TMIO_STOP_AUTO;
 #ifdef DATA32_SUPPORT
 	uint32_t *dataPtr = (uint32_t*)in;
 	volatile uint32_t *fifo = &REG_MMC_FIFO32;
-	REG_MMC_BLKCOUNT32 = numsectors;
+	REG_MMC_BLKCOUNT32 = count;
 	REG_MMC_BLKLEN32 = TMIO_BBS;
-	REG_MMC_BLKCOUNT = numsectors;
+	REG_MMC_BLKCOUNT = count;
 	REG_MMC_DATACTL32 = TMIO32_ENABLE | TMIO32_IRQ_TXRQ;
 	REG_MMC_IRQ_MASK = ~TMIO_MASK_GW;
 #else
 	uint16_t *dataPtr = (uint16_t*)in;
 	volatile uint32_t *fifo = &REG_MMC_FIFO;
-	REG_MMC_BLKCOUNT = numsectors;
+	REG_MMC_BLKCOUNT = count;
 	REG_MMC_IRQ_MASK = ~(TMIO_MASK_GW | TMIO_STAT_TXRQ);
 #endif
 
-	tmio_send_command((numsectors > 1 ? (MMC_WRITE_MULTIPLE_BLOCK | TMIO_CMD_TRANSFER_MULTI) : MMC_WRITE_BLOCK) | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT, sector_no << tmio_dev[target].addr_mul, 0);
+	tmio_send_command((count > 1 ? (MMC_WRITE_MULTIPLE_BLOCK | TMIO_CMD_TRANSFER_MULTI) : MMC_WRITE_BLOCK) | TMIO_CMD_RESP_R1 | TMIO_CMD_DATA_PRESENT, sector_no << tmio_dev[target].addr_mul, 0);
 
 	while (
-		numsectors &&
+		count &&
 		tmio_wfi() &&
 		!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
 	)
@@ -198,11 +208,17 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 		if (!(REG_MMC_DATACTL32 & TMIO32_STAT_BUSY)) {
 #endif
 			for (size_t i = TMIO_BBS; i; i -= sizeof(dataPtr[0]), *fifo = *dataPtr++);
-			numsectors--;
+			count--;
 #ifdef DATA32_SUPPORT
 		}
 #endif
 	waitDataend = 1;
+	if (error) {
+		tmio_dev[target].CSD.sd1.CCC = 0;
+		tmio_dev[target].clk = TMIO_CLK_DIV_512;
+		tmio_init_dev(target);
+	}
+	} while (error);
 	return error;
 }
 
