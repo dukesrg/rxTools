@@ -115,9 +115,8 @@ static uint32_t tmio_send_command(uint16_t cmd, uint32_t args, uint_fast8_t cap_
 
 uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *out) {
 	uint32_t error = 0;
-	uint_fast16_t count;
-	{
-	count = numsectors;
+	do {
+	uint_fast16_t count = numsectors;
 	uint16_t *dataPtr = (uint16_t*)out;
 	inittarget(target);
 	REG_MMC_STOP = TMIO_STOP_AUTO;
@@ -164,22 +163,22 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 		}
 	}
 #endif
-	if (error) {
+/*	if (error) {
 		tmio_dev[target].CSD.sd1.CCC = 0;
 		tmio_dev[target].clk = TMIO_CLK_DIV_512;
 		tmio_init_dev(target);
 	}
+*/
 	} while (error);
 	return error;
 }
 
 uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *in) {
 	uint32_t error = 0;
-	uint_fast16_t count;
 	if (target == TMIO_DEV_NAND && cfgs[CFG_SYSNAND_WRITE_PROTECT].val.i)
 		return 0;
-	{
-	count = numsectors;
+	do {
+	uint_fast16_t count = numsectors;
 	inittarget(target);
 	REG_MMC_STOP = TMIO_STOP_AUTO;
 #ifdef DATA32_SUPPORT
@@ -213,11 +212,12 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 		}
 #endif
 	waitDataend = 1;
-	if (error) {
+/*	if (error) {
 		tmio_dev[target].CSD.sd1.CCC = 0;
 		tmio_dev[target].clk = TMIO_CLK_DIV_512;
 		tmio_init_dev(target);
 	}
+*/
 	} while (error);
 	return error;
 }
