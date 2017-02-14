@@ -176,10 +176,13 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 //		DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, BLUE, ALIGN_LEFT, 16);
 //		DisplayScreen(&top1Screen);
 //		while(1);
-		if (target == TMIO_DEV_SDMC) {
-			tmio_dev[TMIO_DEV_SDMC] = (tmio_device){0, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
-			tmio_init_dev(TMIO_DEV_SDMC);
-		}
+//		if (target == TMIO_DEV_SDMC) {
+//			tmio_dev[TMIO_DEV_SDMC] = (tmio_device){0, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
+//			tmio_init_dev(TMIO_DEV_SDMC);
+//		}
+		tmio_init();
+		tmio_init_dev(TMIO_DEV_NAND);
+		tmio_init_dev(TMIO_DEV_SDMC);
 	}
 	} while (error);
 	return error;
@@ -228,11 +231,14 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 //		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
-		char tmpstr[32];
-		sprintf(tmpstr, "%08lX %08lX", REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL);
-		DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, RED, ALIGN_LEFT, 16);
-		DisplayScreen(&top1Screen);
-		while(1);
+//		char tmpstr[32];
+//		sprintf(tmpstr, "%08lX %08lX", REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL);
+//		DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, RED, ALIGN_LEFT, 16);
+//		DisplayScreen(&top1Screen);
+//		while(1);
+		tmio_init();
+		tmio_init_dev(TMIO_DEV_NAND);
+		tmio_init_dev(TMIO_DEV_SDMC);
 	}
 	} while (error);
 	return error;
@@ -275,20 +281,22 @@ void tmio_init() {
 uint32_t tmio_init_dev(enum tmio_dev_id target) {
 	uint32_t error;
 	tmio_device *dev = &tmio_dev[target];
-	if (dev->CSD.sd1.CCC) //Already initialised if card class defined in CSD for both SD and eMMC
-		return 0;
+//	if (dev->CSD.sd1.CCC) //Already initialised if card class defined in CSD for both SD and eMMC
+//		return 0;
 
 	inittarget(target);
 	waitcycles(0xF000);
 	tmio_send_command(MMC_GO_IDLE_STATE, 0, 0);
 	
 	if (target == TMIO_DEV_NAND) {
+		*dev = (tmio_device){0x10000, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
 		while (
 			tmio_send_command(MMC_SEND_OP_COND | TMIO_CMD_RESP_R3, MMC_OCR_32_33, 0) ||
 			tmio_wait_respend() ||
 			!(REG_MMC_RESP0 & MMC_READY)
 		);
 	} else {
+		*dev = (tmio_device){0, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
 		if ((error = tmio_send_command(SD_SEND_IF_COND | TMIO_CMD_RESP_R1, SD_VHS_27_36 | SD_CHECK_PATTERN, 1)))
 			return error;
 
