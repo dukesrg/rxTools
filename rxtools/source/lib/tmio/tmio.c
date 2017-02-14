@@ -41,7 +41,6 @@
 
 #include "draw.h"
 #include "lang.h"
-#include "theme.h"
 
 #define DATA32_SUPPORT
 
@@ -173,7 +172,7 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
 		char tmpstr[32];
 		sprintf(tmpstr, "%08lX %08lX", REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL);
-		DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, BLUE, style.valueAlign, 16);
+		DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, BLUE, ALIGN_LEFT, 16);
 		DisplayScreen(&top1Screen);
 		while(1);
 	}
