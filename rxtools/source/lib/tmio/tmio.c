@@ -41,6 +41,7 @@
 
 #include "draw.h"
 #include "lang.h"
+#include "theme.h"
 
 #define DATA32_SUPPORT
 
