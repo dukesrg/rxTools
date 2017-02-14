@@ -39,6 +39,9 @@
 #include "configuration.h"
 #include "irq.h"
 
+#include "draw.h"
+#include "lang.h"
+
 #define DATA32_SUPPORT
 
 void waitcycles(uint32_t val);
@@ -164,9 +167,14 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 	}
 #endif
 	if (error) {
-		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
-		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
-		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
+//		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
+//		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
+//		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
+		char tmpstr[32];
+		sprintf(tmpstr, "%08lX %08lX", REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL);
+		DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, BLUE, style.valueAlign, 16);
+		DisplayScreen(&top1Screen);
+		while(1);
 	}
 	} while (error);
 	return error;
@@ -212,9 +220,14 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 #endif
 	waitDataend = 1;
 	if (error) {
-		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
-		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
-		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
+//		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
+//		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
+//		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
+		char tmpstr[32];
+		sprintf(tmpstr, "%08lX %08lX", REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL);
+		DrawStringRect(&top1Screen, lang(tmpstr), &(Rect){0, 0, 400, 32}, RED, style.valueAlign, 16);
+		DisplayScreen(&top1Screen);
+		while(1);
 	}
 	} while (error);
 	return error;
