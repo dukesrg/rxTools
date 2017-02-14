@@ -165,6 +165,8 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 #endif
 	if (error) {
 		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
+		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
+		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
 	}
 	} while (error);
 	return error;
@@ -211,6 +213,8 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 	waitDataend = 1;
 	if (error) {
 		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
+		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
+		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
 	}
 	} while (error);
 	return error;
