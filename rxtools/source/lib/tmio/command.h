@@ -102,4 +102,7 @@ enum {
 #define SD_HCS_SDSC	0
 #define SD_HCS_SDHC	SD_HCS_MASK
 
+#define MMC_RCA_DEFAULT	0x00000000
+#define SD_RCA_DEFAULT	0x00010000
+
 #endif
