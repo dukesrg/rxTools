@@ -49,8 +49,8 @@ void waitcycles(uint32_t val);
 _Static_assert(TMIO_DEV_NUM == 2, "TMIO device numer doesn't accord with the driver context.");
 
 static tmio_device tmio_dev[] = {
-	{0, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}},
-	{0x10000, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}}
+	{SD_RCA_DEFAULT, TMIO_CLK_DIV_128, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}},
+	{MMC_RCA_DEFAULT, TMIO_CLK_DIV_128, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}}
 };
 
 static uint_fast8_t waitDataend = 0;
@@ -167,7 +167,7 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 	}
 #endif
 	if (error) {
-		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
+//		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
 
@@ -289,14 +289,14 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 	tmio_send_command(MMC_GO_IDLE_STATE, 0, 0);
 	
 	if (target == TMIO_DEV_NAND) {
-		*dev = (tmio_device){0x10000, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
+		*dev = (tmio_device){MMC_RCA_DEFAULT, TMIO_CLK_DIV_128, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
 		while (
 			tmio_send_command(MMC_SEND_OP_COND | TMIO_CMD_RESP_R3, MMC_OCR_32_33, 0) ||
 			tmio_wait_respend() ||
 			!(REG_MMC_RESP0 & MMC_READY)
 		);
 	} else {
-		*dev = (tmio_device){0, TMIO_CLK_DIV_512, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
+		*dev = (tmio_device){SD_RCA_DEFAULT, TMIO_CLK_DIV_128, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
 		if ((error = tmio_send_command(SD_SEND_IF_COND | TMIO_CMD_RESP_R1, SD_VHS_27_36 | SD_CHECK_PATTERN, 1)))
 			return error;
 
