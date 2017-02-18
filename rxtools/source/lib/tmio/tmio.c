@@ -41,6 +41,8 @@
 
 #include "draw.h"
 #include "lang.h"
+#include "strings.h"
+#include "hid.h"
 
 #define DATA32_SUPPORT
 
@@ -117,7 +119,7 @@ static uint32_t tmio_send_command(uint16_t cmd, uint32_t args, uint_fast8_t cap_
 }
 
 uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *out) {
-	uint32_t error = 0;
+	uint32_t error = 0, dblerror = 0;
 	do {
 	uint_fast16_t count = numsectors;
 	uint16_t *dataPtr = (uint16_t*)out;
@@ -167,6 +169,13 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 	}
 #endif
 	if (error) {
+		if (dblerror++ > 0) {
+			uint32_t *csd = (uint32_t *)&tmio_dev[target].CSD;
+			uint32_t *cid = (uint32_t *)&tmio_dev[target].CID;
+			DrawInfo(NULL, lang(S_REBOOT), lang("Unrecoverable %ls read error! STATUS: %08lX ERROR: %08lX CID: %08lX %08lX %08lX %08lX CSD: %08lX %08lX %08lX %08lX "), target ? "eMMC" : S_SD, REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL, csd[3], csd[2], csd[1], csd[0], cid[3], cid[2], cid[1], cid[0]);
+			InputWait();
+			Shutdown(0);
+		}
 //		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
@@ -189,7 +198,7 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 }
 
 uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast16_t numsectors, uint8_t *in) {
-	uint32_t error = 0;
+	uint32_t error = 0, dblerror = 0;
 	if (target == TMIO_DEV_NAND && cfgs[CFG_SYSNAND_WRITE_PROTECT].val.i)
 		return 0;
 	do {
@@ -228,6 +237,13 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 #endif
 	waitDataend = 1;
 	if (error) {
+		if (dblerror++ > 0) {
+			uint32_t *csd = (uint32_t *)&tmio_dev[target].CSD;
+			uint32_t *cid = (uint32_t *)&tmio_dev[target].CID;
+			DrawInfo(NULL, lang(S_REBOOT), lang("Unrecoverable %ls write error! STATUS: %08lX ERROR: %08lX CID: %08lX %08lX %08lX %08lX CSD: %08lX %08lX %08lX %08lX "), target ? "eMMC" : S_SD, REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL, csd[3], csd[2], csd[1], csd[0], cid[3], cid[2], cid[1], cid[0]);
+			InputWait();
+			Shutdown(0);
+		}
 //		tmio_send_command(MMC_STOP_TRANSMISSION | TMIO_CMD_RESP_R1B, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, 0, 0);
 //		tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
@@ -239,6 +255,7 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 		tmio_init();
 		tmio_init_dev(TMIO_DEV_NAND);
 		tmio_init_dev(TMIO_DEV_SDMC);
+		dblerror++;
 	}
 	} while (error);
 	return error;
