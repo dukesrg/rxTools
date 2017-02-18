@@ -341,7 +341,9 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 		)) || (
 			target == TMIO_DEV_SDMC && (
 			(error = tmio_send_command(MMC_APP_CMD | TMIO_CMD_RESP_R1, dev->RCA, 1)) ||
-			(error = tmio_send_command(SD_APP_SET_BUS_WIDTH | TMIO_CMD_APP | TMIO_CMD_RESP_R1, SD_BUS_WIDTH_4, 1))
+			(error = tmio_send_command(SD_APP_SET_BUS_WIDTH | TMIO_CMD_APP | TMIO_CMD_RESP_R1, SD_BUS_WIDTH_4, 1)) ||
+			(error = tmio_send_command(MMC_APP_CMD | TMIO_CMD_RESP_R1, dev->RCA, 0)) ||
+			(error = tmio_send_command(SD_APP_SET_CLR_CARD_DETECT | TMIO_CMD_APP | TMIO_CMD_RESP_R1, SD_CD_DISCONNECT, 0))
 		)) ||
 		(error = tmio_send_command(MMC_SEND_STATUS | TMIO_CMD_RESP_R1, dev->RCA, 1)) ||
 		(error = tmio_send_command(MMC_SET_BLOCKLEN | TMIO_CMD_RESP_R1, TMIO_BBS, 1))

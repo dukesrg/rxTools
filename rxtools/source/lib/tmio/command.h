@@ -58,7 +58,8 @@ enum {
 
 	// Application command
 	SD_APP_SET_BUS_WIDTH = 6,
-	SD_APP_OP_COND = 41
+	SD_APP_OP_COND = 41,
+	SD_APP_SET_CLR_CARD_DETECT = 42
 };
 
 #define MMC_READY	0x80000000
@@ -104,5 +105,8 @@ enum {
 
 #define MMC_RCA_DEFAULT	0x00010000
 #define SD_RCA_DEFAULT	0x00000000
+
+#define SD_CD_DISCONNECT	0x00000000
+#define SD_CD_CONNECT	0x00000001
 
 #endif
