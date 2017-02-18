@@ -172,7 +172,7 @@ uint32_t tmio_readsectors(enum tmio_dev_id target, uint32_t sector_no, uint_fast
 		if (dblerror++ > 0) {
 			uint32_t *csd = (uint32_t *)&tmio_dev[target].CSD;
 			uint32_t *cid = (uint32_t *)&tmio_dev[target].CID;
-			DrawInfo(NULL, lang(S_REBOOT), lang("Unrecoverable %ls read error! STATUS: %08lX ERROR: %08lX CID: %08lX %08lX %08lX %08lX CSD: %08lX %08lX %08lX %08lX "), lang(target ? "eMMC" : S_SD), REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL, csd[3], csd[2], csd[1], csd[0], cid[3], cid[2], cid[1], cid[0]);
+			DrawInfo(NULL, lang(S_REBOOT), lang("Unrecoverable %ls read error! STATUS: %08lX ERROR: %08lX CID: %08lX %08lX %08lX %08lX CSD: %08lX %08lX %08lX %08lX "), lang(target ? "eMMC" : S_SD), REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL, cid[3], cid[2], cid[1], cid[0], csd[3], csd[2], csd[1], csd[0]);
 			InputWait();
 			Shutdown(1);
 		}
@@ -240,7 +240,7 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 		if (dblerror++ > 0) {
 			uint32_t *csd = (uint32_t *)&tmio_dev[target].CSD;
 			uint32_t *cid = (uint32_t *)&tmio_dev[target].CID;
-			DrawInfo(NULL, lang(S_REBOOT), lang("Unrecoverable %ls write error! STATUS: %08lX ERROR: %08lX CID: %08lX %08lX %08lX %08lX CSD: %08lX %08lX %08lX %08lX "), lang(target ? "eMMC" : S_SD), REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL, csd[3], csd[2], csd[1], csd[0], cid[3], cid[2], cid[1], cid[0]);
+			DrawInfo(NULL, lang(S_REBOOT), lang("Unrecoverable %ls write error! STATUS: %08lX ERROR: %08lX CID: %08lX %08lX %08lX %08lX CSD: %08lX %08lX %08lX %08lX "), lang(target ? "eMMC" : S_SD), REG_MMC_IRQ_STATUS, REG_MMC_ERROR_DETAIL, cid[3], cid[2], cid[1], cid[0], csd[3], csd[2], csd[1], csd[0]);
 			InputWait();
 			Shutdown(1);
 		}
