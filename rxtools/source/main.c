@@ -46,9 +46,10 @@
 static const wchar_t *const keyX16path = L"0:key_0x16.bin";
 static const wchar_t *const keyX1Bpath = L"0:key_0x1B.bin";
 static const wchar_t *const keyX25path = L"0:slot0x25KeyX.bin";
-static const wchar_t *const rxRootPath = L"0:rxTools/%ls";
+static const wchar_t *const rxPath = L"0:rxTools";
+static const wchar_t *const dataPath = L"data";
+static const wchar_t *const fontPath = L"cbf_std.bcfnt";
 static const wchar_t *const menuPath = L"sys/gui.json";
-static const wchar_t *const fontPath = L"data/cbf_std.bcfnt";
 
 static const wchar_t *const jsonPattern = L"*.json";
 
@@ -241,13 +242,18 @@ __attribute__((section(".text.start"), noreturn)) void _start() {
 		while(1);		
 	}
 
-	if (!(finf || (swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
+	swprintf(path, _MAX_LFN + 1, L"%ls/%ls", rxPath, dataPath);
+	f_mkdir(path);
+	swprintf(path, _MAX_LFN + 1, L"%ls/%ls", rxPath, L"nand");
+	f_mkdir(path);
+
+	if (!(finf || (swprintf(path, _MAX_LFN + 1, L"%ls/%ls/%ls", rxPath, dataPath, fontPath) > 0 &&
 		(size = cfntPreload(path)) &&
 		cfntLoad(__builtin_alloca(size), path, size)
 	))) {
 		*(wcsrchr(path, L'/') + 1) = 0;
 		if (extractFont(path, L"1:title/0004009b/00014002/content/00000000.app") &&
-			swprintf(path, _MAX_LFN + 1, rxRootPath, fontPath) > 0 &&
+			swprintf(path, _MAX_LFN + 1, L"%ls/%ls/%ls", rxPath, dataPath, fontPath) > 0 &&
 			(size = cfntPreload(path)) &&
 			cfntLoad(__builtin_alloca(size), path, size)
 		);
@@ -257,14 +263,14 @@ __attribute__((section(".text.start"), noreturn)) void _start() {
 
 	readCfg();
 
-	if (!(swprintf(langDir, _MAX_LFN + 1, rxRootPath, L"lang") > 0 &&
+	if (!(swprintf(langDir, _MAX_LFN + 1, L"%ls/%ls", rxPath, L"lang") > 0 &&
 		(size = FileMaxSize(langDir, jsonPattern)) &&
 		langInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, langDir, jsonPattern) &&
 		langLoad(cfgs[CFG_LANGUAGE].val.s, LANG_SET) &&
 		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, cfgs[CFG_LANGUAGE].val.s, wcsrchr(jsonPattern, L'.'))
 	)) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
 	
-	swprintf(path, _MAX_LFN + 1, rxRootPath, menuPath);
+	swprintf(path, _MAX_LFN + 1, L"%ls/%ls", rxPath, menuPath);
 	if (!(size = FileSize(path)) ||
 		!menuLoad(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, path)
 	) DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), path);
@@ -272,15 +278,9 @@ __attribute__((section(".text.start"), noreturn)) void _start() {
 	if (getMpInfo() != MPINFO_KTR || (
 		(initKeyX(0x16, keyX16path) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX16path) && 0)) &&
 		(initKeyX(0x1B, keyX1Bpath) || (DrawInfo(lang(S_NO_KTR_KEYS), lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), keyX1Bpath) && 0))
-	)) {
-		swprintf(path, _MAX_LFN + 1, rxRootPath, L"");
-		f_mkdir(path);
-		wcscat(path, L"nand");
-		f_mkdir(path);
-		InstallConfigData();
-	}
+	)) InstallConfigData();
 
-	if (!(swprintf(themeDir, _MAX_LFN + 1, rxRootPath, L"theme") > 0 &&
+	if (!(swprintf(themeDir, _MAX_LFN + 1, L"%ls/%ls", rxPath, L"theme") > 0 &&
 		(size = FileMaxSize(themeDir, jsonPattern)) &&
 		themeInit(&(Json){__builtin_alloca(size), size, __builtin_alloca((size >> 2) * sizeof(jsmntok_t)), size >> 2}, themeDir, jsonPattern) &&
 		themeLoad(cfgs[CFG_THEME].val.s, THEME_SET) &&

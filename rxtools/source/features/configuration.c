@@ -37,7 +37,6 @@
 #include "progress.h"
 #include "strings.h"
 
-#define DATA_PATH	L"rxtools/data"
 #define KEYFILENAME	"slot0x25KeyX.bin"
 
 static char cfgLang[CFG_STR_MAX_LEN] = "en";
@@ -338,8 +337,6 @@ static int InstallData() {
 	int p = 0;
 
 	statusInit(getMpInfo() == MPINFO_CTR ? 3 : 1, 0, L"Decrypting firmware");
-
-	f_mkdir(DATA_PATH);
 
 	r = processFirm(getMpInfo() == MPINFO_CTR ?
 		TID_CTR_NATIVE_FIRM : TID_KTR_NATIVE_FIRM);
