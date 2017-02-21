@@ -45,6 +45,7 @@
 #include "hid.h"
 
 #define DATA32_SUPPORT
+//#define SDXC_XPC_SUPPORT
 
 void waitcycles(uint32_t val);
 
@@ -296,15 +297,17 @@ void tmio_init() {
 }
 
 uint32_t tmio_init_dev(enum tmio_dev_id target) {
-	uint32_t error;
+	uint32_t error, hcs = 0, xpc = SD_XPC_POWER_SAVING;
 	tmio_device *dev = &tmio_dev[target];
 //	if (dev->CSD.sd1.CCC) //Already initialised if card class defined in CSD for both SD and eMMC
 //		return 0;
 
 	inittarget(target);
 	waitcycles(0xF000);
+#ifdef SDXC_XPC_SUPPORT
+	do {
+#endif	
 	tmio_send_command(MMC_GO_IDLE_STATE, 0, 0);
-	
 	if (target == TMIO_DEV_NAND) {
 		*dev = (tmio_device){MMC_RCA_DEFAULT, TMIO_CLK_DIV_128, 9, TMIO_OPT_BUS_WIDTH_1, {}, {}};
 		while (
@@ -318,10 +321,10 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 			return error;
 
 		uint32_t resp;
-		uint32_t hcs = tmio_wait_respend() ? SD_HCS_SDSC : SD_HCS_SDHC;
+		hcs = tmio_wait_respend() ? SD_HCS_SDSC : SD_HCS_SDHC;
 		while (
 			tmio_send_command(MMC_APP_CMD | TMIO_CMD_RESP_R1, dev->RCA, 0) ||
-			tmio_send_command(SD_APP_OP_COND | TMIO_CMD_APP | TMIO_CMD_RESP_R3, MMC_OCR_27_36 | hcs, 1) ||
+			tmio_send_command(SD_APP_OP_COND | TMIO_CMD_APP | TMIO_CMD_RESP_R3, MMC_OCR_27_36 | hcs | xpc, 1) ||
 			tmio_wait_respend() ||
 			!((resp = REG_MMC_RESP0) & MMC_READY)
 		);
@@ -347,6 +350,17 @@ uint32_t tmio_init_dev(enum tmio_dev_id target) {
 		(error = tmio_wait_respend())
 	) return error;
 	dev->CSD = REG_MMC_RESP.CSD;
+
+#ifdef SDXC_XPC_SUPPORT
+	} while (
+		target == TMIO_DEV_SDMC &&
+		xpc == SD_XPC_POWER_SAVING &&
+		dev->CSD.sd2.CSD_STRUCTURE == CSD_STRUCTURE_SD2 &&
+		dev->CSD.sd2.C_SIZE > SDHC_MAX_C_SIZE && 
+		(xpc = SD_XPC_MAX_PERFORMANCE)
+	);
+#endif
+
 	setckl(dev->clk = TMIO_CLK_DIV_2);
 	
 	tmio_send_command(MMC_SELECT_CARD | TMIO_CMD_RESP_R1, dev->RCA, 0);
