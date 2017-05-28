@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include <locale.h>
 #include "lang.h"
 #include "fs.h"
 
@@ -204,6 +205,7 @@ uint32_t langLoad(char *code, langSeek seek) {
 	fno.lfname = lfn;
 	fno.lfsize = _MAX_LFN + 1;
 
+        setlocale(LC_CTYPE, "en_US.UTF-8");
 	if (f_findfirst(&dir, &fno, langDir, langPattern) == FR_OK) {
 		swprintf(path, _MAX_LFN + 1, L"%ls/%s%ls", langDir, code, wcsrchr(langPattern, L'.'));
 		wcscpy(targetfn, pathfn = path + wcslen(langDir) + 1);
