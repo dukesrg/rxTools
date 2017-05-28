@@ -48,10 +48,12 @@ typedef struct{
 	uint_fast16_t w;
 	uint_fast16_t h;
 	uint_fast8_t bpp;
+	uint_fast8_t updated;
 	uint32_t size;
 	void *addr;
 	void *buf2;
-	uint_fast8_t updated;
+	void *bgcache;
+        wchar_t bgpath[256]; //should be _MAX_LFN + 1
 } Screen;
 
 typedef struct {

@@ -27,9 +27,9 @@
 #include "strings.h"
 #include "cfnt.h"
 
-Screen top1Screen = {400, 240, sizeof(Pixel), 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC0, (uint8_t*)0x27000000, 0};
-Screen top2Screen = {400, 240, sizeof(Pixel), 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC8, (uint8_t*)0x27000000+400*240*3, 0};
-Screen bottomScreen = {320, 240, sizeof(Pixel), 320*240*sizeof(Pixel), (uint8_t*)0x080FFFD0, (uint8_t*)0x27000000+400*240*3*2, 0};
+Screen top1Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC0, (uint8_t*)0x27000000, (uint8_t*)0x27000000+400*240*sizeof(Pixel), L""};
+Screen top2Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC8, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*2, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*3, L""};
+Screen bottomScreen = {320, 240, sizeof(Pixel), 0, 320*240*sizeof(Pixel), (uint8_t*)0x080FFFD0, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4+320*240*sizeof(Pixel), L""};
 
 static uint8_t *DrawTile(Screen *screen, uint8_t *in, uint_fast8_t iconsize, uint_fast8_t tilesize, uint_fast16_t ax, uint_fast16_t ay, uint_fast16_t dx, uint_fast16_t dy, uint_fast8_t cw, uint_fast8_t ch, Color color) {
 	for (size_t y = 0; y < iconsize; y += tilesize) {
@@ -318,15 +318,20 @@ void DrawProgress(Screen *screen, Rect *rect, Color frame, Color done, Color bac
 
 void DrawSplash(Screen *screen, wchar_t *splash_file) {
 	File Splash;
-	if (!FileOpen(&Splash, splash_file, 0) ||
-		(FileRead2(&Splash, (void*)(screen->buf2), Splash.fsize) != Splash.fsize &&
-		(FileClose(&Splash) || 1)
-	)) {
-//		DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), splash_file);
-		DrawInfo(NULL, lang(S_CONTINUE), lang("Failed to %ls %ls - %u!"), lang(S_LOAD), splash_file, FSGetLastError());
+	if (wcscmp(splash_file, screen->bgpath)) {
+		if (!FileOpen(&Splash, splash_file, 0) ||
+			(FileRead2(&Splash, (void*)(screen->bgcache), Splash.fsize) != Splash.fsize &&
+			(FileClose(&Splash) || 1)
+		)) {
+//			DrawInfo(NULL, lang(S_CONTINUE), lang(SF_FAILED_TO), lang(S_LOAD), splash_file);
+			DrawInfo(NULL, lang(S_CONTINUE), lang("Failed to %ls %ls - %u!"), lang(S_LOAD), splash_file, FSGetLastError());
 
-	} else
-		FileClose(&Splash);
+		} else {
+			FileClose(&Splash);
+			wcscpy(screen->bgpath, splash_file);
+		}
+	}
+	memcpy(screen->buf2, screen->bgcache, screen->size);
 	screen->updated = 1;
 }
 
