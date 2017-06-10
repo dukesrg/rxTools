@@ -59,17 +59,17 @@ $(call DEPDIR,$(BUILD)/rxtools.elf $(OBJS) $(DEPS))
 
 MAKEDEP	= @$(COMPILE.c) -MM $< > $(patsubst $(BUILD)/%.o,$(DEPS_DIR)/%.d,$@)
 
-.PHONY: $(BUILD)/code.bin all clean
+.PHONY: $(BUILD)/code.bin $(BUILD)/arm9loaderhax.bin all clean
 
-$(BUILD)/arm9loaderhax.bin: 
-	@dd if=$(BUILD)/code.bin of=$(BUILD)/arm9loaderhax.bin skip=73728 bs=1 
+$(BUILD)/arm9loaderhax.bin: $(BUILD)/rxtools.bin
+	@cp -av $< $@
 
 $(BUILD)/code.bin: $(BUILD)/rxtools.bin $(BUILD)/CakeHax/D
 	$(call Q,MAKE,CakeHax)$(MAKE) dir_out=../$(dir $@) dir_build=../$(BUILD)/CakeHax name=$(notdir $@) filepath=$(SYS_PATH)/ -C CakeHax bigpayload
 	$(call Q,DD,$@)dd if=$< bs=896k conv=sync,notrunc | dd of=$@ seek=160 conv=notrunc
 
 %.bin: %.elf
-	$(call Q,OBJCOPY,$@)$(OBJCOPY) -O binary $< $@
+	$(call Q,OBJCOPY,$@)$(OBJCOPY) --set-section-flags .bss=alloc,load,contents -O binary $< $@
 
 $(BUILD)/rxtools.elf: $(OBJS)
 	$(call Q,LINK,$@)$(LINK.o) $^ $(OUTPUT_OPTION)

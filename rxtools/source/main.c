@@ -230,15 +230,7 @@ void toolsmain() {
 	top1Screen.addr = (uint8_t*)*(uint32_t*)top1Screen.addr;
 	top2Screen.addr = (uint8_t*)*(uint32_t*)top2Screen.addr;
 
-	if (!nandInit() || !FSInit()) {
-//		ClearScreen(&bottomScreen, RED);
-//		ClearScreen(&top1Screen, RED);
-//		ClearScreen(&top2Screen, RED);
-//		DisplayScreen(&bottomScreen);
-//		DisplayScreen(&top1Screen);
-//		DisplayScreen(&top2Screen);
-		while(1);		
-	}
+	if (!nandInit() || !FSInit()) return;
 
 	swprintf(path, _MAX_LFN + 1, L"%ls/%ls", rxPath, dataPath);
 	f_mkdir(path);

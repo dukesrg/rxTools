@@ -402,31 +402,7 @@ void InstallConfigData(){
 	if(CheckInstallationData() == 0)
 		return;
 
-//	trySetLangFromTheme(0);
 	writeCfg();
-
-/*	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/cfg0TOP.bin",
-		cfgs[CFG_THEME].val.i);
-	DrawSplash(&top1Screen, path);
-	DrawSplash(&top2Screen, path);
-	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/cfg0.bin",
-		cfgs[CFG_THEME].val.i);
-	DrawSplash(&bottomScreen, path);
-*/
-	/*int res = */
 	InstallData();
-/*	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/cfg1%c.bin",
-		cfgs[CFG_THEME].val.i, res == 0 ? 'O' : 'E');
-	DrawSplash(&bottomScreen, path);
-	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/TOP.bin",
-		cfgs[CFG_THEME].val.i);
-	DrawSplash(&top1Screen, path);
-	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/TOPL.bin",
-		cfgs[CFG_THEME].val.i);
-	DrawSplash(&top1Screen, path);
-	swprintf(path, _MAX_LFN + 1, L"/rxTools/Theme/%u/TOPR.bin",
-		cfgs[CFG_THEME].val.i);
-	DrawSplash(&top2Screen, path);
-*/
 	InputWait();
 }
