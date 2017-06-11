@@ -2,13 +2,18 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
 
+
 MEMORY
 {
 	ram : ORIGIN = 0x08000000, LENGTH = 400K
+/*
+	ram : ORIGIN = 0x23F00000, LENGTH = 400K
+*/
 }
 
 SECTIONS
 {
+
 /*
     . = 0x23F00000;
 
@@ -18,10 +23,14 @@ SECTIONS
     .data       : ALIGN(4) { *(.data*) }
     .bss        : ALIGN(4) { __bss_start = .; *(.bss* COMMON); __bss_end = .;}
 */
-	.text :
+	.text.start :
 	{
 		KEEP(*(.text.vect))
 		KEEP(*(.text.start))
+	} >ram
+
+	.text :
+	{
 		*(.text*)
 	} >ram
 

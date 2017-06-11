@@ -69,8 +69,9 @@ static void bgWork()
 	TryScreenShot();
 
 	// Check whether HOME or POWER button has been pressed
-	if (*(volatile uint8_t *)0x10147021 == 13)
-		Shutdown(1); // Return to HOME menu
+// Not gonna work with a9lh, at least without additional initialization
+//	if (*(volatile uint8_t *)0x10147021 == 13)
+//		Shutdown(1); // Return to HOME menu
 }
 
 uint32_t InputWait() {
