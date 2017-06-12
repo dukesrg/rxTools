@@ -84,7 +84,7 @@ static void statusDrawFinish() {
 uint_fast8_t progressSetPos(uintmax_t pos) {
 	static uintmax_t oldtimeleft = -1;
 	static uintmax_t oldtime = -1;
-	uint32_t timeleft = 0;
+	uintmax_t timeleft = 0;
 	uint_fast8_t redraw = 0;
 	if ((pos += progress_offset) >= progress_posmax) {
 		pos = progress_posmax;
