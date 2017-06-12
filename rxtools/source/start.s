@@ -1,19 +1,4 @@
-@ Copyright (C) 2015 The PASTA Team
-@
-@ This program is free software; you can redistribute it and/or
-@ modify it under the terms of the GNU General Public License
-@ version 2 as published by the Free Software Foundation
-@
-@ This program is distributed in the hope that it will be useful,
-@ but WITHOUT ANY WARRANTY; without even the implied warranty of
-@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-@ GNU General Public License for more details.
-@
-@ You should have received a copy of the GNU General Public License
-@ along with this program; if not, write to the Free Software
-@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-@ Copyright (C) 2015 The PASTA Team
+@ Copyright (C) 2015-2017 The PASTA Team, dukesrg
 @
 @ This program is free software; you can redistribute it and/or
 @ modify it under the terms of the GNU General Public License
@@ -32,7 +17,36 @@
 .align 4
 .arm
 .global _start
+
 _start:
+	@ Vector Table for CakeHax bigpayload (GW)
+	.rept	11
+	nop
+	.endr
+	b	_start_al9h @skip bigpayload additional workaround
+
+	@ bigpayload entry
+_bigpayload:
+@	ldr	r5, =0x33333333
+@	mcr	p15, 0, r5, c5, c0, 2 @ write data access
+@do we need this in al9h?
+	msr	CPSR_c, #0xD3 @ Disable IRQ and FIQ and enter supervisor mode
+
+@ todo: additional bigpayload job
+
+	adr	r0, _start
+	ldr	r1, =payload_start
+	cmp	r0, r1
+	beq	_start_al9h @ already launched from payload_start
+
+@ todo: copy start -> payload_start 
+
+	adr	r2, _start_al9h
+	sub	r2, r0
+	add	r1, r2
+	bx	r1 @ jump to payload_start + _start_al9h - _start
+
+_start_al9h:
     @ Change the stack pointer
     mov sp, #0x27000000
 

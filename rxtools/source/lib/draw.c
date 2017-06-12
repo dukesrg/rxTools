@@ -27,12 +27,9 @@
 #include "strings.h"
 #include "cfnt.h"
 
-Screen top1Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC0, (uint8_t*)0x27000000, (uint8_t*)0x27000000+400*240*sizeof(Pixel), L""};
-Screen top2Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x080FFFC8, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*2, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*3, L""};
-Screen bottomScreen = {320, 240, sizeof(Pixel), 0, 320*240*sizeof(Pixel), (uint8_t*)0x080FFFD0, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4+320*240*sizeof(Pixel), L""};
-//Screen top1Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x23FFFE00, (uint8_t*)0x27000000, (uint8_t*)0x27000000+400*240*sizeof(Pixel), L""};
-//Screen top2Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x23FFFE04, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*2, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*3, L""};
-//Screen bottomScreen = {320, 240, sizeof(Pixel), 0, 320*240*sizeof(Pixel), (uint8_t*)0x23FFFE08, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4+320*240*sizeof(Pixel), L""};
+Screen top1Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x23FFFE00, (uint8_t*)0x27000000, (uint8_t*)0x27000000+400*240*sizeof(Pixel), L""};
+Screen top2Screen = {400, 240, sizeof(Pixel), 0, 400*240*sizeof(Pixel), (uint8_t*)0x23FFFE04, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*2, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*3, L""};
+Screen bottomScreen = {320, 240, sizeof(Pixel), 0, 320*240*sizeof(Pixel), (uint8_t*)0x23FFFE08, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4, (uint8_t*)0x27000000+400*240*sizeof(Pixel)*4+320*240*sizeof(Pixel), L""};
 
 static uint8_t *DrawTile(Screen *screen, uint8_t *in, uint_fast8_t iconsize, uint_fast8_t tilesize, uint_fast16_t ax, uint_fast16_t ay, uint_fast16_t dx, uint_fast16_t dy, uint_fast8_t cw, uint_fast8_t ch, Color color) {
 	for (size_t y = 0; y < iconsize; y += tilesize) {

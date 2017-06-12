@@ -51,7 +51,7 @@ CCOBJS := $(addprefix $(BUILD)/,main.o features/CTRDecryptor.o \
 	features/reboot.o lib/json.o lib/theme.o lib/tmd.o lib/progress.o lib/cfnt.o \
 	lib/timer.o lib/aes.o lib/sha.o lib/rsa.o lib/movable_sed.o lib/bootsector.o)
 
-OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o vect.o lib/delay.o)
+OBJS	:= $(CCOBJS) $(addprefix $(BUILD)/, start.o lib/delay.o)
 
 DEPS	:= $(subst $(BUILD)/,$(DEPS_DIR)/,$(CCOBJS))
 
