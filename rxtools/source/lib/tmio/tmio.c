@@ -216,7 +216,7 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 	REG_MMC_IRQ_MASK = ~TMIO_MASK_GW;
 #else
 	uint16_t *dataPtr = (uint16_t*)in;
-	volatile uint32_t *fifo = &REG_MMC_FIFO;
+	volatile uint16_t *fifo = &REG_MMC_FIFO;
 	REG_MMC_BLKCOUNT = count;
 	REG_MMC_IRQ_MASK = ~(TMIO_MASK_GW | TMIO_STAT_TXRQ);
 #endif
@@ -227,7 +227,7 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 		count &&
 		tmio_wfi() &&
 		!(error = REG_MMC_IRQ_STATUS & TMIO_MASK_GW)
-	)
+	) {
 #ifdef DATA32_SUPPORT
 		if (!(REG_MMC_DATACTL32 & TMIO32_STAT_BUSY)) {
 #endif
@@ -236,6 +236,7 @@ uint32_t tmio_writesectors(enum tmio_dev_id target, uint32_t sector_no, uint_fas
 #ifdef DATA32_SUPPORT
 		}
 #endif
+	}
 	waitDataend = 1;
 	if (error) {
 		if (dblerror++ > 0) {
