@@ -32,18 +32,32 @@ _bigpayload:
 @do we need this in al9h?
 	msr	CPSR_c, #0xD3 @ Disable IRQ and FIQ and enter supervisor mode
 
-@ todo: additional bigpayload job
-
 	adr	r0, _start
 	ldr	r1, =payload_start
 	cmp	r0, r1
 	beq	_start_al9h @ already launched from payload_start
 
-@ todo: copy start -> payload_start 
+	mov	r2, #0x10000
+loop:
+        subs	r2, #1
+        bge	loop
+
+	ldr	r2, =payload_length
+copy:
+	ldmia	r0!, {r3 - r10}
+	stmia	r1!, {r3 - r10}
+	subs	r2, r2, #32
+	bne	copy
+
+	ldr	r2, =payload_length
+	sub	r0, r2
+	sub	r1, r2
 
 	adr	r2, _start_al9h
 	sub	r2, r0
 	add	r1, r2
+	mov	r3, #0
+	mcr	p15, 0, r3, c7, c5, 0 @ flush I-cache
 	bx	r1 @ jump to payload_start + _start_al9h - _start
 
 _start_al9h:
