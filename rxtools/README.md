@@ -1,4 +1,5 @@
 ###Feature compatibility check chart
+
 ||3DS|New 3DS 1.8GB (2GB Toshiba flash)|New 3DS 1.3GB (4GB Samsung flash)|2DS|2DS Pokemon bundle version|
 |---|---|---|---|---|---|
 |RX-E (fw9.2/EmuNAND 11.0)|OK|||||
