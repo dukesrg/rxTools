@@ -13,7 +13,7 @@ MEMORY
 SECTIONS
 {
 	.text.start : { *(.text.start) } >ram
-	.text :	{ *(.text*) } >ram
+	.text : { *(.text*) } >ram
 	.rodata : { *(.rodata*) } >ram
 	.data : { *(.data*) } >ram
 	.bss : { *(.bss*) } >ram

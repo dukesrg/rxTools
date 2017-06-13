@@ -114,4 +114,5 @@ _start_al9h:
     bl toolsmain
 
 .die:
+	nop
     b .die
