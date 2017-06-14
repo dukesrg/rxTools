@@ -34,6 +34,7 @@ static inline void timerSet(uint_fast8_t index, uint_fast16_t val, uint_fast16_t
 }
 
 void timerStart() {
+	timerStop();
 	for (size_t i = 4; i--; timerSet(i, 0, TIMER_DIV_1024 | TIMER_CASCADE | TIMER_START));
 }
 

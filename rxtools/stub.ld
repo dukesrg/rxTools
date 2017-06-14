@@ -13,10 +13,10 @@ MEMORY
 SECTIONS
 {
 	.text.start : { *(.text.start) } >ram
-	.text : { *(.text*) } >ram
-	.rodata : { *(.rodata*) } >ram
-	.data : { *(.data*) } >ram
-	.bss : { *(.bss*) } >ram
+	.text : SUBALIGN(16) { *(.text*) } >ram
+	.rodata : SUBALIGN(16) { *(.rodata*) } >ram
+	.data : SUBALIGN(16) { *(.data*) } >ram
+	.bss : SUBALIGN(16) { *(.bss*) } >ram
 
 	. = ALIGN(4);
 	__end__ = ABSOLUTE(.);

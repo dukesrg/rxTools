@@ -13,6 +13,8 @@
 @ along with this program; if not, write to the Free Software
 @ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#include <arm.h>
+
 .section .text.start
 .arm
 .global _start
@@ -36,6 +38,8 @@ _bigpayload:
 	cmp	r0, r1
 	beq	_start_al9h @ already launched from payload_start
 
+	mov	r11, r0
+	mov	r12, r1
 	mov	r2, #0x10000
 loop:
         subs	r2, #1
@@ -48,26 +52,25 @@ copy:
 	subs	r2, r2, #32
 	bne	copy
 
-	ldr	r2, =payload_length
-	sub	r0, r2
-	sub	r1, r2
-
-	adr	r2, _start_al9h
-	sub	r2, r0
-	add	r1, r2
-	mov	r3, #0
-	mcr	p15, 0, r3, c7, c5, 0 @ flush I-cache
-	bx	r1 @ jump to payload_start + _start_al9h - _start
+	adr	r3, _start_al9h
+	sub	r3, r11
+	add	r3, r12
+	mcr	p15, 0, r2, c7, c5, 0 @ flush I-cache
+	bx	r3 @ jump to payload_start + _start_al9h - _start
 
 .align 4
 _start_al9h:
+    @ Load predefined values to registers for immediate use
+	adr	r0, settings
+	ldm	r0, {r0-r14}
+
     @ Change the stack pointer
     mov sp, #0x27000000
 
     @ Give read/write access to all the memory regions
-    ldr r5, =0x33333333
-    mcr p15, 0, r5, c5, c0, 2 @ write data access
-    mcr p15, 0, r5, c5, c0, 3 @ write instruction access
+@    ldr r5, =0x33333333
+    mcr p15, 0, r14, c5, c0, 2 @ write data access
+    mcr p15, 0, r14, c5, c0, 3 @ write instruction access
 
     @ Sets MPU permissions and cache settings
     ldr r0, =0xFFFF001D	@ ffff0000 32k
@@ -109,9 +112,27 @@ _start_al9h:
     @ Fixes mounting of SDMC
 	ldr r0, =0x10000020
 	mov r1, #0x340
-	str r1, [r0]
+	str	r1, [r0]
 
     bl toolsmain
 
 .die:
     b .die
+
+.align 4
+settings:
+	.word	(0xFFFF0000 | PR_SZ_32K | PR_EN)	@ r0
+	.word	(0x01FF8000 | PR_SZ_32K | PR_EN)	@ r1
+	.word	(0x08000000 | PR_SZ_1M | PR_EN)		@ r2
+	.word	(0x10000000 | PR_SZ_128K | PR_EN)	@ r3
+	.word	(0x10100000 | PR_SZ_512K | PR_EN)	@ r4
+	.word	(0x20000000 | PR_SZ_128K | PR_EN)	@ r5
+	.word	(0x1FF00000 | PR_SZ_1M | PR_EN)		@ r6
+	.word	(0x18000000 | PR_SZ_8M | PR_EN)		@ r7
+	.word	0x00000025	@ r8: for flush cache
+	.word	(CR_I | CR_D | CR_M) @ r9: instruction cache, data cache, MPU enable
+	.word	0x00000000	@ r10: just zero
+	.word	0x10000020	@ r11: SDMC mount fix CFG9? register
+	.word	0x00000340	@ r12: SDMC mount fix value
+	.word	0x27000000	@ r13 SP should work for ARM9(v5)
+	.word	0x33333333	@ r14 LR but who cares at that point?
