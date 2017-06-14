@@ -14,7 +14,6 @@
 @ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 .section .text.start
-.align 4
 .arm
 .global _start
 
@@ -60,6 +59,7 @@ copy:
 	mcr	p15, 0, r3, c7, c5, 0 @ flush I-cache
 	bx	r1 @ jump to payload_start + _start_al9h - _start
 
+.align 4
 _start_al9h:
     @ Change the stack pointer
     mov sp, #0x27000000
@@ -114,5 +114,4 @@ _start_al9h:
     bl toolsmain
 
 .die:
-	nop
     b .die
