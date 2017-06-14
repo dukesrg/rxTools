@@ -26,7 +26,7 @@
 #define CR_P	(1 << 4)	// 32-bit exception handler
 #define CR_D	(1 << 5)	// 32-bit data address range
 #define CR_L	(1 << 6)	// Implementation defined
-#define CR_B	(1 << 7)	//@ Big endian
+#define CR_B	(1 << 7)	// Big endian
 #define CR_S	(1 << 8)	// System MMU protection
 #define CR_R	(1 << 9)	// ROM MMU protection
 #define CR_F	(1 << 10)	// Implementation defined
