@@ -15,8 +15,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef ARM_H
-#define ARM_H
+#ifndef ARM_CP15_H
+#define ARM_CP15_H
 
 // Control Register
 #define CR_M	(1 << 0)	// MMU enable
