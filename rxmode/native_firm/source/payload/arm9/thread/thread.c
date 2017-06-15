@@ -39,7 +39,7 @@ static void memdump(wchar_t *filename, unsigned char *buf, size_t size)
 	P9File f;
 
 	for (i = 0; i < 0x600000; i++)
-		((char *)ARM9_VRAM_ADDR)[i] = 0x77;			//Grey flush : Start Dumping
+		((char *)MEM_VRAM)[i] = 0x77;			//Grey flush : Start Dumping
 
 	p9FileInit(f);
 	p9Open(f, filename, 6);
@@ -47,7 +47,7 @@ static void memdump(wchar_t *filename, unsigned char *buf, size_t size)
 	p9Close(f);
 
 	for (i = 0; i < 0x600000; i++)
-		((char *)ARM9_VRAM_ADDR)[i] = 0xFF;			//White flush : Finished Dumping
+		((char *)MEM_VRAM)[i] = 0xFF;			//White flush : Finished Dumping
 }
 #endif
 
@@ -120,7 +120,7 @@ static void scrPutc(int c)
 		unsigned char r;
 	};
 
-	struct px (* const fb)[FB_HEIGHT] = (void *)ARM9_VRAM_ADDR;
+	struct px (* const fb)[FB_HEIGHT] = (void *)MEM_VRAM;
 	unsigned int fnt_x, fnt_y;
 	const unsigned char *p;
 
