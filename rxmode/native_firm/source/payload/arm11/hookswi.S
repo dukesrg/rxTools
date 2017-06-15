@@ -26,8 +26,8 @@ reg = 0x1EF00000
 hookSwi:
 	cpsid	aif
 
-	mov	r1, #ARM11_VRAM_PADDR
-	add	r0, r1, #reg - ARM11_VRAM_PADDR
+	mov	r1, #MEM_VRAM
+	add	r0, r1, #reg - MEM_VRAM
 	ldr	r2, lcdWH
 	mov	r3, #1
 
