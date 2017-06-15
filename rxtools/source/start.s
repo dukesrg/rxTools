@@ -81,18 +81,15 @@ _start_al9h:
 	mcr	p15, 0, r9, c2, c0, 0	@ Data cacheable 0, 2, 5
 	mcr	p15, 0, r9, c2, c0, 1	@ Inst cacheable 0, 2, 5
 
-	mcr	p15, 0, r14, c9, c1, 0	@ Set DTCM address and size
-    
 	@ Enable caches
 	mrc	p15, 0, r4, c1, c0, 0
 	orr	r4, r4, r10
 	mcr	p15, 0, r4, c1, c0, 0
 
 	@ Flush caches
-	mov	r0, #0
-	mcr	p15, 0, r0, c7, c5, 0	@ flush I-cache
-	mcr	p15, 0, r0, c7, c6, 0	@ flush D-cache
-	mcr	p15, 0, r0, c7, c10, 4	@ drain write buffer
+	mcr	p15, 0, r14, c7, c5, 0	@ flush I-cache
+	mcr	p15, 0, r14, c7, c6, 0	@ flush D-cache
+	mcr	p15, 0, r14, c7, c10, 4	@ drain write buffer
 
 	@ Fixes mounting of SDMC
 	str	r12, [r11]
@@ -105,17 +102,17 @@ _start_al9h:
 .align 4
 settings:
 	.word	(MEM_BOOTROM | PR_SZ_32K | PR_EN)	@ r0: memory region 0 base, size and protection
-	.word	(MEM_ARM9_DTCM | PR_SZ_16K | PR_EN)	@ r1: memory region 1 base, size and protection
-	.word	(MEM_ARM9_ITCM_KERNEL | PR_SZ_32K | PR_EN)	@ r2: memory region 2 base, size and protection
-	.word	(MEM_ARM9_RAM | PR_SZ_1M | PR_EN)	@ r3: memory region 3 base, size and protection
-	.word	(MEM_IO | PR_SZ_2M | PR_EN)		@ r4: memory region 4 base, size and protection
+	.word	(MEM_ARM9_ITCM_KERNEL | PR_SZ_32K | PR_EN)	@ r1: memory region 1 base, size and protection
+	.word	(MEM_ARM9_RAM | PR_SZ_1M | PR_EN)	@ r2: memory region 2 base, size and protection
+	.word	(MEM_IO | PR_SZ_128K | PR_EN)		@ r3: memory region 3 base, size and protection
+	.word	(MEM_IO + 0x00100000 | PR_SZ_512K | PR_EN)		@ r4: memory region 4 base, size and protection
 	.word	(MEM_FCRAM | PR_SZ_128M | PR_EN)	@ r5: memory region 5 base, size and protection
 	.word	(MEM_DSP | PR_SZ_1M | PR_EN)		@ r6: memory region 6 base, size and protection
 	.word	(MEM_VRAM | PR_SZ_8M | PR_EN)		@ r7: memory region 7 base, size and protection
 	.word	AP_ALL_ACCESS	@ r8: memory regions 0-7 access rights
-	.word	(CB_0 | CB_3 | CB_5)	@ r9: memory regions 0-7 cache and write buffer control
+	.word	(CB_0 | CB_2 | CB_5)	@ r9: memory regions 0-7 cache and write buffer control
 	.word	(CR_M | CR_C | CR_I)	@ r10: instruction cache, data cache, MPU enable
 	.word	0x10000020	@ r11: SDMC mount fix CFG9(?) register
 	.word	0x00000340	@ r12: SDMC mount fix value
 	.word	0x27000000	@ r13: SP init value
-	.word	(MEM_ARM9_DTCM | TCM_SZ_16K)	@ r14: DTCM base and size
+	.word	0x00000000	@ r14: just zero
