@@ -36,6 +36,7 @@
 #include "jsmn/jsmn.h"
 #include "progress.h"
 #include "strings.h"
+#include "aes.h"
 
 #define KEYFILENAME	"slot0x25KeyX.bin"
 
@@ -247,7 +248,7 @@ static FRESULT saveFirm(uint32_t id, const void *p, DWORD n)
 static int processFirmFile(uint32_t lo)
 {
 	static const wchar_t pathFmt[] = L"rxTools/firm/00040138%08" PRIX32 "%ls.bin";
-	const uint32_t hi = 0x00040138;
+	const uint64_t title_id = (uint64_t)__builtin_bswap32(lo) << 32 | 0x38010400;
 	uint8_t key[AES_BLOCK_SIZE];
 	wchar_t path[_MAX_LFN + 1];
 	void *buff, *firm;
@@ -274,16 +275,15 @@ static int processFirmFile(uint32_t lo)
 			return saveFirm(lo, firm, size);
 	}
 
-	if (!getTitleKey(key, hi, lo, 1)) {
-		firm = decryptFirmTitle(buff, size, &size, key);
-		if (firm != NULL)
-			return saveFirm(lo, firm, size);
-	}
-
-	if (!getTitleKey(key, hi, lo, 2)) {
-		firm = decryptFirmTitle(buff, size, &size, key);
-		if (firm != NULL)
-			return saveFirm(lo, firm, size);
+	aes_key Key = {&(aes_key_data){{0}}, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
+	aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
+	for (uint_fast8_t drive = 1; drive <= 2; drive++) {
+		if (!getTitleKey2(&Key, title_id, drive)) {
+			aes_set_key(&Key);
+			aes(buff, buff, size, &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+			if ((firm = decryptFirmTitleNcch(buff, &size)) != NULL)
+				return saveFirm(lo, firm, size);
+		}
 	}
 
 	return -1;
