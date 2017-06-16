@@ -27,6 +27,8 @@
 #include "CTRDecryptor.h"
 #include "crypto.h"
 
+#include "ticket.h"
+
 #define BUF1 (uint8_t*)0x21000000
 #define TITLES (uint8_t*)0x22000000
 
@@ -67,37 +69,6 @@ int DecryptTitleKey(uint8_t *titleid, uint8_t *key, uint32_t index) {
 
 	memcpy(titleId, titleid, 8);
 	memcpy(&ctr, titleId, 8);
-	set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
-
-	if (keyYList == NULL) {
-		p = 0x08080000;
-		while (((uint8_t *)p)[0] != 0xD0 || ((uint8_t *)p)[1] != 0x7B) {
-			p++;
-			if (p >= 0x080A0000)
-				return 1;
-		}
-
-		keyYList = (void *)p;
-	}
-
-	memcpy(keyY, keyYList[index].key, sizeof(keyY));
-	setup_aeskey(0x3D, AES_BIG_INPUT | AES_NORMAL_INPUT, keyY);
-	use_aeskey(0x3D);
-	aes_decrypt(key, key, 1, AES_CBC_DECRYPT_MODE);
-	return 0;
-}
-
-int DecryptTitleKey2(uint64_t titleid, uint8_t *key, uint_fast8_t index) {
-#define blockSize 16
-	static struct {
-		uint8_t key[blockSize];
-		uint32_t pad;
-	} *keyYList = NULL;
-	aes_ctr_old ctr = {0};
-	uint8_t keyY[blockSize];
-	uintptr_t p;
-
-	memcpy(&ctr, &titleid, 8);
 	set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
 
 	if (keyYList == NULL) {
@@ -345,42 +316,6 @@ int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive) {
 						r = DecryptTitleKey(titleid, Key, kindex);
 						if (!r)
 							memcpy(TitleKey, Key, 16);
-						FileClose(&tick);
-						return r;
-					}
-				}
-			}
-		}
-		FileClose(&tick);
-	}
-	return 1;
-}
-
-int getTitleKey2(aes_key *TitleKey, uint64_t tid, uint_fast8_t drive) {
-	File tick;
-	uint32_t tick_size = 0x200;     //Chunk size
-
-	wchar_t path[_MAX_LFN] = {0};
-	int r;
-
-	swprintf(path, _MAX_LFN, L"%d:dbs/ticket.db", drive);
-
-	if (FileOpen(&tick, path, 0)) {
-		uint8_t *buf = TITLES;
-		while (FileRead2(&tick, buf, tick_size)) {
-			if (*(uint32_t*)buf == 'KCIT' ) {
-				tick_size = 0xD0000;
-				continue;
-			}
-			for (int j = 0; j < tick_size; j++) {
-				if (!strcmp((char *)buf + j, "Root-CA00000003-XS0000000c")) {
-					uint64_t titleid = *(uint64_t*)(buf + j + 0x9C);
-					uint_fast8_t kindex = *(buf + j + 0xB1);
-					uint8_t Key[16];
-					memcpy(Key, buf + j + 0x7F, 16);
-					if (titleid == tid) {
-						if (!(r = DecryptTitleKey2(titleid, Key, kindex)))
-							memcpy(TitleKey->data, Key, 16);
 						FileClose(&tick);
 						return r;
 					}
