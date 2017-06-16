@@ -277,10 +277,10 @@ static int processFirmFile(uint32_t lo)
 	}
 
 	aes_key Key = {0};
-	aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
 	for (uint_fast8_t drive = 1; drive <= 2; drive++) {
 		if (ticketGetKey(&Key, title_id, drive)) {
 			aes_set_key(&Key);
+			aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
 			aes(buff, buff, size, &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 			if ((firm = decryptFirmTitleNcch(buff, &size)) != NULL)
 				return saveFirm(lo, firm, size);

@@ -22,7 +22,7 @@
 #include "aes.h"
 
 typedef struct {
-	uint8_t issuer[0x40];
+	char issuer[0x40];
 	uint8_t public_key[0x3C];
 	uint8_t version;
 	uint8_t ca_crl_version;
@@ -30,7 +30,7 @@ typedef struct {
 	aes_key_data key;
 	uint8_t reserved_1;
 	union {
-		uint64_t ticket_id;
+		uint64_t ticket_id __attribute__((packed));
 		struct {
 			uint32_t ticket_id_hi;
 			uint32_t ticket_id_lo;
@@ -38,7 +38,7 @@ typedef struct {
 	};
 	uint32_t console_id;
 	union {
-		uint64_t title_id;
+		uint64_t title_id __attribute__((packed));
 		struct {
 			uint32_t title_id_hi;
 			uint32_t title_id_lo;
@@ -49,7 +49,7 @@ typedef struct {
 	uint8_t reserved_3[8];
 	uint8_t license_type;
 	uint8_t key_index;
-	uint8_t reserved_4[2A];
+	uint8_t reserved_4[0x2A];
 	uint32_t eshop_account_id;
 	uint8_t reserved_5;
 	uint8_t audit;

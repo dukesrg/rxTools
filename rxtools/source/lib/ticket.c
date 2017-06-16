@@ -15,8 +15,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include "aes.h"
+#include "fs.h"
 #include "signature.h"
 #include "ticket.h"
 
@@ -34,10 +36,10 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 		keyYList = (void*)p;
 	}
 	
-	aes_ctr ctr = {.data.as64={ticket->titleid, 0}, AES_CNT_INPUT_BE_NORMAL};
-	aes_set_key(&{&keyYList[ticket->index].key, AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
-	aes(key->data, ticket.key, sizeof(ticket->key), &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
-	*key = {key->data, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
+	aes_ctr ctr = {.data.as64={ticket->title_id, 0}, AES_CNT_INPUT_BE_NORMAL};
+	aes_set_key(&(aes_key){&keyYList[ticket->key_index].key, AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
+	aes(key->data, &ticket->key, sizeof(ticket->key), &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+	*key = (aes_key){key->data, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
 	return 1;
 }
 
@@ -49,19 +51,19 @@ uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 	wchar_t path[_MAX_LFN + 1];
 	ticket_data *ticket;
 
-	swprintf(path, sizeof(path), L"%d:dbs/ticket.db", drive);
+	swprintf(path, sizeof(path), L"%u:dbs/ticket.db", drive);
 
 	if (!FileOpen(&fil, path, 0))
 		return 0;
 	
-	uint8_t buf[BUF_SIZE];
+	void *buf = __builtin_alloca(BUF_SIZE);
 	while (FileRead2(&fil, buf, tick_size))
 		if (*(uint32_t*)buf == 'KCIT')
 			tick_size = BUF_SIZE;
 		else
 			for (size_t i = 0; i < tick_size; i++)
-				if ((ticket = (ticket_data*)buf + i)->title_id == tid &&
-					!strncmp(ticket.issuer, "Root-CA00000003-XS0000000c", sizeof(ticket->issuer))
+				if ((ticket = (ticket_data*)buf + i)->title_id == titleid &&
+					!strncmp(ticket->issuer, "Root-CA00000003-XS0000000c", sizeof(ticket->issuer))
 				) {
 					FileClose(&fil);
 					return decryptKey(key, ticket);
@@ -79,7 +81,7 @@ uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path) {
 		(FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) != sizeof(data.sig_type) ||
 		(offset = signatureAdvance(data.sig_type)) == 0 ||
 		!FileSeek(&fil, offset) ||
-		FileRead2(&fil, &data.header, sizeof(data.header)) != sizeof(data.header)) &&
+		FileRead2(&fil, &data.ticket, sizeof(data.ticket)) != sizeof(data.ticket)) &&
 		(FileClose(&fil) || 1) &&
 		data.ticket.title_id != titleid
 	)) return 0;
