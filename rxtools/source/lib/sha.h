@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015-2016 b1l1s, dukesrg 
+ * Copyright (C) 2015-2017 b1l1s, dukesrg 
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -20,6 +20,15 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
+typedef enum {
+	RSA_4096_SHA1	= 0x00000100,
+	RSA_2048_SHA1	= 0x01000100,
+	ECDSA_SHA1	= 0x02000100,
+	RSA_4096_SHA256	= 0x03000100,
+	RSA_2048_SHA256	= 0x04000100,
+	ECDSA_SHA256	= 0x05000100
+} signature_type; //BE order
 
 #define REG_SHA_CNT		((volatile uint32_t*)0x1000A000)
 #define REG_SHA_BLKCNT		((volatile uint32_t*)0x1000A004)
