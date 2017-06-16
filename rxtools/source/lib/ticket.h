@@ -27,7 +27,7 @@ typedef struct {
 	uint8_t version;
 	uint8_t ca_crl_version;
 	uint8_t signer_crl_version;
-	aes_key_data title_key;
+	aes_key_data key;
 	uint8_t reserved_1;
 	union {
 		uint64_t ticket_id;
@@ -56,14 +56,15 @@ typedef struct {
 	uint8_t reserved_6[0x42];
 	uint8_t limits[0x40];
 	uint8_t content_index[0xAC];
-} __attribute__((packed)) ticket_header;
+} __attribute__((packed)) ticket_data;
 
 typedef struct {
 	uint32_t sig_type;
 	uint8_t *sig;
-	ticket_header data;
-} ticket_data;
+	ticket_data ticket;
+} cetk_data;
 
-uint_fast8_t ticketGetKeyCetk(aes_key *Key, wchar_t *path, uint64_t titleid);
+uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive);
+uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path);
 
 #endif
