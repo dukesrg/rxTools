@@ -275,7 +275,7 @@ static int processFirmFile(uint32_t lo)
 			return saveFirm(lo, firm, size);
 	}
 
-	aes_key Key = {&(aes_key_data){{0}}, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
+	aes_key Key = {0};
 	aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
 	for (uint_fast8_t drive = 1; drive <= 2; drive++) {
 		if (!getTitleKey2(&Key, title_id, drive)) {
