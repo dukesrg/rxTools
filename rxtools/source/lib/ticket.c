@@ -16,12 +16,61 @@
  */
 
 #include <string.h>
-#include "cetk.h"
 #include "aes.h"
 #include "signature.h"
-#include "TitleKeyDecrypt.h"
+#include "ticket.h"
 
-uint_fast8_t ticketGetKeyCetk(aes_key *Key, wchar_t *path, uint64_t titleid) {
+uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
+	static struct {
+		aes_key_data key;
+		uint32_t pad;
+	} *keyYList = NULL;
+
+	if (keyYList == NULL) {
+		uintptr_t p;
+		for (p = 0x08080000; *(uint16_t*)p != 0x7BD0; p++)
+			if (p == 0x080A0000)
+				return 0;
+		keyYList = (void*)p;
+	}
+	
+	aes_ctr ctr = {.data.as64={ticket->titleid, 0}, AES_CNT_INPUT_BE_NORMAL};
+	aes_set_key(&{&keyYList[ticket->index].key, AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
+	aes(key->data, ticket.key, sizeof(ticket->key), &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+	*key = {key->data, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
+	return 1;
+}
+
+uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
+#define BUF_SIZE 0xD0000
+	File fil;
+	uint32_t tick_size = 0x200;
+
+	wchar_t path[_MAX_LFN + 1];
+	ticket_data *ticket;
+
+	swprintf(path, sizeof(path), L"%d:dbs/ticket.db", drive);
+
+	if (!FileOpen(&fil, path, 0))
+		return 0;
+	
+	uint8_t buf[BUF_SIZE];
+	while (FileRead2(&fil, buf, tick_size))
+		if (*(uint32_t*)buf == 'KCIT')
+			tick_size = BUF_SIZE;
+		else
+			for (size_t i = 0; i < tick_size; i++)
+				if ((ticket = (ticket_data*)buf + i)->title_id == tid &&
+					!strncmp(ticket.issuer, "Root-CA00000003-XS0000000c", sizeof(ticket->issuer))
+				) {
+					FileClose(&fil);
+					return decryptKey(key, ticket);
+				}
+	FileClose(&fil);
+	return 0;
+}
+
+uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path) {
 	File fil;
 	size_t offset;
 	cetk_data data;
@@ -32,9 +81,8 @@ uint_fast8_t ticketGetKeyCetk(aes_key *Key, wchar_t *path, uint64_t titleid) {
 		!FileSeek(&fil, offset) ||
 		FileRead2(&fil, &data.header, sizeof(data.header)) != sizeof(data.header)) &&
 		(FileClose(&fil) || 1) &&
-		data.title_id != titleid
+		data.ticket.title_id != titleid
 	)) return 0;
 	
-	*Key->data = data.title_key;
-	return DecryptTitleKey2(data.title_id, Key->data, data.key_index);
+	return decryptKey(key, &data.ticket);
 }
