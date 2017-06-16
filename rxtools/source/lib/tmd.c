@@ -18,13 +18,13 @@
 #include <string.h>
 #include "tmd.h"
 #include "fs.h"
-#include "TitleKeyDecrypt.h"
 
 #include "aes.h"
 #include "draw.h"
 #include "sha.h"
 #include "theme.h"
 #include "signature.h"
+#include "ticket.h"
 
 #define BUF_SIZE 0x100000
 #define APP_EXT ".app"
@@ -184,8 +184,8 @@ uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t conte
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, 0) && (FileGetSize(&fil) == size || (FileClose(&fil) && 0))
 				) {
-					aes_key Key = {&(aes_key_data){{0}}, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
-					getTitleKey2(&Key, data->header.title_id, drive);
+					aes_key Key = {0};
+					ticketGetKey(&Key, data->header.title_id, drive);
 					aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
 					aes_set_key(&Key);
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) {
