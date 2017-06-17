@@ -27,6 +27,8 @@
 #include "CTRDecryptor.h"
 #include "crypto.h"
 
+#include "ticket.h"
+
 #define BUF1 (uint8_t*)0x21000000
 #define TITLES (uint8_t*)0x22000000
 
@@ -67,37 +69,6 @@ int DecryptTitleKey(uint8_t *titleid, uint8_t *key, uint32_t index) {
 
 	memcpy(titleId, titleid, 8);
 	memcpy(&ctr, titleId, 8);
-	set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
-
-	if (keyYList == NULL) {
-		p = 0x08080000;
-		while (((uint8_t *)p)[0] != 0xD0 || ((uint8_t *)p)[1] != 0x7B) {
-			p++;
-			if (p >= 0x080A0000)
-				return 1;
-		}
-
-		keyYList = (void *)p;
-	}
-
-	memcpy(keyY, keyYList[index].key, sizeof(keyY));
-	setup_aeskey(0x3D, AES_BIG_INPUT | AES_NORMAL_INPUT, keyY);
-	use_aeskey(0x3D);
-	aes_decrypt(key, key, 1, AES_CBC_DECRYPT_MODE);
-	return 0;
-}
-
-int DecryptTitleKey2(uint64_t titleid, uint8_t *key, uint_fast8_t index) {
-#define blockSize 16
-	static struct {
-		uint8_t key[blockSize];
-		uint32_t pad;
-	} *keyYList = NULL;
-	aes_ctr_old ctr = {0};
-	uint8_t keyY[blockSize];
-	uintptr_t p;
-
-	memcpy(&ctr, &titleid, 8);
 	set_ctr(AES_BIG_INPUT | AES_NORMAL_INPUT, &ctr);
 
 	if (keyYList == NULL) {
@@ -312,133 +283,4 @@ void DecryptTitleKeyFile(void) {
 	ConsoleShow();
 	WaitForButton(keys[KEY_A].mask);
 	return;
-}
-
-int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive) {
-	File tick;
-	uint32_t tid_low = ((low >> 24) & 0xff) | ((low << 8) & 0xff0000) | ((low >> 8) & 0xff00) | ((low << 24) & 0xff000000);
-	uint32_t tid_high = ((high >> 24) & 0xff) | ((high << 8) & 0xff0000) | ((high >> 8) & 0xff00) | ((high << 24) & 0xff000000);
-	uint32_t tick_size = 0x200;     //Chunk size
-
-	wchar_t path[_MAX_LFN] = {0};
-	int r;
-
-	swprintf(path, _MAX_LFN, L"%d:dbs/ticket.db", drive);
-
-	if (FileOpen(&tick, path, 0)) {
-		uint8_t *buf = TITLES;
-		int pos = 0;
-		for (;;) {
-			int rb = FileRead(&tick, buf, tick_size, pos);
-			if (rb == 0) { break; } /* error or eof */
-			pos += rb;
-			if (buf[0] == 'T' && buf[1] == 'I' && buf[2] == 'C' && buf[3] == 'K') {
-				tick_size = 0xD0000;
-				continue;
-			}
-			for (int j = 0; j < tick_size; j++) {
-				if (!strcmp((char *)buf + j, "Root-CA00000003-XS0000000c")) {
-					uint8_t *titleid = buf + j + 0x9C;
-					uint32_t kindex = *(buf + j + 0xB1);
-					uint8_t Key[16]; memcpy(Key, buf + j + 0x7F, 16);
-					if (*((uint32_t *)titleid) == tid_low && *((uint32_t *)(titleid + 4)) == tid_high) {
-						r = DecryptTitleKey(titleid, Key, kindex);
-						if (!r)
-							memcpy(TitleKey, Key, 16);
-						FileClose(&tick);
-						return r;
-					}
-				}
-			}
-		}
-		FileClose(&tick);
-	}
-	return 1;
-}
-
-int getTitleKey2(aes_key *TitleKey, uint64_t tid, uint_fast8_t drive) {
-	File tick;
-	uint32_t tick_size = 0x200;     //Chunk size
-
-	wchar_t path[_MAX_LFN] = {0};
-	int r;
-
-	swprintf(path, _MAX_LFN, L"%d:dbs/ticket.db", drive);
-
-	if (FileOpen(&tick, path, 0)) {
-		uint8_t *buf = TITLES;
-		while (FileRead2(&tick, buf, tick_size)) {
-			if (*(uint32_t*)buf == 'KCIT' ) {
-				tick_size = 0xD0000;
-				continue;
-			}
-			for (int j = 0; j < tick_size; j++) {
-				if (!strcmp((char *)buf + j, "Root-CA00000003-XS0000000c")) {
-					uint64_t titleid = *(uint64_t*)(buf + j + 0x9C);
-					uint_fast8_t kindex = *(buf + j + 0xB1);
-					uint8_t Key[16];
-					memcpy(Key, buf + j + 0x7F, 16);
-					if (titleid == tid) {
-						if (!(r = DecryptTitleKey2(titleid, Key, kindex)))
-							memcpy(TitleKey->data, Key, 16);
-						FileClose(&tick);
-						return r;
-					}
-				}
-			}
-		}
-		FileClose(&tick);
-	}
-	return 1;
-}
-
-static FRESULT seekRead(FIL *fp, DWORD ofs, void *buff, UINT btr)
-{
-	FRESULT r;
-	UINT br;
-
-	r = f_lseek(fp, ofs);
-	if (r != FR_OK)
-		return r;
-
-	r = f_read(fp, buff, btr, &br);
-	return br < btr ? (r == FR_OK ? EOF : r) : FR_OK;
-}
-
-#define CETK_MEMBER_SIZE(member) (sizeof(((TicketHdr *)NULL)->member))
-#define CETK_READ_MEMBER(fp, member, buff)	\
-	(seekRead((fp), 0x140 + offsetof(TicketHdr, member), buff,	\
-		CETK_MEMBER_SIZE(member)))
-
-int getTitleKeyWithCetk(uint8_t dst[16], const wchar_t *path)
-{
-	uint8_t id[CETK_MEMBER_SIZE(titleId)];
-	uint8_t index;
-	FRESULT r;
-	FIL f;
-
-	r = f_open(&f, path, FA_READ);
-	if (r != FR_OK)
-		return r;
-
-	r = CETK_READ_MEMBER(&f, titleKey, dst);
-	if (r != FR_OK) {
-		f_close(&f);
-		return r;
-	}
-
-	r = CETK_READ_MEMBER(&f, titleId, id);
-	if (r != FR_OK) {
-		f_close(&f);
-		return r;
-	}
-
-	r = CETK_READ_MEMBER(&f, keyIndex, &index);
-	if (r != FR_OK) {
-		f_close(&f);
-		return r;
-	}
-
-	f_close(&f);
-	return DecryptTitleKey(id, dst, index);
 }

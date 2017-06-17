@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The PASTA Team
+ * Copyright (C) 2017 dukesrg 
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,33 +15,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#ifndef DOWNGRADEAPP_H
-#define DOWNGRADEAPP_H
- 
+#ifndef SIGNATURE_H
+#define SIGNATURE_H
+
 #include <stdint.h>
-#include "fs.h"
+#include <stddef.h>
 
-typedef struct {
-        unsigned int drive;
-	union {
-		uint64_t tid;
-        	struct {
-		        uint32_t tidLo;
-			uint32_t tidHi;
-		};
-	};
-        wchar_t tmd[_MAX_LFN];
-        wchar_t content[_MAX_LFN];
-} AppInfo;
+typedef enum {
+	RSA_4096_SHA1	= 0x00000100,
+	RSA_2048_SHA1	= 0x01000100,
+	ECDSA_SHA1	= 0x02000100,
+	RSA_4096_SHA256	= 0x03000100,
+	RSA_2048_SHA256	= 0x04000100,
+	ECDSA_SHA256	= 0x05000100
+} signature_type; //BE order
 
-//Utilities
-// Fill drive, tidLo and tidHi before calling this.
-int FindApp(AppInfo *info);
-int CheckRegion(int drive);
-
-//Features
-void downgradeMSET();
-void installFBI();
-void restoreHS();
+size_t signatureAdvance(uint32_t sig_type);
 
 #endif

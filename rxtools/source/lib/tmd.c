@@ -18,12 +18,13 @@
 #include <string.h>
 #include "tmd.h"
 #include "fs.h"
-#include "TitleKeyDecrypt.h"
 
 #include "aes.h"
 #include "draw.h"
 #include "sha.h"
 #include "theme.h"
+#include "signature.h"
+#include "ticket.h"
 
 #define BUF_SIZE 0x100000
 #define APP_EXT ".app"
@@ -140,16 +141,7 @@ bool tmdLoad(wchar_t *apppath, tmd_data *data, uint32_t drive) {
 	f_closedir(&dir);
 	return data->header.title_version != CONTENT_VERSION_UNSET;
 }
-*/
-static size_t tmdHeaderOffset(uint32_t sig_type) {
-	switch (sig_type) {
-		case RSA_4096_SHA1: case RSA_4096_SHA256: return 0x240;
-		case RSA_2048_SHA1: case RSA_2048_SHA256: return 0x140;
-		case ECDSA_SHA1: case ECDSA_SHA256: return 0x80;
-		default: return 0;
-	}
-}
-/*
+
 static bool checkFileHash(wchar_t *path, uint8_t *checkhash) {
 	FIL fil;
 	uint8_t *buf;
@@ -192,8 +184,8 @@ uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t conte
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, 0) && (FileGetSize(&fil) == size || (FileClose(&fil) && 0))
 				) {
-					aes_key Key = {&(aes_key_data){{0}}, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
-					getTitleKey2(&Key, data->header.title_id, drive);
+					aes_key Key = {&(aes_key_data){{0}}};
+					ticketGetKey(&Key, data->header.title_id, drive);
 					aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
 					aes_set_key(&Key);
 					while ((size = FileRead2(&fil, buf, BUF_SIZE))) {
@@ -219,7 +211,7 @@ size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_inde
 	uint_fast16_t content_count;
 	uint32_t content_size = 0;
 	
-	if (!FileOpen(&fil, path, 0) || (offset = tmdHeaderOffset(data->sig_type)) == 0) return 0;
+	if (!FileOpen(&fil, path, 0) || (offset = signatureAdvance(data->sig_type)) == 0) return 0;
 	offset += sizeof(data->header) + sizeof(data->content_info);
 	content_count = __builtin_bswap16(data->header.content_count);
 	size = content_count * sizeof(tmd_content_chunk);
@@ -246,7 +238,7 @@ uint_fast8_t tmdLoadHeader(tmd_data *data, wchar_t *path) { //validate and load 
 	
 	if (!FileOpen(&fil, path, 0) || (
 		(FileRead2(&fil, &data_tmp.sig_type, sizeof(data_tmp.sig_type)) != sizeof(data_tmp.sig_type) ||
-		(offset = tmdHeaderOffset(data_tmp.sig_type)) == 0 ||
+		(offset = signatureAdvance(data_tmp.sig_type)) == 0 ||
 		!FileSeek(&fil, offset) ||
 		FileRead2(&fil, &data_tmp.header, sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) != sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) &&
 		(FileClose(&fil) || 1)
@@ -276,7 +268,7 @@ size_t tmdPreloadHeader(tmd_data *data, wchar_t *path) { //loads tmd header, val
 	
 	if (!FileOpen(&fil, path, 0) || (
 		(FileRead2(&fil, &data_tmp.sig_type, sizeof(data_tmp.sig_type)) != sizeof(data_tmp.sig_type) ||
-		(offset = tmdHeaderOffset(data_tmp.sig_type)) == 0 ||
+		(offset = signatureAdvance(data_tmp.sig_type)) == 0 ||
 		!FileSeek(&fil, offset) ||
 		FileRead2(&fil, &data_tmp.header, sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) != sizeof(data_tmp.header) + sizeof(data_tmp.content_info)) &&
 		(FileClose(&fil) || 1)
@@ -295,7 +287,7 @@ size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_inde
 	uint_fast16_t content_count, chunk_count;
 	uint8_t hash[SHA_256_SIZE];
 	
-	if (FileOpen(&fil, path, 0) && (offset = tmdHeaderOffset(data->sig_type))) {
+	if (FileOpen(&fil, path, 0) && (offset = signatureAdvance(data->sig_type))) {
 		size = (content_count = __builtin_bswap16(data->header.content_count)) * sizeof(tmd_content_chunk);
 		if (!data->content_chunk)
 			data->content_chunk = __builtin_alloca(size);

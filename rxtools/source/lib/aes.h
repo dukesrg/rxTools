@@ -42,6 +42,7 @@ typedef struct {
 typedef union {
 	uint8_t as8[16];
 	uint32_t as32[4];
+	uint64_t as64[2];
 } aes_ctr_data;
 
 typedef struct {
