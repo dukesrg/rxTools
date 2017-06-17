@@ -146,15 +146,6 @@ uint8_t *decryptFirmTitleNcch(uint8_t* title, size_t *size) {
 	return firm;
 }
 
-uint8_t *decryptFirmTitle(uint8_t *title, size_t size, size_t *firmSize, uint8_t key[16])
-{
-	aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
-	aes_set_key(&(aes_key){(aes_key_data*)key, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY});
-	aes(title, title, size, &ctr, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
-
-	return decryptFirmTitleNcch(title, firmSize);
-}
-
 static void setAgbBios()
 {
 	File agb_firm;

@@ -50,7 +50,6 @@ int PastaMode();
 void FirmLoader();
 int rxMode(int_fast8_t drive);
 uint8_t* decryptFirmTitleNcch(uint8_t* title, size_t *size);
-uint8_t *decryptFirmTitle(uint8_t *title, size_t size, size_t *firmSize, uint8_t key[16]);
 FRESULT applyPatch(void *file, const char *patch);
 
 static inline int getFirmPath(wchar_t *s, TitleIdLo id)

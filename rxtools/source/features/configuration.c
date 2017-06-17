@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <reboot.h>
-#include "TitleKeyDecrypt.h"
 #include "configuration.h"
 #include "lang.h"
 #include "screenshot.h"
@@ -250,7 +249,6 @@ static int processFirmFile(uint32_t lo)
 {
 	static const wchar_t pathFmt[] = L"rxTools/firm/00040138%08lx%ls.bin";
 	const uint64_t title_id = (uint64_t)__builtin_bswap32(lo) << 32 | 0x38010400;
-	uint8_t key[AES_BLOCK_SIZE];
 	wchar_t path[_MAX_LFN + 1];
 	void *buff, *firm;
 	UINT size;
@@ -269,33 +267,19 @@ static int processFirmFile(uint32_t lo)
 	if (r != FR_OK)
 		return r;
 
-//	aes_key_data key_data __attribute__((aligned(32))) = {{0}};
 	aes_key Key = {&(aes_key_data){{0}}};
-//	aes_key Key = {&key_data};
-/*
+
 	swprintf(path, sizeof(path), pathFmt, lo, L"_cetk");
-	if (ticketGetKeyCetk(&Key, title_id, path)) {
-		firm = decryptFirmTitle(buff, size, &size, key);
-		if (firm != NULL)
+	uint_fast8_t drive = 1;
+	uint_fast8_t maxdrive = 2; //todo get max NAND drive number
+	if (!ticketGetKeyCetk(&Key, title_id, path)) //try with cetk
+		for (; drive <= maxdrive && !ticketGetKey(&Key, title_id, drive); drive++); //try with title.db from all NAND drives
+	if (drive <= maxdrive) {
+		aes_set_key(&Key);
+		aes(buff, buff, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+		if ((firm = decryptFirmTitleNcch(buff, &size)) != NULL)
 			return saveFirm(lo, firm, size);
 	}
-*/
-	for (uint_fast8_t drive = 1; drive <= 2; drive++) {
-		if (ticketGetKey(&Key, title_id, drive)) {
-//ClearScreen(&bottomScreen, BLUE);
-//DisplayScreen(&bottomScreen);
-			aes_set_key(&Key);
-			aes(buff, buff, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
-			if ((firm = decryptFirmTitleNcch(buff, &size)) != NULL)
-{
-ClearScreen(&bottomScreen, GREEN);
-DisplayScreen(&bottomScreen);
-				return saveFirm(lo, firm, size);
-}
-		}
-	}
-ClearScreen(&bottomScreen, RED);
-DisplayScreen(&bottomScreen);
 
 	return -1;
 }
@@ -336,11 +320,10 @@ static int processFirm(uint32_t lo)
 {
 	int r;
 
-	r = processFirmFile(lo);
-//	if (r && processFirmInstalled(lo))
-		return r;
+	if ((r = processFirmFile(lo)))
+		r = processFirmInstalled(lo);
 
-//	return 0;
+	return r;
 }
 
 static int InstallData() {
@@ -353,7 +336,7 @@ static int InstallData() {
 		TID_CTR_NATIVE_FIRM : TID_KTR_NATIVE_FIRM);
 	if (r)
 		return r;
-/*
+
 	progressSetPos(++p);
 
 	if (getMpInfo() == MPINFO_CTR) {
@@ -369,7 +352,7 @@ static int InstallData() {
 
 		progressSetPos(++p);
 	}
-*/
+
 	return 0;
 }
 
