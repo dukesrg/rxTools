@@ -184,7 +184,7 @@ uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t conte
 				} else if (!(apppath[wcslen(apppath) - strlen(APP_EXT)] = 0) && 
 					FileOpen(&fil, apppath, 0) && (FileGetSize(&fil) == size || (FileClose(&fil) && 0))
 				) {
-					aes_key Key = {0};
+					aes_key Key = {&(aes_key_data){{0}}};
 					ticketGetKey(&Key, data->header.title_id, drive);
 					aes_ctr ctr = {{{0}}, AES_CNT_INPUT_BE_NORMAL};
 					aes_set_key(&Key);

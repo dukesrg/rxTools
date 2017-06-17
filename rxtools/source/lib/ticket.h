@@ -30,7 +30,7 @@ typedef struct {
 	aes_key_data key;
 	uint8_t reserved_1;
 	union {
-		uint64_t ticket_id __attribute__((packed));
+		uint64_t ticket_id;
 		struct {
 			uint32_t ticket_id_hi;
 			uint32_t ticket_id_lo;
@@ -38,7 +38,7 @@ typedef struct {
 	};
 	uint32_t console_id;
 	union {
-		uint64_t title_id __attribute__((packed));
+		uint64_t title_id;
 		struct {
 			uint32_t title_id_hi;
 			uint32_t title_id_lo;
