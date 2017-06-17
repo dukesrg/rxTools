@@ -23,8 +23,13 @@
 
 typedef struct {
         unsigned int drive;
-        uint32_t tidLo;
-        uint32_t tidHi;
+	union {
+		uint64_t tid;
+        	struct {
+		        uint32_t tidLo;
+			uint32_t tidHi;
+		};
+	};
         wchar_t tmd[_MAX_LFN];
         wchar_t content[_MAX_LFN];
 } AppInfo;

@@ -19,36 +19,8 @@
 #define TITLE_KEY_DECRYPT_H
 
 #include <stdint.h>
-#include <aes.h>
-
-typedef struct {
-	uint8_t issuer[64];
-	uint8_t pubKey[60];
-	uint8_t ver;
-	uint8_t caCrlVer;
-	uint8_t issuerCrlVer;
-	uint8_t titleKey[16];
-	uint8_t unused0;
-	uint8_t ticketId[8];
-	uint8_t consoleId[4];
-	uint8_t titleId[8];
-	uint8_t unused1[2];
-	uint16_t titleVer;
-	uint8_t unused2[8];
-	uint8_t type;
-	uint8_t keyIndex;
-	uint8_t unused3[42];
-	uint8_t unk[4];
-	uint8_t unused4;
-	uint8_t audit;
-	uint8_t unused6[66];
-	uint8_t limits[64];
-	uint8_t contentIndex[172];
-} __attribute__((packed)) TicketHdr;
 
 void DecryptTitleKeys();
 void DecryptTitleKeyFile(void);
-int getTitleKey(uint8_t *TitleKey, uint32_t low, uint32_t high, int drive);
-int getTitleKey2(aes_key *TitleKey, uint64_t tid, uint_fast8_t drive);
 
 #endif

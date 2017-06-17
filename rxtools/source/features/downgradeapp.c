@@ -26,10 +26,11 @@
 #include "lang.h"
 #include "hid.h"
 #include "ncch.h"
-#include "TitleKeyDecrypt.h"
 #include "NandDumper.h"
 #include "crypto.h"
 #include "sha.h"
+#include "aes.h"
+#include "ticket.h"
 
 #define bswap_16(a) ((((a) << 8) & 0xff00) | (((a) >> 8) & 0xff))
 #define bswap_32(a) ((((a) << 24) & 0xff000000) | (((a) << 8) & 0xff0000) | (((a) >> 8) & 0xff00) | (((a) >> 24) & 0xff))
@@ -401,7 +402,8 @@ void downgradeMSET()
 									/* Downgrade pack decryption */
 									uint8_t Key[0x10] = {0};
 
-									getTitleKey(&Key[0], info.tidHi, info.tidLo, info.drive);
+									aes_key key = {(aes_key_data*)&Key[0], AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY};
+									ticketGetKey(&key, __builtin_bswap64(info.tid), info.drive);
 
 									setup_aeskeyN(0x2C, Key);
 									use_aeskey(0x2C);
