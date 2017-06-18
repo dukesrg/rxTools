@@ -29,8 +29,9 @@
 #define PROCESS9_SEEK_FAILED	0xFFFFFFFF
 
 uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
-	const uint32_t keyy_magic = 0x7F337BD0; //first key octets
-	const uint32_t keyy_magic_dev = 0x72F8A355;
+	const uint32_t keyy_magic = 0x55D76DA1; //last key octets 
+	const uint32_t keyy_magic_dev = 0x630DCF76;
+
 	static aes_key_data common_keyy[6] = {PROCESS9_SEEK_PENDING};
 	uint8_t buf[NAND_SECTOR_SIZE], *data;
 	firm_header *firm = (firm_header*)&buf[0];
@@ -47,13 +48,16 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 					) {
 						data = __builtin_alloca(firm->sections[i].size);
 						nand_readsectors(firm->sections[i].offset/NAND_SECTOR_SIZE, firm->sections[i].size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
-						for (size_t j = firm->sections[i].size; j--; data++)
+						uint32_t j = firm->sections[i].size - sizeof(keyy_magic);
+						for (data += j; j--; data--) //make it backwards
 							if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
 								!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
 							) {
-								for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
+								data -= sizeof(common_keyy[0]) - sizeof(keyy_magic); //advance to start of the key data
+								for (size_t k = sizeof(common_keyy)/sizeof(common_keyy)[0]; k--;) {
+//									common_keyy[k] = *(aes_key_data)data; //alignment failure here, workaround with memcpy
 									memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
-									data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
+									data -= sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
 								}
 								break;
 							}
@@ -64,6 +68,11 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 				return 0;
 			}
 	}
+	aes_set_key(&(aes_key){&common_keyy[ticket->key_index], AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
+	*key->data = ticket->key; //make it aligned
+//	memcpy(key->data, &ticket->key, sizeof(*key->data)); //looks like no alignment issue with structure assignment above
+	aes(key->data, key->data, sizeof(*key->data), &(aes_ctr){.data.as64={ticket->title_id}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+	*key = (aes_key){key->data, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY}; //set aes_key metadata
 	return 1;
 }
 
