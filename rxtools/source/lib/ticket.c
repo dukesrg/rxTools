@@ -25,6 +25,9 @@
 #include "nand.h"
 #include "memory.h"
 
+#include "draw.h"
+#include "lang.h"
+
 #define PROCESS9_SEEK_PENDING	0
 #define PROCESS9_SEEK_FAILED	0xFFFFFFFF
 
@@ -60,6 +63,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 						break;
 					}
 			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
+DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search failed"));
 				common_keyy[0].as32[0] = PROCESS9_SEEK_FAILED;
 				return 0;
 			}
@@ -92,6 +96,7 @@ uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 					return decryptKey(key, ticket);
 				}
 	FileClose(&fil);
+DrawInfo(NULL, lang(S_CONTINUE), lang("Ticket key search failed"));
 	return 0;
 }
 
@@ -107,7 +112,11 @@ uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path) {
 		FileRead2(&fil, &data.ticket, sizeof(data.ticket)) != sizeof(data.ticket)) &&
 		(FileClose(&fil) || 1) &&
 		data.ticket.title_id != titleid
-	)) return 0;
+	))
+{
+DrawInfo(NULL, lang(S_CONTINUE), lang("CETK key search failed"));
+		return 0;
+}
 	
 	return decryptKey(key, &data.ticket);
 }
