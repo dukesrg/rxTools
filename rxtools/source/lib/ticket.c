@@ -140,9 +140,10 @@ uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 			tick_size = BUF_SIZE;
 		else
 			for (size_t i = 0; i < tick_size; i++)
-				if ((ticket = (ticket_data*)(buf + i))->title_id == titleid &&
-					!strncmp(ticket->issuer, "Root-CA00000003-XS0000000c", sizeof(ticket->issuer))
-				) {
+				if ((ticket = (ticket_data*)(buf + i))->title_id == titleid && (
+					!strncmp(ticket->issuer, "Root-CA00000003-XS0000000c", sizeof(ticket->issuer)) ||
+					!strncmp(ticket->issuer, "Root-CA00000004-XS00000009", sizeof(ticket->issuer))
+				)) {
 					FileClose(&fil);
 					return decryptKey(key, ticket);
 				}
