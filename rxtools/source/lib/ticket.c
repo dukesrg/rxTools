@@ -91,7 +91,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 						(FileClose(&fil) && 0)
 					)) {
 */
-					if (!FileOpen(&fil, path, 0)) {
+					if (!FileOpen(&fil, apppath, 0)) {
 						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't open file %ls"), apppath);
 						break;	
 					}
