@@ -70,13 +70,13 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
 DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
 				tmd_data data;
-				wchar_t path[MAX_LFN + 1];
-				swprintf(path, MAX_LFN + 1, L"1:title/00040138/%1x0000002/content", getMpInfo() == MPINFO_KTR ? 2 : 0);
+				wchar_t path[_MAX_LFN + 1];
+				swprintf(path, _MAX_LFN + 1, L"1:title/00040138/%1x0000002/content", getMpInfo() == MPINFO_KTR ? 2 : 0);
 				uint32_t contentid = tmdPreloadRecent(&data, path);
 				if (contentid != 0xFFFFFFFF) {
 					wcscat(path, L"/%08lx.app");
-					wchar_t pathapp[MAX_LFN + 1];
-					swprintf(pathapp, MAX_LFN + 1, path, contentid);
+					wchar_t pathapp[_MAX_LFN + 1];
+					swprintf(pathapp, _MAX_LFN + 1, path, contentid);
 					File fil;
 					size_t size;
 					if (FileOpen(&fil, src, 0) && (
