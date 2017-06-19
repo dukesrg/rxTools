@@ -75,15 +75,15 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 				uint32_t contentid = tmdPreloadRecent(&tmd, path);
 				if (contentid != 0xFFFFFFFF) {
 					File fil;
+					size_t size;
 					tmd_content_chunk content_chunk;
-					FileOpen(&fil, path, 0);
-					size_t offset = signatureAdvance(tmd.sig_type);
-					FileSeek(&fil, offset + sizeof(tmd.header) + sizeof(tmd.content_info));
-					FileRead2(&fil, &content_chunk, sizeof(content_chunk));
 					wchar_t apppath[_MAX_LFN + 1];
+					FileOpen(&fil, path, 0);
+					FileSeek(&fil, signatureAdvance(tmd.sig_type) + sizeof(tmd.header) + sizeof(tmd.content_info));
+					FileRead2(&fil, &content_chunk, sizeof(content_chunk));
+					FileClose(&fil);
 					wcscpy(wcsrchr(path, L'/'), L"/%08lx.app");
 					swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id));
-					size_t size;
 /*					if (FileOpen(&fil, pathapp, 0) && (
 						((size = FileGetSize(&fil)) &&
 						(data = __builtin_alloca(size)) &&
@@ -92,11 +92,11 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 					)) {
 */
 					if (!FileOpen(&fil, path, 0)) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't open file %ls"), path);
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't open file %ls"), apppath);
 						break;	
 					}
 					if (!(size = FileGetSize(&fil))) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't get file size %ls"), path);
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't get file size %ls"), apppath);
 						break;	
 					}
 					if (!(data = __builtin_alloca(size))) {
@@ -104,7 +104,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 						break;	
 					}
 					if (!(FileRead2(&fil, data, size) == size)) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't read %u bytes from %ls"), size, path);
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't read %u bytes from %ls"), size, apppath);
 						break;	
 					} else {
 //					)) {
