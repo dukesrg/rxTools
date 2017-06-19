@@ -79,12 +79,30 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 					swprintf(pathapp, _MAX_LFN + 1, path, contentid);
 					File fil;
 					size_t size;
-					if (FileOpen(&fil, pathapp, 0) && (
+/*					if (FileOpen(&fil, pathapp, 0) && (
 						((size = FileGetSize(&fil)) &&
 						(data = __builtin_alloca(size)) &&
 						FileRead2(&fil, data, size) == size) ||
 						(FileClose(&fil) && 0)
 					)) {
+*/
+					if (!FileOpen(&fil, pathapp, 0)) {
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't open file %ls"), pathapp);
+						break;	
+					}
+					if (!(size = FileGetSize(&fil))) {
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't get file size %ls"), pathapp);
+						break;	
+					}
+					if (!(data = __builtin_alloca(size))) {
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't allocate %u bytes"), size);
+						break;	
+					}
+					if (!(FileRead2(&fil, data, size) == size)) {
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't read %u bytes from %ls"), size, pathapp);
+						break;	
+					} else {
+//					)) {
 						FileClose(&fil);
 						data = decryptFirmTitleNcch((uint8_t*)data, &size);
 						if (data == NULL) {
@@ -116,8 +134,8 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title key seek failed"));
 DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title magic not found"));
 			}
 
-					} else {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title read failed"));
+//					} else {
+//DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title read failed"));
 					}
 				} else {
 DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title tmd preload falied"));
