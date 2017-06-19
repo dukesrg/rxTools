@@ -74,8 +74,15 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 				swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0);
 				uint32_t contentid = tmdPreloadRecent(&tmd, path);
 				if (contentid != 0xFFFFFFFF) {
-					wcscpy(path + wcslen(path) - 3, L"app");
 					File fil;
+					tmd_content_chunk content_chunk;
+					FileOpen(&fil, path, 0);
+					size_t offset = signatureAdvance(tmd.sig_type);
+					FileSeek(&fil, offset + sizeof(tmd.header) + sizeof(tmd.content_info));
+					FileRead2(&fil, &content_chunk, sizeof(content_chunk));
+					wchar_t apppath[_MAX_LFN + 1];
+					wcscpy(wcsrchr(path, L'/'), L"/%08lx.app");
+					swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id));
 					size_t size;
 /*					if (FileOpen(&fil, pathapp, 0) && (
 						((size = FileGetSize(&fil)) &&
