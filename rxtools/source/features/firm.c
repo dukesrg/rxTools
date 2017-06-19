@@ -141,7 +141,7 @@ uint8_t *decryptFirmTitleNcch(uint8_t* title, size_t *size) {
 
 	uint8_t *firm = (uint8_t*)(title + NCCH->exefsoffset * NCCH_MEDIA_UNIT_SIZE + sizeof(FirmHdr));
 
-	if (getMpInfo() == MPINFO_KTR && !decryptFirmKtrArm9(firm))
+	if ((REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) && !decryptFirmKtrArm9(firm))
 		return NULL;
 	return firm;
 }
@@ -194,20 +194,7 @@ int rxMode(int_fast8_t drive)
 	} else
 		sector = 0;
 
-	r = getMpInfo();
-	switch (r) {
-		case MPINFO_KTR:
-			tid = TID_KTR_NATIVE_FIRM;
-			break;
-
-		case MPINFO_CTR:
-			tid = TID_CTR_NATIVE_FIRM;
-			break;
-
-		default:
-			msg = L"Unknown Platform: %d";
-			goto fail;
-	}
+	tid = (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) ? TID_KTR_NATIVE_FIRM : TID_CTR_NATIVE_FIRM;
 
 	setAgbBios();
 
@@ -281,7 +268,14 @@ int PastaMode() {
 	if (*(uint32_t*)firm != FIRM_MAGIC)
 		nand_readsectors(0, PASTA_FIRM_SEEK_SIZE / NAND_SECTOR_SIZE, firm, SYSNAND, NAND_PARTITION_FIRM1);
 
-	if (getMpInfo() == MPINFO_CTR) {
+	if (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) {
+		//new 3ds patches
+		decryptFirmKtrArm9((void *)FIRM_ADDR);
+		uint8_t patch0[] = { 0x00, 0x20, 0x3B, 0xE0 };
+		uint8_t patch1[] = { 0x00, 0x20, 0x08, 0xE0 };
+		memcpy((uint32_t*)(FIRM_ADDR + 0xB39D8), patch0, sizeof(patch0));
+		memcpy((uint32_t*)(FIRM_ADDR + 0xB9204), patch1, sizeof(patch1));
+	} else {
 		//o3ds patches
 		uint8_t sign1[] = { 0xC1, 0x17, 0x49, 0x1C, 0x31, 0xD0, 0x68, 0x46, 0x01, 0x78, 0x40, 0x1C, 0x00, 0x29, 0x10, 0xD1 };
 		uint8_t sign2[] = { 0xC0, 0x1C, 0x76, 0xE7, 0x20, 0x00, 0x74, 0xE7, 0x22, 0xF8, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F };
@@ -294,13 +288,6 @@ int PastaMode() {
 			if (!memcmp(firm + i, sign2, sizeof(sign2)))
 				memcpy(firm + i, patch2, sizeof(patch2));
 		}
-	} else {
-		//new 3ds patches
-		decryptFirmKtrArm9((void *)FIRM_ADDR);
-		uint8_t patch0[] = { 0x00, 0x20, 0x3B, 0xE0 };
-		uint8_t patch1[] = { 0x00, 0x20, 0x08, 0xE0 };
-		memcpy((uint32_t*)(FIRM_ADDR + 0xB39D8), patch0, sizeof(patch0));
-		memcpy((uint32_t*)(FIRM_ADDR + 0xB9204), patch1, sizeof(patch1));
 	}
 
 	return loadExecReboot();
