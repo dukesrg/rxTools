@@ -113,6 +113,9 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 						if (data == NULL) {
 DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title decrypt failed"));
 						} else {
+							FileOpen(&fil, L"0:firm.dmp", 1);
+							FileWrite2(&fil, data, size);
+							FileClose(&fil);
 							firm = (firm_header*)data;
 						}
 
