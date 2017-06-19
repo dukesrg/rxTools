@@ -25,6 +25,10 @@
 #include "nand.h"
 #include "memory.h"
 
+#include "tmd.h"
+#include "firm.h"
+#include "mpinfo.h"
+
 #include "draw.h"
 #include "lang.h"
 
@@ -62,8 +66,55 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 							}
 						break;
 					}
+
 			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search failed"));
+DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
+				tmd_data data;
+				wchar_t path[MAX_LFN + 1];
+				swprintf(path, MAX_LFN + 1, L"1:title/00040138/%1x0000002/content", getMpInfo() == MPINFO_KTR ? 2 : 0);
+				uint32_t contentid = tmdPreloadRecent(&data, path);
+				if (contentid != 0xFFFFFFFF) {
+					wcscat(path, L"/%08lx.app");
+					wchar_t pathapp[MAX_LFN + 1];
+					swprintf(pathapp, MAX_LFN + 1, path, contentid);
+					File fil;
+					size_t size;
+					if (FileOpen(&fil, src, 0) && (
+						((size = FileGetSize(&fil)) &&
+						(data = __builtin_alloca(size)) &&
+						FileRead2(&fil, data, size) == size) ||
+						(FileClose(&fil) && 0)
+					)) {
+						FileClose(&fil);
+						data = decryptFirmTitleNcch(data, &size);
+						firm = (firm_header*)data;
+
+			if (firm->magic == FIRM_MAGIC) {
+				for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
+					if (firm->sections[i].load_address >= MEM_ARM9_RAM && 
+						firm->sections[i].load_address + firm->sections[i].size <= MEM_ARM9_RAM + MEM_ARM9_RAM_SIZE + MEM_ARM9_RAM_KTR_SIZE
+					) {
+						data += firm->sections[i].offset;
+						for (size_t j = firm->sections[i].size; j--; data++)
+							if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
+								!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
+							) {
+								for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
+									memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
+									data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
+								}
+								break;
+							}
+						break;
+					}
+			}
+
+					}
+				}
+			}
+			
+			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
+DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in firm title failed"));
 				common_keyy[0].as32[0] = PROCESS9_SEEK_FAILED;
 				return 0;
 			}
