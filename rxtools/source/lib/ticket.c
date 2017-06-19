@@ -23,7 +23,6 @@
 #include "ticket.h"
 #include "native_firm.h"
 #include "nand.h"
-#include "memory.h"
 
 #define PROCESS9_SEEK_PENDING	0
 #define PROCESS9_SEEK_FAILED	0xFFFFFFFF
@@ -43,8 +42,8 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 			nand_readsectors(0, 1, buf, SYSNAND, NAND_PARTITION_FIRM0);
 			if (firm->magic == FIRM_MAGIC)
 				for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
-					if (firm->sections[i].load_address >= MEM_ARM9_RAM && 
-						firm->sections[i].load_address + firm->sections[i].size <= MEM_ARM9_RAM + MEM_ARM9_RAM_SIZE + MEM_ARM9_RAM_KTR_SIZE
+					if (firm->arm9_entry >= firm->sections[i].load_address && 
+						firm->arm9_entry < firm->sections[i].load_address + firm->sections[i].size
 					) {
 						data = __builtin_alloca(firm->sections[i].size);
 						nand_readsectors(firm->sections[i].offset/NAND_SECTOR_SIZE, firm->sections[i].size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
