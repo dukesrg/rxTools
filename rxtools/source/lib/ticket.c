@@ -68,7 +68,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 					}
 
 			for (size_t drive = 1; drive <= 2 && common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING; drive++) {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
+//DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
 				tmd_data tmd;
 				wchar_t path[_MAX_LFN + 1];
 				swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0);
@@ -87,7 +87,11 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
 					)) {
 						FileClose(&fil);
 						data = decryptFirmTitleNcch((uint8_t*)data, &size);
-						firm = (firm_header*)data;
+						if (data == NULL) {
+DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title decrypt failed"));
+						} else {
+							firm = (firm_header*)data;
+						}
 
 			if (firm->magic == FIRM_MAGIC) {
 				for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
@@ -107,9 +111,16 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
 							}
 						break;
 					}
+DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title key seek failed"));
+			} else {
+DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title magic not found"));
 			}
 
+					} else {
+DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title read failed"));
 					}
+				} else {
+DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title tmd preload falied"));
 				}
 			}
 			
