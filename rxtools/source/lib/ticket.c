@@ -27,7 +27,7 @@
 
 #include "tmd.h"
 #include "firm.h"
-#include "mpinfo.h"
+#include "mpcore.h"
 
 #include "draw.h"
 #include "lang.h"
@@ -69,24 +69,24 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 
 			for (size_t drive = 1; drive <= 2 && common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING; drive++) {
 DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
-				tmd_data data;
+				tmd_data tmd;
 				wchar_t path[_MAX_LFN + 1];
 				swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0);
-				uint32_t contentid = tmdPreloadRecent(&data, path);
+				uint32_t contentid = tmdPreloadRecent(&tmd, path);
 				if (contentid != 0xFFFFFFFF) {
 					wcscat(path, L"/%08lx.app");
 					wchar_t pathapp[_MAX_LFN + 1];
 					swprintf(pathapp, _MAX_LFN + 1, path, contentid);
 					File fil;
 					size_t size;
-					if (FileOpen(&fil, src, 0) && (
+					if (FileOpen(&fil, pathapp, 0) && (
 						((size = FileGetSize(&fil)) &&
 						(data = __builtin_alloca(size)) &&
 						FileRead2(&fil, data, size) == size) ||
 						(FileClose(&fil) && 0)
 					)) {
 						FileClose(&fil);
-						data = decryptFirmTitleNcch(data, &size);
+						data = decryptFirmTitleNcch((uint8_t*)data, &size);
 						firm = (firm_header*)data;
 
 			if (firm->magic == FIRM_MAGIC) {
