@@ -98,7 +98,7 @@ uint_fast8_t nandInit() {
 	mbr sd_mbr;
 	uint8_t hash[SHA_256_SIZE];
 /*
-	if (getMpInfo() == MPINFO_CTR) {
+	if (!(REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR)) {
 		for (size_t i = 0; !ctr && i < sizeof(fsCountersCtr) / sizeof(fsCountersCtr[0]); i++)
 			if (*fsCountersCtr[i] == FS_COUNTER_MAGIC) {
 				sysver = i + 3;
