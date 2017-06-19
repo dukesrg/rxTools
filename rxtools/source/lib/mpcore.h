@@ -18,7 +18,7 @@
 #ifndef MPCORE_H
 #define MPCORE_H
 
-#define REG_CFG11_SOCINFO	((volatile uint16_t*)0x10140FFC)
+#define REG_CFG11_SOCINFO	(*(volatile uint16_t*)0x10140FFC)
 
 #define CFG11_SOCINFO_ALWAYS1		(1<<0)
 #define CFG11_SOCINFO_KTR		(1<<1)
