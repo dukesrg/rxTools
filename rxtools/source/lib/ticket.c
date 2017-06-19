@@ -74,9 +74,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 				swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0);
 				uint32_t contentid = tmdPreloadRecent(&tmd, path);
 				if (contentid != 0xFFFFFFFF) {
-					wcscat(path, L"/%08lx.app");
-					wchar_t pathapp[_MAX_LFN + 1];
-					swprintf(pathapp, _MAX_LFN + 1, path, contentid);
+					wcscat(path + wcslen(path) - 3, L"app");
 					File fil;
 					size_t size;
 /*					if (FileOpen(&fil, pathapp, 0) && (
@@ -86,12 +84,12 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 						(FileClose(&fil) && 0)
 					)) {
 */
-					if (!FileOpen(&fil, pathapp, 0)) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't open file %ls"), pathapp);
+					if (!FileOpen(&fil, path, 0)) {
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't open file %ls"), path);
 						break;	
 					}
 					if (!(size = FileGetSize(&fil))) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't get file size %ls"), pathapp);
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't get file size %ls"), path);
 						break;	
 					}
 					if (!(data = __builtin_alloca(size))) {
@@ -99,7 +97,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 						break;	
 					}
 					if (!(FileRead2(&fil, data, size) == size)) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't read %u bytes from %ls"), size, pathapp);
+						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't read %u bytes from %ls"), size, path);
 						break;	
 					} else {
 //					)) {
