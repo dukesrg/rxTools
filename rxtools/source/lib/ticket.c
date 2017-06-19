@@ -129,6 +129,7 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title decrypt failed"));
 							if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
 								!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
 							) {
+DrawInfo(NULL, lang(S_CONTINUE), lang("Keys found"));
 								for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
 									memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
 									data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
@@ -137,7 +138,6 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title decrypt failed"));
 							}
 						break;
 					}
-DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title key seek failed"));
 			} else {
 DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title magic not found"));
 			}
@@ -156,6 +156,13 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in firm title failed"))
 				return 0;
 			}
 	}
+
+	aes_set_key(&(aes_key){&common_keyy[ticket->key_index], AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
+	*key->data = ticket->key; //make it aligned
+//	memcpy(key->data, &ticket->key, sizeof(*key->data)); //looks like no alignment issue with structure assignment above
+	aes(key->data, key->data, sizeof(*key->data), &(aes_ctr){.data.as64={ticket->title_id}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+	*key = (aes_key){key->data, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY}; //set aes_key metadata
+
 	return 1;
 }
 
