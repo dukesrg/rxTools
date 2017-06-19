@@ -20,9 +20,9 @@
 
 #define REG_CFG11_SOCINFO	((volatile uint16_t*)0x10140FFC)
 
-#define SOCINFO_ALWAYS1		(1<<0)
-#define SOCINFO_NEW3DS		(1<<1)
-#define SOCINFO_CLK3X		(1<<2)
+#define CFG11_SOCINFO_ALWAYS1		(1<<0)
+#define CFG11_SOCINFO_KTR		(1<<1)
+#define CFG11_SOCINFO_CLK3X		(1<<2)
 
 typedef enum {
 	MPINFO_CTR = 1,
