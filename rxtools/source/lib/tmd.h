@@ -105,6 +105,7 @@ typedef struct {
 uint_fast8_t tmdLoadHeader(tmd_data *data, wchar_t *path);
 uint_fast8_t tmdValidateChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index, uint_fast8_t drive);
 size_t tmdGetChunkSize(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
+uint32_t tmdPreloadRecent(tmd_data *data, wchar_t *path);
 uint32_t tmdLoadRecent(tmd_data *data, wchar_t *path);
 size_t tmdPreloadHeader(tmd_data *data, wchar_t *path);
 size_t tmdPreloadChunk(tmd_data *data, wchar_t *path, uint_fast16_t content_index);
