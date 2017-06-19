@@ -74,7 +74,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 				swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0);
 				uint32_t contentid = tmdPreloadRecent(&tmd, path);
 				if (contentid != 0xFFFFFFFF) {
-					wcscat(path + wcslen(path) - 3, L"app");
+					wcscat(wcsrchr(path, L'.'), L".app");
 					File fil;
 					size_t size;
 /*					if (FileOpen(&fil, pathapp, 0) && (
