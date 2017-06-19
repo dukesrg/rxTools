@@ -24,14 +24,4 @@
 #define CFG11_SOCINFO_KTR		(1<<1)
 #define CFG11_SOCINFO_CLK3X		(1<<2)
 
-typedef enum {
-	MPINFO_CTR = 1,
-	MPINFO_KTR = 7,
-} MpInfo;
-
-static inline MpInfo getMpInfo()
-{
-        return *(MpInfo *)0x10140FFC;
-}
-
 #endif
