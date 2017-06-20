@@ -20,70 +20,10 @@
 
 #include <stdint.h>
 
-#define BDRI_MAGIC	'IRDB'
-
 typedef struct {
-	uint32_t magic;
-	uint32_t format_version;
-	uint64_t unknown1;
-	uint64_t size;
-	uint32_t size_div;
-	uint32_t reserved;
-	uint8_t unknown2[0x20];
-	uint8_t unknown3[0x18];
-	uint64_t title_entry_table_offset;
-	uint8_t unknown4[0x20];
-} __attribute__((packed)) bdri_header;	
-
-typedef struct {
-	uint32_t magic;
-	uint32_t format_version;
-	uint8_t reserved1[0x24];
-	uint32_t entries_used;
-	uint8_t reserved2[0x50];
-	uint32_t max_entries;
-	uint32_t unknown;
-	uint8_t reserved2[0x20];
-} __attribute__((packed)) title_entry_header;	
-
-typedef struct {
-	uint32_t unknown1;
-	uint32_t used;
-	union {
-		uint64_t title_id;
-		struct {
-			uint32_t title_id_hi;
-			uint32_t title_id_lo;
-		};
-	};
-	uint32_t index;
-	uint32_t title_info_offset;
-	uint32_t title_info_offset_div;
-	uint32_t reserved;
-	uint8_t unknown2[0x0C];
-} __attribute__((packed)) title_entry;
-
-typedef struct {
-	title_entry_header header;
-	title_entry *entries;
-} __attribute__((packed)) title_entry_table;
-
-typedef struct {
-	uint64_t size;
-	uint32_t type;
-	uint32_t version;
-	uint32_t flags0;
-	uint32_t tmd_content_id;
-	uint32_t cmd_content_id;
-	uint32_t flags1;
-	uint32_t extdata_id_lo;
-	uint32_t reserved1;
-	uint64_t flags2;
-	uint8_t product_code[0x10];
-	uint8_t reserved2[0x10];
-	uint32_t unknown;
-	uint8_t reserved2[0x2c];
-} __attribute__((packed)) title_info;
+	uint8_t cmac[0x10];
+	uint8_t pad[0xf0];
+} __attribute__((packed)) aes_cmac_header;	
 
 #define DISA_MAGIC	'ASID'
 #define DISA_PARTITION_PRIMARY	0
@@ -106,7 +46,7 @@ typedef struct {
 	uint64_t data_partition_length;
 	uint32_t active_partition;
 	uint8_t hash[0x20];
-	uint8_t hash[0x74];
+	uint8_t reserved[0x74];
 } __attribute__((packed)) disa_header;	
 
 #define DIFF_MAGIC	'FFID'
@@ -124,7 +64,7 @@ typedef struct {
 	uint32_t active_partition;
 	uint8_t hash[0x20];
 	uint64_t extdata_uid;
-	uint8_t reserver[0xA4]
+	uint8_t reserved[0xA4];
 } __attribute__((packed)) diff_header;
 
 #define DIFI_MAGIC	'IFID'
@@ -214,7 +154,7 @@ typedef struct {
 	};
 	uint32_t l4_block_size_log2;
 	uint64_t unknown;
-} __attribute__((packed)) ivfc_header;
+} __attribute__((packed)) ivfc_v2_header;
 
 #define DPFS_MAGIC	'SFPD'
 
@@ -232,12 +172,15 @@ typedef struct {
 	uint64_t ivfc_partiton_block_size_log2;
 } __attribute__((packed)) dpfs_header;
 
-
-//ticket.db blobs
-
 #define TICK_MAGIC	'KCIT'
 
-#define DIFF_MAGIC	'IRDB'
+typedef struct {
+	uint32_t magic;
+	uint32_t unknown1; //0x00000001
+	uint8_t unknown2[8];
+} __attribute__((packed)) tick_header;
+
+#define BDRI_MAGIC	'IRDB'
 
 typedef struct {
 	uint32_t magic;
@@ -257,65 +200,68 @@ typedef struct {
 	uint32_t magic2; //0x00000003
 	uint8_t reserved1[0x24];
 	uint32_t entries_used;
-	uint8_t reserved2[0x1D0]; //*0x50 at 3dbrew
-	uint32_t max_entries;
+} __attribute__((packed)) title_entry_header_1;
+
+typedef struct {
+	uint32_t entries_total;
 	uint32_t unknown; //0x2001
 	uint8_t reserved2[0x20];
-} __attribute__((packed)) title_entry_header;
+} __attribute__((packed)) title_entry_header_2;
 
 typedef struct {
 	uint32_t unknown1;
 	uint32_t used;
 	union {
-		uint64_t title_id; //LE
+		uint64_t title_id;
 		struct {
-			uint32_t title_id_hi;
 			uint32_t title_id_lo;
+			uint32_t title_id_hi;
 		};
 	};
 	uint32_t index;
-	uint32_t unknown1; //0x080936AC
-	uint32_t title_info_offset; //relative to title entry header, in BRDI units (0x200 in fact)
-	uint32_t title_info_size; //in bytes
-	uint8_t unknown2[0x0C]; //0
+	uint32_t title_info_offset;
+	uint32_t title_info_offset_block_size;
+	uint32_t reserved;
+	uint8_t unknown2[0x0C];
 } __attribute__((packed)) title_entry;
 
 typedef struct {
-	uint32_t file_count; //not sure, looks like always 1
-	uint32_t file_size;
-} __attribute__((packed)) ticketdb_record_header;
+	uint64_t size;
+	uint32_t type;
+	uint32_t version;
+	uint32_t flags0;
+	uint32_t tmd_content_id;
+	uint32_t cmd_content_id;
+	uint32_t flags1;
+	uint32_t extdata_id_lo;
+	uint32_t reserved1;
+	uint64_t flags2;
+	uint8_t product_code[0x10];
+	uint8_t reserved2[0x10];
+	uint32_t unknown;
+	uint8_t reserved3[0x2c];
+} __attribute__((packed)) title_info;
 
 typedef struct {
-	ticketdb_record_header header;
-	void *data;
-} ticketdb_record;
+	uint32_t unknown1;
+	uint32_t active;
+	union {
+		uint64_t title_id;
+		struct {
+			uint32_t title_id_lo;
+			uint32_t title_id_hi;
+		};
+	};
+	uint32_t index;
+	uint32_t unknown2; //0x080936AC
+	uint32_t title_info_offset; //relative to title entry header, in BRDI units (0x200 in fact)
+	uint32_t title_info_size; //in bytes
+	uint8_t unknown3[0x0C]; //0
+} __attribute__((packed)) ticket_title_entry;
 
 typedef struct {
-	uint32_t magik;
-	uint32_t unknown1; //0x00000001
-	uint8_t unknown2[8];
-} __attribute__((packed)) tick_header;
+	uint32_t count; //not sure, looks like always 1
+	uint32_t size;
+} __attribute__((packed)) ticket_title_info;
 
-/*
-	FileSeek(&fil, 0x100);
-	FileRead(&fil, diff, sizeof(diff));
-	FileSeek(&fil, (difi_offset = diff.active_partition ? diff.primary_partition_offset : diff.seconday_partition_offset));
-	FileRead(&fil, difi, sizeof(difi));
-	FileSeek(&fil, difi_offset + difi.ivfc_offset);
-	FileRead(&fil, ivfc, sizeof(ivfc));
-	FileSeek(&fil, difi_offset + difi.dpfs_offset);
-	FileRead(&fil, dpfs, sizeof(dpfs));
-	FileSeek(&fil, (tick_offset = diff.file_base_offset + dpfs.ivfc_partiton_offset + ivfc.l4_offset_lo));
-	FileRead(&fil, tick, sizeof(tick));
-	bdri_offset = tick_offset + sizeof(tick);
-	FileRead(&fil, bdri, sizeof(bdri));
-
-bdri_offset + bdri.title_entry_table_offset
-
-
-	for (size_t i = 0; i < bdri.entries_used; i++) {
-	
-	
-	}
-*/
 #endif
