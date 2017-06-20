@@ -15,9 +15,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <stddef.h>
 #include "native_firm.h"
 
-firm_section_header *firmFindSection(firm *firm_header, uint32_t address) {
+firm_section_header *firmFindSection(firm_header *firm, uint32_t address) {
 	if (firm->magic == FIRM_MAGIC)
 		for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
 			if (address >= firm->sections[i].load_address && address < firm->sections[i].load_address + firm->sections[i].size)

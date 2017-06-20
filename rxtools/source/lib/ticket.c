@@ -67,7 +67,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 			return 0;
 		case PROCESS9_SEEK_PENDING: //first search, try to fill keys
 			nand_readsectors(0, 1, data, SYSNAND, NAND_PARTITION_FIRM0);
-			if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) && (data = __builtin_alloca(firm->sections[i].size))) {
+			if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) && (data = __builtin_alloca(arm9_section->size))) {
 				nand_readsectors(arm9_section->offset/NAND_SECTOR_SIZE, arm9_section->size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
 				findCommonKeyY(data, arm9_section->size);
 			}
@@ -82,7 +82,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 					) && (FileClose(&fil) || 1) && //close on success
 					wcscpy(wcsrchr(path, L'/'), L"/%08lx.app") && //make APP path
 					(swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id)) > 0) &&
-					FileOpen(&fil, pathapp, 0) && (
+					FileOpen(&fil, apppath, 0) && (
 						((size = FileGetSize(&fil)) &&
 							(data = __builtin_alloca(size)) &&
 							FileRead2(&fil, data, size) == size
