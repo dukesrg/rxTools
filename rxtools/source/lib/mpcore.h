@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The PASTA Team
+ * Copyright (C) 2015, 2017 The PASTA Team, dukesrg
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -18,14 +18,10 @@
 #ifndef MPCORE_H
 #define MPCORE_H
 
-typedef enum {
-	MPINFO_CTR = 1,
-	MPINFO_KTR = 7,
-} MpInfo;
+#define REG_CFG11_SOCINFO	(*(volatile uint16_t*)0x10140FFC)
 
-static inline MpInfo getMpInfo()
-{
-        return *(MpInfo *)0x10140FFC;
-}
+#define CFG11_SOCINFO_ALWAYS1		(1<<0)
+#define CFG11_SOCINFO_KTR		(1<<1)
+#define CFG11_SOCINFO_CLK3X		(1<<2)
 
 #endif

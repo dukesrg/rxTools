@@ -23,7 +23,6 @@
 #include "ticket.h"
 #include "native_firm.h"
 #include "nand.h"
-#include "memory.h"
 
 #include "tmd.h"
 #include "firm.h"
@@ -67,7 +66,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 			return 0;
 		case PROCESS9_SEEK_PENDING: //first search, try to fill keys
 			for (size_t drive = 1; drive <= 2; drive++) //todo: max NAND drive
-				if ((swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0) > 0) &&
+				if ((swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) > 0) &&
 					(tmdPreloadRecent(&tmd, path) != 0xFFFFFFFF) &&
 					FileOpen(&fil, path, 0) && (
 						(FileSeek(&fil, signatureAdvance(tmd.sig_type) + sizeof(tmd.header) + sizeof(tmd.content_info)) &&
@@ -101,13 +100,13 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 			}
 	}
 
-	aes_set_key(&(aes_key){&common_keyy[ticket->key_index], AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
+  aes_set_key(&(aes_key){&common_keyy[ticket->key_index], AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
 	*key->data = ticket->key; //make it aligned
 //	memcpy(key->data, &ticket->key, sizeof(*key->data)); //looks like no alignment issue with structure assignment above
 	aes(key->data, key->data, sizeof(*key->data), &(aes_ctr){.data.as64={ticket->title_id}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 	*key = (aes_key){key->data, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY}; //set aes_key metadata
 
-	return 1;
+  return 1;
 }
 
 uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
