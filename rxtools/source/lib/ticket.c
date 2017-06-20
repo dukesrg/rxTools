@@ -35,38 +35,39 @@
 static aes_key_data common_keyy[6] = {PROCESS9_SEEK_PENDING};
 
 uint_fast8_t findCommonKeyY(void *data, uint32_t size) {
-	const uint32_t keyy_magic = 0x7F337BD0; //first key octets
-	const uint32_t keyy_magic_dev = 0x72F8A355;
+	const uint32_t keyy_magic = 0x55D76DA1; //last key octets 
+	const uint32_t keyy_magic_dev = 0x630DCF76;
 
-	for (size_t j = size; j--; data++)
-		if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
-			!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
-		) {
-			for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
-				memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
-				data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
+	for (data += size -= sizeof(keyy_magic); size--; data--) //make it backwards
+		if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) || !memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))) {
+			data -= sizeof(common_keyy[0]) - sizeof(keyy_magic); //advance to start of the last key data
+			for (size_t i = sizeof(common_keyy)/sizeof(common_keyy)[0]; i--;) {
+//				common_keyy[i] = *(aes_key_data)data; //alignment failure here, workaround with memcpy
+				memcpy(&common_keyy[i], data, sizeof(common_keyy[0]));
+				data -= sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
 			}
 			return 1;
 		}
+
 	return 0;
 }
 
 uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
-	uint8_t buf[NAND_SECTOR_SIZE], *data;
-	firm_header *firm = (firm_header*)&buf[0];
+	void *data = __builtin_alloca(NAND_SECTOR_SIZE);
+	firm_header *firm = (firm_header*)data;
 	firm_section_header *arm9_section;
 	wchar_t path[_MAX_LFN + 1], apppath[_MAX_LFN + 1];
 	tmd_data tmd;
+	tmd_content_chunk content_chunk;
 	File fil;
 	size_t size;
-	tmd_content_chunk content_chunk;
 
 	switch (common_keyy[0].as32[0]) {
 		case PROCESS9_SEEK_FAILED: //previous search failed, don't waste time
 			return 0;
 		case PROCESS9_SEEK_PENDING: //first search, try to fill keys
-			nand_readsectors(0, 1, buf, SYSNAND, NAND_PARTITION_FIRM0);
-			if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) != NULL && (data = __builtin_alloca(firm->sections[i].size)) != NULL) {
+			nand_readsectors(0, 1, data, SYSNAND, NAND_PARTITION_FIRM0);
+			if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) && (data = __builtin_alloca(firm->sections[i].size))) {
 				nand_readsectors(arm9_section->offset/NAND_SECTOR_SIZE, arm9_section->size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
 				findCommonKeyY(data, arm9_section->size);
 			}
@@ -87,9 +88,8 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 							FileRead2(&fil, data, size) == size
 						) || (FileClose(&fil) && 0)
 					) && (FileClose(&fil) || 1) &&
-					(data = decryptFirmTitleNcch((uint8_t*)data, &size)) != NULL &&
-					(firm = (firm_header*)data) &&
-					(arm9_section = firmFindSection(firm, firm->arm9_entry)) != NULL &&
+					(firm = (firm_header*)(data = decryptFirmTitleNcch((uint8_t*)data, &size))) &&
+					(arm9_section = firmFindSection(firm, firm->arm9_entry)) &&
 					findCommonKeyY(data + arm9_section->offset, arm9_section->size)
 				) break;
 			
