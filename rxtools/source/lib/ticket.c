@@ -66,13 +66,7 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 		case PROCESS9_SEEK_FAILED: //previous search failed, don't waste time
 			return 0;
 		case PROCESS9_SEEK_PENDING: //first search, try to fill keys
-			nand_readsectors(0, 1, data, SYSNAND, NAND_PARTITION_FIRM0);
-			if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) && (data = __builtin_alloca(arm9_section->size))) {
-				nand_readsectors(arm9_section->offset/NAND_SECTOR_SIZE, arm9_section->size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
-				findCommonKeyY(data, arm9_section->size);
-			}
-
-			for (size_t drive = 1; drive <= 2 && common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING; drive++) //todo: max NAND drive
+			for (size_t drive = 1; drive <= 2; drive++) //todo: max NAND drive
 				if ((swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0) > 0) &&
 					(tmdPreloadRecent(&tmd, path) != 0xFFFFFFFF) &&
 					FileOpen(&fil, path, 0) && (
@@ -93,6 +87,14 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 					findCommonKeyY(data + arm9_section->offset, arm9_section->size)
 				) break;
 			
+			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
+				nand_readsectors(0, 1, data, SYSNAND, NAND_PARTITION_FIRM0);
+				if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) && (data = __builtin_alloca(arm9_section->size))) {
+					nand_readsectors(arm9_section->offset/NAND_SECTOR_SIZE, arm9_section->size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
+					findCommonKeyY(data, arm9_section->size);
+				}
+			}
+
 			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
 				common_keyy[0].as32[0] = PROCESS9_SEEK_FAILED;
 				return 0;
