@@ -67,57 +67,32 @@ uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 						break;
 					}
 
-			for (size_t drive = 1; drive <= 2 && common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING; drive++) {
-//DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in FIRM0 failed"));
+			for (size_t drive = 1; drive <= 2 && common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING; drive++) { //todo: max NAND drive
 				tmd_data tmd;
 				wchar_t path[_MAX_LFN + 1];
 				swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0);
-				uint32_t contentid = tmdPreloadRecent(&tmd, path);
-				if (contentid != 0xFFFFFFFF) {
+				if (tmdPreloadRecent(&tmd, path) != 0xFFFFFFFF) { //get header and content info from the most recent TMD
 					File fil;
 					size_t size;
 					tmd_content_chunk content_chunk;
 					wchar_t apppath[_MAX_LFN + 1];
-					FileOpen(&fil, path, 0);
-					FileSeek(&fil, signatureAdvance(tmd.sig_type) + sizeof(tmd.header) + sizeof(tmd.content_info));
-					FileRead2(&fil, &content_chunk, sizeof(content_chunk));
-					FileClose(&fil);
-					wcscpy(wcsrchr(path, L'/'), L"/%08lx.app");
-					swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id));
-/*					if (FileOpen(&fil, pathapp, 0) && (
+					FileOpen(&fil, path, 0) && (
+						(FileSeek(&fil, signatureAdvance(tmd.sig_type) + sizeof(tmd.header) + sizeof(tmd.content_info)) &&
+						FileRead2(&fil, &content_chunk, sizeof(content_chunk)) == sizeof(content_chunk)) || //FIRM title have only  one file, so just first chunk is needed
+						(FileClose(&fil) && 0) //close on fail
+					) && FileClose(&fil) && //close on success
+					wcscpy(wcsrchr(path, L'/'), L"/%08lx.app") && //make APP path
+					(swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id)) > 0) &&
+					FileOpen(&fil, pathapp, 0) && (
 						((size = FileGetSize(&fil)) &&
 						(data = __builtin_alloca(size)) &&
 						FileRead2(&fil, data, size) == size) ||
 						(FileClose(&fil) && 0)
 					)) {
-*/
-					if (!FileOpen(&fil, apppath, 0)) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't open file %ls"), apppath);
-						break;	
-					}
-					if (!(size = FileGetSize(&fil))) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't get file size %ls"), apppath);
-						break;	
-					}
-					if (!(data = __builtin_alloca(size))) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't allocate %u bytes"), size);
-						break;	
-					}
-					if (!(FileRead2(&fil, data, size) == size)) {
-						DrawInfo(NULL, lang(S_CONTINUE), lang("Can't read %u bytes from %ls"), size, apppath);
-						break;	
-					} else {
-//					)) {
 						FileClose(&fil);
-						data = decryptFirmTitleNcch((uint8_t*)data, &size);
-						if (data == NULL) {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title decrypt failed"));
-						} else {
-							FileOpen(&fil, L"0:firm.dmp", 1);
-							FileWrite2(&fil, data, size);
-							FileClose(&fil);
-							firm = (firm_header*)data;
-						}
+						if ((data = decryptFirmTitleNcch((uint8_t*)data, &size)) == NULL)
+							break;
+						firm = (firm_header*)data;
 
 			if (firm->magic == FIRM_MAGIC) {
 				for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
@@ -129,7 +104,6 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title decrypt failed"));
 							if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
 								!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
 							) {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Keys found"));
 								for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
 									memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
 									data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
@@ -138,20 +112,13 @@ DrawInfo(NULL, lang(S_CONTINUE), lang("Keys found"));
 							}
 						break;
 					}
-			} else {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title magic not found"));
 			}
 
-//					} else {
-//DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title read failed"));
 					}
-				} else {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Firm title tmd preload falied"));
 				}
 			}
 			
 			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
-DrawInfo(NULL, lang(S_CONTINUE), lang("Common key search in firm title failed"));
 				common_keyy[0].as32[0] = PROCESS9_SEEK_FAILED;
 				return 0;
 			}
@@ -192,7 +159,6 @@ uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 					return decryptKey(key, ticket);
 				}
 	FileClose(&fil);
-DrawInfo(NULL, lang(S_CONTINUE), lang("Ticket key search failed"));
 	return 0;
 }
 
@@ -208,11 +174,7 @@ uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path) {
 		FileRead2(&fil, &data.ticket, sizeof(data.ticket)) != sizeof(data.ticket)) &&
 		(FileClose(&fil) || 1) &&
 		data.ticket.title_id != titleid
-	))
-{
-DrawInfo(NULL, lang(S_CONTINUE), lang("CETK key search failed"));
-		return 0;
-}
+	)) return 0;
 	
 	return decryptKey(key, &data.ticket);
 }
