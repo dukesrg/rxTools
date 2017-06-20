@@ -46,7 +46,7 @@ CCOBJS := $(addprefix $(BUILD)/,main.o features/CTRDecryptor.o \
 	features/padgen.o features/screenshot.o	\
 	lib/fatfs/diskio.o lib/fatfs/ff.o lib/fatfs/option/unicode.o \
 	lib/tmio/tmio.o \
-	lib/signature.o lib/ticket.o \
+	lib/signature.o lib/ticket.o lib/native_firm.o \
 	lib/console.o lib/crypto.o lib/draw.o lib/fs.o lib/hid.o lib/lang.o \
 	lib/log.o lib/i2c.o lib/jsmn/jsmn.o lib/menu.o lib/nand.o lib/ncch.o \
 	features/reboot.o lib/json.o lib/theme.o lib/tmd.o lib/progress.o lib/cfnt.o \
