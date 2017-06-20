@@ -46,4 +46,6 @@ typedef struct {
 	uint8_t signature[0x100];
 } __attribute__((packed)) firm_header;
 
+firm_section_header *firmFindSection(firm *firm_header, uint32_t address);
+
 #endif
