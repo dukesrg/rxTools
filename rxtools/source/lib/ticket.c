@@ -29,94 +29,69 @@
 #include "firm.h"
 #include "mpcore.h"
 
-#include "draw.h"
-#include "lang.h"
-
 #define PROCESS9_SEEK_PENDING	0
 #define PROCESS9_SEEK_FAILED	0xFFFFFFFF
 
-uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
+static aes_key_data common_keyy[6] = {PROCESS9_SEEK_PENDING};
+
+uint_fast8_t findCommonKeyY(void *data, uint32_t size) {
 	const uint32_t keyy_magic = 0x7F337BD0; //first key octets
 	const uint32_t keyy_magic_dev = 0x72F8A355;
-	static aes_key_data common_keyy[6] = {PROCESS9_SEEK_PENDING};
+
+	for (size_t j = size; j--; data++)
+		if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
+			!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
+		) {
+			for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
+				memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
+				data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
+			}
+			return 1;
+		}
+	return 0;
+}
+
+uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
 	uint8_t buf[NAND_SECTOR_SIZE], *data;
 	firm_header *firm = (firm_header*)&buf[0];
+	firm_section_header *arm9_section;
+	wchar_t path[_MAX_LFN + 1], apppath[_MAX_LFN + 1];
+	tmd_data tmd;
+	File fil;
+	size_t size;
+	tmd_content_chunk content_chunk;
 
 	switch (common_keyy[0].as32[0]) {
 		case PROCESS9_SEEK_FAILED: //previous search failed, don't waste time
 			return 0;
 		case PROCESS9_SEEK_PENDING: //first search, try to fill keys
 			nand_readsectors(0, 1, buf, SYSNAND, NAND_PARTITION_FIRM0);
-			if (firm->magic == FIRM_MAGIC)
-				for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
-					if (firm->sections[i].load_address >= MEM_ARM9_RAM && 
-						firm->sections[i].load_address + firm->sections[i].size <= MEM_ARM9_RAM + MEM_ARM9_RAM_SIZE + MEM_ARM9_RAM_KTR_SIZE
-					) {
-						data = __builtin_alloca(firm->sections[i].size);
-						nand_readsectors(firm->sections[i].offset/NAND_SECTOR_SIZE, firm->sections[i].size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
-						for (size_t j = firm->sections[i].size; j--; data++)
-							if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
-								!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
-							) {
-								for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
-									memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
-									data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
-								}
-								break;
-							}
-						break;
-					}
+			if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) != NULL && (data = __builtin_alloca(firm->sections[i].size)) != NULL) {
+				nand_readsectors(arm9_section->offset/NAND_SECTOR_SIZE, arm9_section->size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
+				findCommonKeyY(data, arm9_section->size);
+			}
 
-			for (size_t drive = 1; drive <= 2 && common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING; drive++) { //todo: max NAND drive
-				tmd_data tmd;
-				wchar_t path[_MAX_LFN + 1];
-				swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0);
-				if (tmdPreloadRecent(&tmd, path) != 0xFFFFFFFF) { //get header and content info from the most recent TMD
-					File fil;
-					size_t size;
-					tmd_content_chunk content_chunk;
-					wchar_t apppath[_MAX_LFN + 1];
+			for (size_t drive = 1; drive <= 2 && common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING; drive++) //todo: max NAND drive
+				if ((swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, getMpInfo() == MPINFO_KTR ? 2 : 0) > 0) &&
+					(tmdPreloadRecent(&tmd, path) != 0xFFFFFFFF) &&
 					FileOpen(&fil, path, 0) && (
 						(FileSeek(&fil, signatureAdvance(tmd.sig_type) + sizeof(tmd.header) + sizeof(tmd.content_info)) &&
-						FileRead2(&fil, &content_chunk, sizeof(content_chunk)) == sizeof(content_chunk)) || //FIRM title have only  one file, so just first chunk is needed
-						(FileClose(&fil) && 0) //close on fail
-					) && FileClose(&fil) && //close on success
+							FileRead2(&fil, &content_chunk, sizeof(content_chunk)) == sizeof(content_chunk) //FIRM title have only  one file, so just first chunk is needed
+						) || (FileClose(&fil) && 0) //close on fail
+					) && (FileClose(&fil) || 1) && //close on success
 					wcscpy(wcsrchr(path, L'/'), L"/%08lx.app") && //make APP path
 					(swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id)) > 0) &&
 					FileOpen(&fil, pathapp, 0) && (
 						((size = FileGetSize(&fil)) &&
-						(data = __builtin_alloca(size)) &&
-						FileRead2(&fil, data, size) == size) ||
-						(FileClose(&fil) && 0)
-					)) {
-						FileClose(&fil);
-						if ((data = decryptFirmTitleNcch((uint8_t*)data, &size)) == NULL)
-							break;
-						firm = (firm_header*)data;
-
-			if (firm->magic == FIRM_MAGIC) {
-				for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
-					if (firm->sections[i].load_address >= MEM_ARM9_RAM && 
-						firm->sections[i].load_address + firm->sections[i].size <= MEM_ARM9_RAM + MEM_ARM9_RAM_SIZE + MEM_ARM9_RAM_KTR_SIZE
-					) {
-						data += firm->sections[i].offset;
-						for (size_t j = firm->sections[i].size; j--; data++)
-							if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
-								!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
-							) {
-								for (size_t k = 0; k < sizeof(common_keyy)/sizeof(common_keyy)[0]; k++) {
-									memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
-									data += sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
-								}
-								break;
-							}
-						break;
-					}
-			}
-
-					}
-				}
-			}
+							(data = __builtin_alloca(size)) &&
+							FileRead2(&fil, data, size) == size
+						) || (FileClose(&fil) && 0)
+					) && (FileClose(&fil) || 1) &&
+					(data = decryptFirmTitleNcch((uint8_t*)data, &size)) != NULL &&
+					(firm = (firm_header*)data) &&
+					(arm9_section = firmFindSection(firm, firm->arm9_entry)) != NULL &&
+					findCommonKeyY(data + arm9_section->offset, arm9_section->size)
+				) break;
 			
 			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
 				common_keyy[0].as32[0] = PROCESS9_SEEK_FAILED;
