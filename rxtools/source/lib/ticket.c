@@ -139,17 +139,14 @@ uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 
 uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path) {
 	File fil;
-	size_t offset;
 	cetk_data data;
 	
-	if (!FileOpen(&fil, path, 0) || (
-		(FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) != sizeof(data.sig_type) ||
-		(offset = signatureAdvance(data.sig_type)) == 0 ||
-		!FileSeek(&fil, offset) ||
-		FileRead2(&fil, &data.ticket, sizeof(data.ticket)) != sizeof(data.ticket)) &&
-		(FileClose(&fil) || 1) &&
-		data.ticket.title_id != titleid
-	)) return 0;
-	
-	return decryptKey(key, &data.ticket);
+	return FileOpen(&fil, path, 0) && (
+			(FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) == sizeof(data.sig_type) &&
+			 	FileSeek(&fil, signatureAdvance(data.sig_type)) &&
+			 	FileRead2(&fil, &data.ticket, sizeof(data.ticket)) == sizeof(data.ticket)
+			) || (FileClose(&fil) && 0)
+		) && (FileClose(&fil) || 1) &&
+		data.ticket.title_id == titleid &&
+		decryptKey(key, &data.ticket);
 }
