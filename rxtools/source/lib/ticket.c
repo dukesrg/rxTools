@@ -23,61 +23,90 @@
 #include "ticket.h"
 #include "native_firm.h"
 #include "nand.h"
-#include "memory.h"
 #include "blobs.h"
-
-#include "draw.h"
-#include "lang.h"
+#include "tmd.h"
+#include "firm.h"
+#include "mpcore.h"
 
 #define PROCESS9_SEEK_PENDING	0
 #define PROCESS9_SEEK_FAILED	0xFFFFFFFF
 
-uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
+static aes_key_data common_keyy[6] = {PROCESS9_SEEK_PENDING};
+
+uint_fast8_t findCommonKeyY(void *data, uint32_t size) {
 	const uint32_t keyy_magic = 0x55D76DA1; //last key octets 
 	const uint32_t keyy_magic_dev = 0x630DCF76;
 
-	static aes_key_data common_keyy[6] = {PROCESS9_SEEK_PENDING};
-	uint8_t buf[NAND_SECTOR_SIZE], *data;
-	firm_header *firm = (firm_header*)&buf[0];
+	for (data += size -= sizeof(keyy_magic); size--; data--) //make it backwards
+		if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) || !memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))) {
+			data -= sizeof(common_keyy[0]) - sizeof(keyy_magic); //advance to start of the last key data
+			for (size_t i = sizeof(common_keyy)/sizeof(common_keyy)[0]; i--;) {
+//				common_keyy[i] = *(aes_key_data)data; //alignment failure here, workaround with memcpy
+				memcpy(&common_keyy[i], data, sizeof(common_keyy[0]));
+				data -= sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
+			}
+			return 1;
+		}
+
+	return 0;
+}
+
+uint_fast8_t decryptKey(aes_key *key, ticket_data *ticket) {
+	void *data = __builtin_alloca(NAND_SECTOR_SIZE);
+	firm_header *firm = (firm_header*)data;
+	firm_section_header *arm9_section;
+	wchar_t path[_MAX_LFN + 1], apppath[_MAX_LFN + 1];
+	tmd_data tmd;
+	tmd_content_chunk content_chunk;
+	File fil;
+	size_t size;
 
 	switch (common_keyy[0].as32[0]) {
 		case PROCESS9_SEEK_FAILED: //previous search failed, don't waste time
 			return 0;
 		case PROCESS9_SEEK_PENDING: //first search, try to fill keys
-			nand_readsectors(0, 1, buf, SYSNAND, NAND_PARTITION_FIRM0);
-			if (firm->magic == FIRM_MAGIC)
-				for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--;)
-					if (firm->sections[i].load_address >= MEM_ARM9_RAM && 
-						firm->sections[i].load_address + firm->sections[i].size <= MEM_ARM9_RAM + MEM_ARM9_RAM_SIZE + MEM_ARM9_RAM_KTR_SIZE
-					) {
-						data = __builtin_alloca(firm->sections[i].size);
-						nand_readsectors(firm->sections[i].offset/NAND_SECTOR_SIZE, firm->sections[i].size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
-						uint32_t j = firm->sections[i].size - sizeof(keyy_magic);
-						for (data += j; j--; data--) //make it backwards
-							if (!memcmp(data, &keyy_magic, sizeof(keyy_magic)) ||
-								!memcmp(data, &keyy_magic_dev, sizeof(keyy_magic_dev))
-							) {
-								data -= sizeof(common_keyy[0]) - sizeof(keyy_magic); //advance to start of the key data
-								for (size_t k = sizeof(common_keyy)/sizeof(common_keyy)[0]; k--;) {
-//									common_keyy[k] = *(aes_key_data)data; //alignment failure here, workaround with memcpy
-									memcpy(&common_keyy[k], data, sizeof(common_keyy[0]));
-									data -= sizeof(common_keyy[0]) + sizeof(uint32_t); //size + pad
-								}
-								break;
-							}
-						break;
-					}
+			for (size_t drive = 1; drive <= 2; drive++) //todo: max NAND drive
+				if ((swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%1x0000002/content", drive, REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) > 0) &&
+					(tmdPreloadRecent(&tmd, path) != 0xFFFFFFFF) &&
+					FileOpen(&fil, path, 0) && (
+						(FileSeek(&fil, signatureAdvance(tmd.sig_type) + sizeof(tmd.header) + sizeof(tmd.content_info)) &&
+							FileRead2(&fil, &content_chunk, sizeof(content_chunk)) == sizeof(content_chunk) //FIRM title have only  one file, so just first chunk is needed
+						) || (FileClose(&fil) && 0) //close on fail
+					) && (FileClose(&fil) || 1) && //close on success
+					wcscpy(wcsrchr(path, L'/'), L"/%08lx.app") && //make APP path
+					(swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id)) > 0) &&
+					FileOpen(&fil, apppath, 0) && (
+						((size = FileGetSize(&fil)) &&
+							(data = __builtin_alloca(size)) &&
+							FileRead2(&fil, data, size) == size
+						) || (FileClose(&fil) && 0)
+					) && (FileClose(&fil) || 1) &&
+					(firm = (firm_header*)(data = decryptFirmTitleNcch((uint8_t*)data, &size))) &&
+					(arm9_section = firmFindSection(firm, firm->arm9_entry)) &&
+					findCommonKeyY(data + arm9_section->offset, arm9_section->size)
+				) break;
+			
+			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
+				nand_readsectors(0, 1, data, SYSNAND, NAND_PARTITION_FIRM0);
+				if ((arm9_section = firmFindSection(firm, firm->arm9_entry)) && (data = __builtin_alloca(arm9_section->size))) {
+					nand_readsectors(arm9_section->offset/NAND_SECTOR_SIZE, arm9_section->size/NAND_SECTOR_SIZE, data, SYSNAND, NAND_PARTITION_FIRM0);
+					findCommonKeyY(data, arm9_section->size);
+				}
+			}
+
 			if (common_keyy[0].as32[0] == PROCESS9_SEEK_PENDING) {
 				common_keyy[0].as32[0] = PROCESS9_SEEK_FAILED;
 				return 0;
 			}
 	}
-	aes_set_key(&(aes_key){&common_keyy[ticket->key_index], AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
+
+  aes_set_key(&(aes_key){&common_keyy[ticket->key_index], AES_CNT_INPUT_BE_NORMAL, 0x3D, KEYY});
 	*key->data = ticket->key; //make it aligned
 //	memcpy(key->data, &ticket->key, sizeof(*key->data)); //looks like no alignment issue with structure assignment above
 	aes(key->data, key->data, sizeof(*key->data), &(aes_ctr){.data.as64={ticket->title_id}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 	*key = (aes_key){key->data, AES_CNT_INPUT_BE_NORMAL, 0x2C, NORMALKEY}; //set aes_key metadata
-	return 1;
+
+  return 1;
 }
 
 uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
@@ -98,9 +127,10 @@ uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 			tick_size = BUF_SIZE;
 		else
 			for (size_t i = 0; i < tick_size; i++)
-				if ((ticket = (ticket_data*)(buf + i))->title_id == titleid &&
-					!strncmp(ticket->issuer, "Root-CA00000003-XS0000000c", sizeof(ticket->issuer))
-				) {
+				if ((ticket = (ticket_data*)(buf + i))->title_id == titleid && (
+					!strncmp(ticket->issuer, "Root-CA00000003-XS0000000c", sizeof(ticket->issuer)) ||
+					!strncmp(ticket->issuer, "Root-CA00000004-XS00000009", sizeof(ticket->issuer))
+				)) {
 					FileClose(&fil);
 					return decryptKey(key, ticket);
 				}
@@ -198,17 +228,14 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 
 uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path) {
 	File fil;
-	size_t offset;
 	cetk_data data;
 	
-	if (!FileOpen(&fil, path, 0) || (
-		(FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) != sizeof(data.sig_type) ||
-		(offset = signatureAdvance(data.sig_type)) == 0 ||
-		!FileSeek(&fil, offset) ||
-		FileRead2(&fil, &data.ticket, sizeof(data.ticket)) != sizeof(data.ticket)) &&
-		(FileClose(&fil) || 1) &&
-		data.ticket.title_id != titleid
-	)) return 0;
-	
-	return decryptKey(key, &data.ticket);
+	return FileOpen(&fil, path, 0) && (
+			(FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) == sizeof(data.sig_type) &&
+			 	FileSeek(&fil, signatureAdvance(data.sig_type)) &&
+			 	FileRead2(&fil, &data.ticket, sizeof(data.ticket)) == sizeof(data.ticket)
+			) || (FileClose(&fil) && 0)
+		) && (FileClose(&fil) || 1) &&
+		data.ticket.title_id == titleid &&
+		decryptKey(key, &data.ticket);
 }

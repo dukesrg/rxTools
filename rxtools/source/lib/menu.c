@@ -257,7 +257,10 @@ static uint_fast8_t getStrVal(wchar_t *s, int i) {
 
 	if ((nand_idx = wcstoul(str, NULL, 10) - 1) >= NAND_COUNT)
 		nand_idx = 0;
-	wcsreplace(s, str, L"%SYSTEM%", getMpInfo() == MPINFO_KTR ? L"2" : L"0");
+	
+	wchar_t platform_idx[2];
+	swprintf(platform_idx, 2, L"%1x", REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR);
+	wcsreplace(s, str, L"%SYSTEM%", platform_idx);
 	wcsreplace(str, s, L"%REGION%", getRegion(nand_idx)->id);
 	wcsreplace(s, str, L"%ID0%", getID0(nand_idx));
 

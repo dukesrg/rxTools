@@ -330,16 +330,16 @@ static int InstallData() {
 	int r;
 	int p = 0;
 
-	statusInit(getMpInfo() == MPINFO_CTR ? 3 : 1, 0, L"Decrypting firmware");
+	statusInit((REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) ? 1 : 3, 0, L"Decrypting firmware");
 
-	r = processFirm(getMpInfo() == MPINFO_CTR ?
-		TID_CTR_NATIVE_FIRM : TID_KTR_NATIVE_FIRM);
+	r = processFirm((REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) ?
+		TID_KTR_NATIVE_FIRM : TID_CTR_NATIVE_FIRM);
 	if (r)
 		return r;
 
 	progressSetPos(++p);
 
-	if (getMpInfo() == MPINFO_CTR) {
+	if (!(REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR)) {
 		r = processFirm(TID_CTR_AGB_FIRM);
 		if (r)
 			return r;
@@ -360,31 +360,22 @@ int CheckInstallationData(){
 	File file;
 	wchar_t str[_MAX_LFN + 1];
 
-	switch (getMpInfo()) {
-		case MPINFO_CTR:
-			getFirmPath(str, TID_CTR_NATIVE_FIRM);
-			if(!FileOpen(&file, str, 0)) return -1;
-			FileClose(&file);
+	if (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) {
+		getFirmPath(str, TID_KTR_NATIVE_FIRM);
+		if(!FileOpen(&file, str, 0)) return -1;
+		FileClose(&file);
+	} else {
+		getFirmPath(str, TID_CTR_NATIVE_FIRM);
+		if(!FileOpen(&file, str, 0)) return -1;
+		FileClose(&file);
 
-			getFirmPath(str, TID_CTR_TWL_FIRM);
-			if(!FileOpen(&file, str, 0)) return -2;
-			FileClose(&file);
+		getFirmPath(str, TID_CTR_TWL_FIRM);
+		if(!FileOpen(&file, str, 0)) return -2;
+		FileClose(&file);
 
-			getFirmPath(str, TID_CTR_AGB_FIRM);
-			if(!FileOpen(&file, str, 0)) return -3;
-			FileClose(&file);
-
-			break;
-
-		case MPINFO_KTR:
-			getFirmPath(str, TID_KTR_NATIVE_FIRM);
-			if(!FileOpen(&file, str, 0)) return -1;
-			FileClose(&file);
-
-			break;
-
-		default:
-			return 0;
+		getFirmPath(str, TID_CTR_AGB_FIRM);
+		if(!FileOpen(&file, str, 0)) return -3;
+		FileClose(&file);
 	}
 
 	return 0;
