@@ -167,8 +167,10 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 			FileClose(&fil);
 			return 0;
 		default:
-			if (!FileSeek(&fil, table_offset + block_size + sizeof(header2)))
-				return 0;
+			if (FileSeek(&fil, table_offset + block_size + sizeof(header2)))
+				break;
+			FileClose(&fil);
+			return 0;
 	}
 
 	ticket_title_entry entries[entries_total];
