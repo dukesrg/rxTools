@@ -26,6 +26,9 @@
 #include "memory.h"
 #include "blobs.h"
 
+#include "draw.h"
+#include "lang.h"
+
 #define PROCESS9_SEEK_PENDING	0
 #define PROCESS9_SEEK_FAILED	0xFFFFFFFF
 
@@ -163,23 +166,28 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 		case BDRI_SEEK_FAILED:
 			FileClose(&fil);
 			return 0;
+		default:
+			if (!FileSeek(&fil, table_offset + block_size + sizeof(header2)))
+				return 0;
 	}
 
 	ticket_title_entry entries[entries_total];
 	if (FileRead2(&fil, entries, sizeof(entries)) == sizeof(entries)) {
 		cetk_data data;
+		ticket_title_info info;
 		uint32_t entry_offset;
 		titleid = __builtin_bswap64(titleid); //ticket entry table have little-endian title ID
 		for (size_t i = 0; i < entries_total; i++)
-			if (entries[i].active &&
-				entries[i].title_id == titleid &&
-				(entry_offset = table_offset + entries[i].title_info_offset * block_size + sizeof(ticket_title_info)) &&
-				FileSeek(&fil, entry_offset) &&
-				FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) == sizeof(data.sig_type) &&
-				FileSeek(&fil, entry_offset + signatureAdvance(data.sig_type) - sizeof(data.sig_type)) &&
-				FileRead2(&fil, &data.ticket, sizeof(data.ticket)) == sizeof(data.ticket) &&
-				(FileClose(&fil) || 1)
-			) return decryptKey(key, &data.ticket);
+			if (entries[i].title_id == titleid && entries[i].active)
+				return (entry_offset = table_offset + entries[i].title_info_offset * block_size) &&
+					FileSeek(&fil, entry_offset) &&
+					FileRead2(&fil, &info, sizeof(info)) == sizeof(info) &&
+					entries[i].title_info_size == info.size + sizeof(info) && //several active entries contains trash data, so size check used to filter wrong
+					FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) == sizeof(data.sig_type) &&
+					FileSeek(&fil, entry_offset + sizeof(info) + signatureAdvance(data.sig_type)) &&
+					FileRead2(&fil, &data.ticket, sizeof(data.ticket)) == sizeof(data.ticket) &&
+					(FileClose(&fil) || 1) &&
+					decryptKey(key, &data.ticket);
 	}
 
 	FileClose(&fil);

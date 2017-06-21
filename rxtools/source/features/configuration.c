@@ -273,7 +273,7 @@ static int processFirmFile(uint32_t lo)
 	uint_fast8_t drive = 1;
 	uint_fast8_t maxdrive = 2; //todo get max NAND drive number
 	if (!ticketGetKeyCetk(&Key, title_id, path)) //try with cetk
-		for (; drive <= maxdrive && !ticketGetKey(&Key, title_id, drive); drive++); //try with title.db from all NAND drives
+		for (; drive <= maxdrive && !ticketGetKey2(&Key, title_id, drive); drive++); //try with title.db from all NAND drives
 	if (drive <= maxdrive) {
 		aes_set_key(&Key);
 		aes(buff, buff, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
