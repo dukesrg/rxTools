@@ -122,7 +122,7 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 	tick_header tick;
 	bdri_header bdri;
         size_t difi_offset, tick_offset;
-	uint8_t *header_1;
+	uint8_t *header1;
 	title_entry_header_2 header2;
 
 	swprintf(path, _MAX_LFN + 1, L"%u:dbs/ticket.db", drive);
@@ -155,18 +155,18 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 				(table_offset = tick_offset + sizeof(tick) + bdri.title_entry_table_offset) &&
 				FileSeek(&fil, table_offset) &&
 				(header1 = __builtin_alloca(block_size)) &&
-				FileRead(&fil, header1, block_size)) == block_size &&
-				FileRead(&fil, &header2, sizeof(header2)) == sizeof(header2) &&
+				FileRead2(&fil, header1, block_size) == block_size &&
+				FileRead2(&fil, &header2, sizeof(header2)) == sizeof(header2) &&
 				(entries_total = header2.entries_total)
 			) break;
 			table_offset = BDRI_SEEK_FAILED;
 		case BDRI_SEEK_FAILED:
-			FileClose(&fil)
+			FileClose(&fil);
 			return 0;
 	}
 
 	ticket_title_entry entries[entries_total];
-	if (FileRead(&fil, entries, sizeof(entries)) == sizeof(entries)) {
+	if (FileRead2(&fil, entries, sizeof(entries)) == sizeof(entries)) {
 		cetk_data data;
 		uint32_t entry_offset;
 		titleid = __builtin_bswap64(titleid); //ticket entry table have little-endian title ID
@@ -175,9 +175,9 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 				entries[i].title_id == titleid &&
 				(entry_offset = table_offset + entries[i].title_info_offset * block_size + sizeof(ticket_title_info)) &&
 				FileSeek(&fil, entry_offset) &&
-				FileRead(&fil, &data.sig_type, sizeof(data.sig_type)) == sizeof(data.sig_type) &&
+				FileRead2(&fil, &data.sig_type, sizeof(data.sig_type)) == sizeof(data.sig_type) &&
 				FileSeek(&fil, entry_offset + signatureAdvance(data.sig_type) - sizeof(data.sig_type)) &&
-				FileRead(&fil, &data.ticket, sizeof(data.ticket)) == sizeof(data.ticket) &&
+				FileRead2(&fil, &data.ticket, sizeof(data.ticket)) == sizeof(data.ticket) &&
 				(FileClose(&fil) || 1)
 			) return decryptKey(key, &data.ticket);
 	}
