@@ -89,7 +89,7 @@ typedef struct {
 typedef struct {
 	uint32_t magic;
 	uint32_t format_version;
-	uint32_t master_hash_size;
+	uint64_t master_hash_size;
 	union {
 		uint64_t l1_offset;
 		struct {
