@@ -141,7 +141,7 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 				FileSeek(&fil, difi_offset + difi.ivfc_offset) &&
 				FileRead2(&fil, &ivfc, sizeof(ivfc)) == sizeof(ivfc) &&
 				ivfc.magic == (uint32_t)IVFC_MAGIC &&
-				ivfc.format_version == (uint32_t)IVFC_VERSION_2 &&
+				ivfc.format_version == IVFC_VERSION_2 &&
 				FileSeek(&fil, difi_offset + difi.dpfs_offset) &&
 				FileRead2(&fil, &dpfs, sizeof(dpfs)) == sizeof(dpfs) &&
 				dpfs.magic == (uint32_t)DPFS_MAGIC &&
@@ -167,18 +167,19 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 
 	ticket_title_entry entries[entries_total];
 	if (FileRead(&fil, entries, sizeof(entries)) == sizeof(entries)) {
-		ticket_data ticket;
-		uint32_t entry_offset, sigtype;
+		cetk_data data;
+		uint32_t entry_offset;
 		titleid = __builtin_bswap64(titleid); //ticket entry table have little-endian title ID
 		for (size_t i = 0; i < entries_total; i++)
-			if (entries[i].title_id == titleid &&
+			if (entries[i].active &&
+				entries[i].title_id == titleid &&
 				(entry_offset = table_offset + entries[i].title_info_offset * block_size + sizeof(ticket_title_info)) &&
 				FileSeek(&fil, entry_offset) &&
-				FileRead(&fil, &sigtype, sizeof(sigtype)) == sizeof(isigtype) &&
-				FileSeek(&fil, entry_offset + signatureAdvance(sigtype) - sizeof(sigtype)) &&
-				FileRead(&fil, &ticket, sizeof(ticket)) == sizeof(ticket) &&
+				FileRead(&fil, &data.sig_type, sizeof(data.sig_type)) == sizeof(data.sig_type) &&
+				FileSeek(&fil, entry_offset + signatureAdvance(data.sig_type) - sizeof(data.sig_type)) &&
+				FileRead(&fil, &data.ticket, sizeof(data.ticket)) == sizeof(data.ticket) &&
 				(FileClose(&fil) || 1)
-			) return decryptKey(key, &ticket);
+			) return decryptKey(key, &data.ticket);
 	}
 
 	FileClose(&fil);
