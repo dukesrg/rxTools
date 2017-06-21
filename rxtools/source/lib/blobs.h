@@ -37,13 +37,13 @@ typedef struct {
 	uint64_t primary_partition_offset;
 	uint64_t partition_size;
 	uint64_t save_partition_entry_offset;
-	uint64_t save_partition_entry_length;
+	uint64_t save_partition_entry_size;
 	uint64_t data_partition_entry_offset;
-	uint64_t data_partition_entry_length;
+	uint64_t data_partition_entry_size;
 	uint64_t save_partition_offset;
-	uint64_t save_partition_length;
+	uint64_t save_partition_size;
 	uint64_t data_partition_offset;
-	uint64_t data_partition_length;
+	uint64_t data_partition_size;
 	uint32_t active_partition;
 	uint8_t hash[0x20];
 	uint8_t reserved[0x74];
@@ -58,7 +58,7 @@ typedef struct {
 	uint32_t format_version;
 	uint64_t secondary_partition_offset;
 	uint64_t primary_partition_offset;
-	uint64_t partition_length;
+	uint64_t partition_size;
 	uint64_t file_base_offset;
 	uint64_t file_base_size;
 	uint32_t active_partition;
@@ -89,7 +89,7 @@ typedef struct {
 typedef struct {
 	uint32_t magic;
 	uint32_t format_version;
-	uint32_t master_hash_size;
+	uint64_t master_hash_size;
 	union {
 		uint64_t l1_offset;
 		struct {
@@ -162,13 +162,13 @@ typedef struct {
 	uint32_t magic;
 	uint32_t format_version;
 	uint64_t first_table_offset;
-	uint64_t first_table_length;
+	uint64_t first_table_size;
 	uint64_t first_table_block_size_log2;
 	uint64_t second_table_offset;
-	uint64_t second_table_length;
+	uint64_t second_table_size;
 	uint64_t second_table_block_size_log2;
 	uint64_t ivfc_partiton_offset;
-	uint64_t ivfc_partiton_length;
+	uint64_t ivfc_partiton_size;
 	uint64_t ivfc_partiton_block_size_log2;
 } __attribute__((packed)) dpfs_header;
 
@@ -191,13 +191,13 @@ typedef struct {
 	uint32_t reserved;
 	uint8_t unknown2[0x20];
 	uint8_t unknown3[0x18];
-	uint64_t title_entry_table_offset; //relative to BDRI header
+	uint64_t title_entry_table_offset;
 	uint8_t unknown4[0x20];
 } __attribute__((packed)) bdri_header;	
 
 typedef struct {
-	uint32_t magic1; //0x00000002
-	uint32_t magic2; //0x00000003
+	uint32_t magic1;
+	uint32_t magic2;
 	uint8_t reserved1[0x24];
 	uint32_t entries_used;
 } __attribute__((packed)) title_entry_header_1;

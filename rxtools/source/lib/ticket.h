@@ -65,6 +65,7 @@ typedef struct {
 } cetk_data;
 
 uint_fast8_t ticketGetKey(aes_key *key, uint64_t titleid, uint_fast8_t drive);
+uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive);
 uint_fast8_t ticketGetKeyCetk(aes_key *key, uint64_t titleid, wchar_t *path);
 
 #endif
