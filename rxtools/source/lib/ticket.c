@@ -178,7 +178,7 @@ uint_fast8_t ticketGetKey2(aes_key *key, uint64_t titleid, uint_fast8_t drive) {
 				FileSeek(&fil, difi_offset + difi.dpfs_offset) &&
 				FileRead2(&fil, &dpfs, sizeof(dpfs)) == sizeof(dpfs) &&
 				dpfs.magic == (uint32_t)DPFS_MAGIC &&
-				(tick_offset = diff.file_base_offset + dpfs.ivfc_partiton_offset + (diff.active_partition == DIFF_PARTITION_PRIMARY ? 0 : dpfs.ivfc_partiton_size) + ivfc.l4_offset_lo) &&
+				(tick_offset = diff.file_base_offset + dpfs.ivfc_partiton_offset + (diff.active_partition == DIFF_PARTITION_PRIMARY ? dpfs.ivfc_partiton_size : 0) + ivfc.l4_offset_lo) &&
 				FileSeek(&fil, tick_offset) &&
 				FileRead2(&fil, &tick, sizeof(tick)) == sizeof(tick) &&
 				tick.magic == (uint32_t)TICK_MAGIC &&
