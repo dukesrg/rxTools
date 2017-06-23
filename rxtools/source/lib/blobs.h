@@ -177,7 +177,7 @@ typedef struct {
 typedef struct {
 	uint32_t magic;
 	uint32_t unknown1; //0x00000001
-	uint8_t unknown2[8];
+	uint32_t unknown2[0x02];
 } __attribute__((packed)) tick_header;
 
 #define BDRI_MAGIC	'IRDB'
@@ -253,10 +253,11 @@ typedef struct {
 		};
 	};
 	uint32_t index;
-	uint32_t unknown2; //0x080936AC
+	uint32_t unknown2;
 	uint32_t title_info_offset; //relative to title entry header, in BRDI units (0x200 in fact)
 	uint32_t title_info_size; //in bytes
-	uint8_t unknown3[0x0C]; //0
+	uint32_t unknown3; //0
+	uint32_t unknown4[0x02];
 } __attribute__((packed)) ticket_title_entry;
 
 typedef struct {
