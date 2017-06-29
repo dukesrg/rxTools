@@ -14,6 +14,9 @@
 @ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #define ASM
+
+#include <arm.h>
+#include <memory.h>
 #include <reboot.h>
 
 line = 32
@@ -22,8 +25,8 @@ line = 32
 	.global	execReboot
 	.type	execReboot, %function
 execReboot:
-	mov	r4, #0x08000000	@ Address
-	orr	r4, #0x29	@ Size: 2^0x28 = 2M, Enable
+	mov	r4, #MEM_ARM9_RAM	@ Address
+	orr	r4, #PR_SZ_2M | PR_EN	@ Size: 2^0x28 = 2M, Enable
 	mcr	p15, 0, r4, c6, c2, 0	@ Set MPU area 2
 
 	ldr	r4, [r3, #20]

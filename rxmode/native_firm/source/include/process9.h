@@ -21,14 +21,8 @@
 
 typedef uint32_t P9File[8];
 
-static inline void p9FileInit(P9File f)
-{
-	unsigned int i;
-
-	for (i = 0; i < sizeof(P9File); i += sizeof(uint32_t)) {
-		*f = 0;
-		f++;
-	}
+static inline void p9FileInit(P9File f) {		
+	for (size_t i = sizeof(P9File)/sizeof(uint32_t); i--; *f++ = 0);
 }
 
 unsigned int p9Open(P9File, const wchar_t *name, unsigned int flag);

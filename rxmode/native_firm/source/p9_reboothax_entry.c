@@ -22,24 +22,6 @@
 #include <emunand.h>
 #include <process9.h>
 
-static void *memcpy32(void *dst, const void *src, size_t n)
-{
-	const uint32_t *_src;
-	uint32_t *_dst;
-	uintptr_t btm;
-
-	_dst = dst;
-	_src = src;
-	btm = (uintptr_t)dst + n;
-	while ((uintptr_t)_dst < btm) {
-		*_dst = *_src;
-		_dst++;
-		_src++;
-	}
-
-	return _dst;
-}
-
 static _Noreturn void __attribute__((section(".patch.p9.reboot.entry")))
 execReboot()
 {
