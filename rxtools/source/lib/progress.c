@@ -113,7 +113,7 @@ uint_fast8_t progressSetPos(uintmax_t pos) {
 				wcscpy(status_value, lang(S_CANCELED));
 				status_features |= STATUS_WAIT | STATUS_FINISHED | STATUS_FAILED;
 			}
-			if (status_features & STATUS_FINISHED) {
+			if (status_features & STATUS_WAIT && status_features & STATUS_FINISHED) {
 				wcscat(status_value, L" ");
 				swprintf(status_value + wcslen(status_value), _MAX_LFN + 1, lang(SF2_PRESS_BUTTON_ACTION), lang(S_ANY_BUTTON), lang(S_CONTINUE));
 			}

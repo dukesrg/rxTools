@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The PASTA Team
+ * Copyright (C) 2015-2017 The PASTA Team, dukesrg
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,15 +30,12 @@
 #include "mpcore.h"
 #include "ncch.h"
 #include "firm.h"
-#include "downgradeapp.h"
 #include "menu.h"
 #include "jsmn/jsmn.h"
 #include "progress.h"
 #include "strings.h"
 #include "aes.h"
 #include "ticket.h"
-
-#define KEYFILENAME	"slot0x25KeyX.bin"
 
 static char cfgLang[CFG_STR_MAX_LEN] = "en";
 static char cfgTheme[CFG_STR_MAX_LEN] = "";
@@ -226,168 +223,7 @@ int readCfg()
 
 	return 0;
 }
-
-static FRESULT saveFirm(uint32_t id, const void *p, DWORD n)
-{
-	wchar_t path[_MAX_LFN + 1];
-	UINT bw;
-	FRESULT r;
-	FIL f;
-
-	getFirmPath(path, id);
-	r = f_open(&f, path, FA_WRITE | FA_CREATE_ALWAYS);
-	if (r != FR_OK)
-		return r;
-
-	r = f_write(&f, p, n, &bw);
-	f_close(&f);
-
-	return r;
-}
-
-static int processFirmFile(uint32_t lo)
-{
-	static const wchar_t pathFmt[] = L"rxTools/firm/00040138%08lx%ls.bin";
-	const uint64_t title_id = (uint64_t)__builtin_bswap32(lo) << 32 | 0x38010400;
-	wchar_t path[_MAX_LFN + 1];
-	void *buff, *firm;
-	UINT size;
-	FRESULT r;
-	FIL f;
-
-	swprintf(path, _MAX_LFN + 1, pathFmt, lo, L"");
-	r = f_open(&f, path, FA_READ);
-	if (r != FR_OK)
-		return r;
-
-	size = f_size(&f);
-	buff = __builtin_alloca(size + sizeof(uint32_t));
-	r = f_read(&f, buff, size, &size);
-	f_close(&f);
-	if (r != FR_OK)
-		return r;
-
-	aes_key Key = {&(aes_key_data){{0}}};
-
-	swprintf(path, sizeof(path), pathFmt, lo, L"_cetk");
-	uint_fast8_t drive = 1;
-	uint_fast8_t maxdrive = 2; //todo get max NAND drive number
-	if (!ticketGetKeyCetk(&Key, title_id, path)) //try with cetk
-		for (; drive <= maxdrive && !ticketGetKey2(&Key, title_id, drive); drive++); //try with title.db from all NAND drives
-	if (drive <= maxdrive) {
-		aes_set_key(&Key);
-		aes(buff, buff, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
-		if ((firm = decryptFirmTitleNcch(buff, &size)) != NULL)
-			return saveFirm(lo, firm, size);
-	}
-
-	return -1;
-}
-
-static int processFirmInstalled(uint32_t lo)
-{
-	void *buff, *firm;
-	AppInfo appInfo;
-	UINT size;
-	FRESULT r;
-	FIL f;
-
-	appInfo.drive = 1;
-	appInfo.tidLo = lo;
-	appInfo.tidHi = TID_HI_FIRM;
-	FindApp(&appInfo);
-	if (f_open(&f, appInfo.content, FA_READ) != FR_OK) {
-		appInfo.drive = 2;
-		FindApp(&appInfo);
-		r = f_open(&f, appInfo.content, FA_READ);
-		if (r != FR_OK)
-			return r;
-	}
-
-	size = f_size(&f);
-	buff = __builtin_alloca(size);
-
-	r = f_read(&f, buff, size, &size);
-	f_close(&f);
-	if (r != FR_OK)
-		return r;
-
-	firm = decryptFirmTitleNcch(buff, &size);
-	return firm == NULL ? -1 : saveFirm(lo, firm, size);
-}
-
-static int processFirm(uint32_t lo)
-{
-	int r;
-
-	if ((r = processFirmFile(lo)))
-		r = processFirmInstalled(lo);
-
-	return r;
-}
-
-static int InstallData() {
-	int r;
-	int p = 0;
-
-	statusInit((REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) ? 1 : 3, 0, L"Decrypting firmware");
-
-	r = processFirm((REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) ?
-		TID_KTR_NATIVE_FIRM : TID_CTR_NATIVE_FIRM);
-	if (r)
-		return r;
-
-	progressSetPos(++p);
-
-	if (!(REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR)) {
-		r = processFirm(TID_CTR_AGB_FIRM);
-		if (r)
-			return r;
-
-		progressSetPos(++p);
-
-		r = processFirm(TID_CTR_TWL_FIRM);
-		if (r != FR_OK)
-			return r;
-
-		progressSetPos(++p);
-	}
-
-	return 0;
-}
-
-int CheckInstallationData(){
-	File file;
-	wchar_t str[_MAX_LFN + 1];
-
-	if (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) {
-		getFirmPath(str, TID_KTR_NATIVE_FIRM);
-		if(!FileOpen(&file, str, 0)) return -1;
-		FileClose(&file);
-	} else {
-		getFirmPath(str, TID_CTR_NATIVE_FIRM);
-		if(!FileOpen(&file, str, 0)) return -1;
-		FileClose(&file);
-
-		getFirmPath(str, TID_CTR_TWL_FIRM);
-		if(!FileOpen(&file, str, 0)) return -2;
-		FileClose(&file);
-
-		getFirmPath(str, TID_CTR_AGB_FIRM);
-		if(!FileOpen(&file, str, 0)) return -3;
-		FileClose(&file);
-	}
-
-	return 0;
-}
-
-void InstallConfigData(){
-//	wchar_t path[_MAX_LFN + 1];
-
-	if(CheckInstallationData() == 0)
-		return;
-
-	writeCfg();
-	InstallData();
-	InputWait();
+void InstallConfigData() {
+	if (!FileExists(jsonPath))
+		writeCfg();
 }

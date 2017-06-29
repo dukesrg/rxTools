@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The PASTA Team
+ * Copyright (C) 2015-2017 The PASTA Team, dukesrg
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -37,6 +37,9 @@
 #include "lang.h"
 #include "aes.h"
 #include "progress.h"
+#include "tmd.h"
+#include "ticket.h"
+#include "signature.h"
 
 const wchar_t *firmPathFmt= L"" FIRM_PATH_FMT;
 const wchar_t *firmPatchPathFmt = L"" FIRM_PATCH_PATH_FMT;
@@ -160,9 +163,86 @@ static void setAgbBios()
 	}
 }
 
+static uint_fast8_t saveFirm(wchar_t *path, void *data, size_t size) {
+	File f;
+	return (data = decryptFirmTitleNcch(data, &size)) != NULL &&
+		FileOpen(&f, path, 1) &&
+		(FileWrite2(&f, data, size) == size || (FileClose(&f) && 0)) &&
+		(FileClose(&f) || 1);
+}
+
+static uint_fast8_t processFirmFile(uint32_t title_id_lo) {
+	static const wchar_t pathFmt[] = L"rxTools/firm/00040138%08lx%ls.bin";
+	const uint64_t title_id = (uint64_t)__builtin_bswap32(title_id_lo) << 32 | 0x38010400;
+	wchar_t path[_MAX_LFN + 1];
+	void *buff;
+	size_t size;
+	File f;
+
+	if (swprintf(path, _MAX_LFN + 1, pathFmt, title_id_lo, L"") > 0 &&
+		FileOpen(&f, path, 0) && (
+			((size = FileSize(path)) &&
+				(buff = __builtin_alloca(size)) &&
+				FileRead2(&f, buff, size) == size
+			) || (FileClose(&f) && 0)
+		)
+	) {
+		FileClose(&f);
+		aes_key Key = {&(aes_key_data){{0}}};
+	
+		swprintf(path, sizeof(path), pathFmt, title_id_lo, L"_cetk");
+		uint_fast8_t drive = 1;
+		uint_fast8_t maxdrive = 2; //todo get max NAND drive number
+		if (!ticketGetKeyCetk(&Key, title_id, path)) //try with cetk
+			for (uint_fast8_t drive = 0; drive <= 2 && !ticketGetKey2(&Key, title_id, drive); drive++); //try with title.db from all NAND drives
+		if (drive <= maxdrive) {
+			aes_set_key(&Key);
+			aes(buff, buff, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+			return getFirmPath(path, title_id_lo) && saveFirm(path, buff, size);
+		}
+	}
+
+	return 0;
+}
+
+static uint_fast8_t processFirmInstalled(uint32_t title_id_lo) {
+	void *data;
+	wchar_t path[_MAX_LFN + 1], apppath[_MAX_LFN + 1];
+	File f;
+	size_t size;
+	tmd_data tmd;
+	tmd_content_chunk content_chunk;
+
+	for (size_t drive = 1; drive <= 2; drive++) //todo: max NAND drive
+		if (swprintf(path, _MAX_LFN + 1, L"%u:title/00040138/%08x/content", drive, title_id_lo) > 0 &&
+			tmdPreloadRecent(&tmd, path) != 0xFFFFFFFF &&
+			FileOpen(&f, path, 0) && (
+				(FileSeek(&f, signatureAdvance(tmd.sig_type) + sizeof(tmd.header) + sizeof(tmd.content_info)) &&
+					FileRead2(&f, &content_chunk, sizeof(content_chunk)) == sizeof(content_chunk) //FIRM title have only one file, so just first chunk is needed
+					) || (FileClose(&f) && 0) //close on fail
+				) && (FileClose(&f) || 1) && //close on success
+				wcscpy(wcsrchr(path, L'/'), L"/%08lx.app") && //make APP path
+				swprintf(apppath, _MAX_LFN + 1, path, __builtin_bswap32(content_chunk.content_id)) > 0 &&
+				FileOpen(&f, apppath, 0) && (
+					((size = FileGetSize(&f)) &&
+						(data = __builtin_alloca(size)) &&
+						FileRead2(&f, data, size) == size
+					) || (FileClose(&f) && 0)
+				) && (FileClose(&f) || 1) &&
+				getFirmPath(path, title_id_lo) &&
+				saveFirm(path, data, size)
+		) return 1;
+
+	return 0;
+}
+
+static uint_fast8_t processFirm(uint32_t title_id_lo) {
+	return processFirmFile(title_id_lo) || processFirmInstalled(title_id_lo); 
+}
+
 int rxMode(int_fast8_t drive)
 {
-	wchar_t path[64];
+	wchar_t path[_MAX_LFN + 1];
 	const char *shstrtab;
 	const wchar_t *msg;
 	uint8_t keyx[16];
@@ -194,10 +274,6 @@ int rxMode(int_fast8_t drive)
 	} else
 		sector = 0;
 
-	tid = (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) ? TID_KTR_NATIVE_FIRM : TID_CTR_NATIVE_FIRM;
-
-	setAgbBios();
-
 	if (sysver < 7 && f_open(&fd, L"slot0x25KeyX.bin", FA_READ) == FR_OK) {
 		f_read(&fd, keyx, sizeof(keyx), &br);
 		f_close(&fd);
@@ -205,7 +281,42 @@ int rxMode(int_fast8_t drive)
 	} else
 		keyxArg = NULL;
 
+	if (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) {
+		tid = TID_KTR_NATIVE_FIRM;
+	} else {
+		getFirmPath(path, TID_CTR_TWL_FIRM);
+		if (!FileExists(path)) {
+			statusInit(1, 0, L"Decrypting TWL_FIRM");
+			if (!processFirm(TID_CTR_TWL_FIRM)) {
+				DrawInfo(NULL, lang(S_CONTINUE), lang("Error dectypting TWL_FIRM"));
+				return 0;
+			}
+			progressSetPos(1);
+		}
+	
+		getFirmPath(path, TID_CTR_AGB_FIRM);
+		if (!FileExists(path)) {
+			statusInit(1, 0, L"Decrypting AGB_FIRM");
+			if (!processFirm(TID_CTR_AGB_FIRM)) {
+				DrawInfo(NULL, lang(S_CONTINUE), lang("Error dectypting AGB_FIRM"));
+				return 0;
+			}
+			progressSetPos(1);
+			setAgbBios();
+		}
+
+		tid = TID_CTR_NATIVE_FIRM;
+	}
 	getFirmPath(path, tid);
+	if (!FileExists(path)) {
+		statusInit(1, 0, L"Decrypting NATIVE_FIRM");
+		if (!processFirm(tid)) {
+			DrawInfo(NULL, lang(S_CONTINUE), lang("Error dectypting NATIVE_FIRM"));
+			return 0;
+		}
+		progressSetPos(1);
+	}
+
 	r = loadFirm(path, &fsz);
 	if (r) {
 		msg = L"Failed to load NATIVE_FIRM: %d\n"
