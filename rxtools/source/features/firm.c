@@ -40,6 +40,14 @@
 #include "tmd.h"
 #include "ticket.h"
 #include "signature.h"
+#include "native_firm.h"
+
+//FIRM processing additional job flags
+typedef enum {
+	FIRM_PATCH = 1<<0, //apply patches
+	FIRM_COPY = 1<<1, //copy section to target address
+	FIRM_SAVE = 1<<2 //save to file
+} firm_operation;
 
 const wchar_t *firmPathFmt= L"" FIRM_PATH_FMT;
 const wchar_t *firmPatchPathFmt = L"" FIRM_PATCH_PATH_FMT;
@@ -163,27 +171,62 @@ static void setAgbBios()
 	}
 }
 
-static uint_fast8_t saveFirm(wchar_t *path, void *data, size_t size) {
+static uint_fast8_t firmPatch(void *data) { //path FIRM sections
+//	firm_section_header *section = ((firm_header*)data).sections;
+//	for (size_t i = sizeof(firm_header->sections)/sizeof(firm_section_header); i--; section++) {
+//todo: static firmware patching
+//	}
+	return 1;
+}
+
+static uint_fast8_t firmLoad(wchar_t *path) { //load FIRM file sections directly to target addresses
 	File f;
-	return (data = decryptFirmTitleNcch(data, &size)) != NULL &&
-		FileOpen(&f, path, 1) &&
+	firm_header firm;
+	firm_section_header *section = firm.sections;
+	
+	if (!(FileOpen(&f, path, 0) && (
+		(FileRead2(&f, &firm, sizeof(firm)) == sizeof(firm) &&
+			firm.magic == FIRM_MAGIC
+		) || (FileClose(&f) && 0)
+	))) return 0;
+
+	for (size_t i = sizeof(firm_header->sections)/sizeof(firm_section_header); i--; section++)
+		if (!((FileSeek(&f, section->offset) &&
+				FileRead2(&f, section->load_address, section->size) == section->size
+			) || (FileClose(&f) && 0)
+		)) return 0;
+
+	FileClose(&f);
+	return 1;
+}	
+
+static uint_fast8_t firmCopy(void *data) { //copy FIRM sections to target addresses
+	firm_section_header *section = ((firm_header*)data).sections;
+	for (size_t i = sizeof(firm_header->sections)/sizeof(firm_section_header); i--; section++)
+		memcpy(section->load_address, data + section->offset, section->size);
+	return 1;
+}
+
+static uint_fast8_t firmSave(wchar_t *path, void *data, size_t size) { //decrypt FIRM title and save NCCH to file
+	File f;
+	return FileOpen(&f, path, 1) &&
 		(FileWrite2(&f, data, size) == size || (FileClose(&f) && 0)) &&
 		(FileClose(&f) || 1);
 }
 
-static uint_fast8_t processFirmFile(uint32_t title_id_lo) {
+static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operation) {
 	static const wchar_t pathFmt[] = L"rxTools/firm/00040138%08lx%ls.bin";
 	const uint64_t title_id = (uint64_t)__builtin_bswap32(title_id_lo) << 32 | 0x38010400;
 	wchar_t path[_MAX_LFN + 1];
-	void *buff;
+	void *data;
 	size_t size;
 	File f;
 
 	if (swprintf(path, _MAX_LFN + 1, pathFmt, title_id_lo, L"") > 0 &&
 		FileOpen(&f, path, 0) && (
 			((size = FileSize(path)) &&
-				(buff = __builtin_alloca(size)) &&
-				FileRead2(&f, buff, size) == size
+				(data = __builtin_alloca(size)) &&
+				FileRead2(&f, data, size) == size
 			) || (FileClose(&f) && 0)
 		)
 	) {
@@ -197,15 +240,18 @@ static uint_fast8_t processFirmFile(uint32_t title_id_lo) {
 			for (uint_fast8_t drive = 0; drive <= 2 && !ticketGetKey2(&Key, title_id, drive); drive++); //try with title.db from all NAND drives
 		if (drive <= maxdrive) {
 			aes_set_key(&Key);
-			aes(buff, buff, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
-			return getFirmPath(path, title_id_lo) && saveFirm(path, buff, size);
+			aes(data, data, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
+			return (data = decryptFirmTitleNcch(data, &size))
+				(!(operation & FIRM_PATCH) || firmPatch(data)) &&
+				(!(operation & FIRM_COPY) || firmCopy(data)) &&
+				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)));
 		}
 	}
 
 	return 0;
 }
 
-static uint_fast8_t processFirmInstalled(uint32_t title_id_lo) {
+static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation operation) {
 	void *data;
 	wchar_t path[_MAX_LFN + 1], apppath[_MAX_LFN + 1];
 	File f;
@@ -229,15 +275,18 @@ static uint_fast8_t processFirmInstalled(uint32_t title_id_lo) {
 						FileRead2(&f, data, size) == size
 					) || (FileClose(&f) && 0)
 				) && (FileClose(&f) || 1) &&
-				getFirmPath(path, title_id_lo) &&
-				saveFirm(path, data, size)
+				(data = decryptFirmTitleNcch(data, &size)) &&
+				(!(operation & FIRM_PATCH) || firmPatch(data)) &&
+				(!(operation & FIRM_COPY) || firmCopy(data)) &&
+				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)));
 		) return 1;
 
 	return 0;
 }
 
-static uint_fast8_t processFirm(uint32_t title_id_lo) {
-	return processFirmFile(title_id_lo) || processFirmInstalled(title_id_lo); 
+static uint_fast8_t processFirm(uint32_t title_id_lo, firm_operation operation) {
+	return processFirmFile(title_id_lo, operation) ||
+		processFirmInstalled(title_id_lo, operation); 
 }
 
 int rxMode(int_fast8_t drive)
@@ -287,8 +336,8 @@ int rxMode(int_fast8_t drive)
 		getFirmPath(path, TID_CTR_TWL_FIRM);
 		if (!FileExists(path)) {
 			statusInit(1, 0, L"Decrypting TWL_FIRM");
-			if (!processFirm(TID_CTR_TWL_FIRM)) {
-				DrawInfo(NULL, lang(S_CONTINUE), lang("Error dectypting TWL_FIRM"));
+			if (!processFirm(TID_CTR_TWL_FIRM, FIRM_PATCH | FIRM_SAVE)) {
+				DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting TWL_FIRM"));
 				return 0;
 			}
 			progressSetPos(1);
@@ -297,8 +346,8 @@ int rxMode(int_fast8_t drive)
 		getFirmPath(path, TID_CTR_AGB_FIRM);
 		if (!FileExists(path)) {
 			statusInit(1, 0, L"Decrypting AGB_FIRM");
-			if (!processFirm(TID_CTR_AGB_FIRM)) {
-				DrawInfo(NULL, lang(S_CONTINUE), lang("Error dectypting AGB_FIRM"));
+			if (!processFirm(TID_CTR_AGB_FIRM, FIRM_PATCH | FIRM_SAVE)) {
+				DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting AGB_FIRM"));
 				return 0;
 			}
 			progressSetPos(1);
@@ -308,22 +357,22 @@ int rxMode(int_fast8_t drive)
 		tid = TID_CTR_NATIVE_FIRM;
 	}
 	getFirmPath(path, tid);
-	if (!FileExists(path)) {
+	if (!firmLoad(path)) {
 		statusInit(1, 0, L"Decrypting NATIVE_FIRM");
-		if (!processFirm(tid)) {
-			DrawInfo(NULL, lang(S_CONTINUE), lang("Error dectypting NATIVE_FIRM"));
+		if (!processFirm(tid, FIRM_PATCH | FIRM_SAVE | FIRM_COPY)) {
+			DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting NATIVE_FIRM"));
 			return 0;
 		}
 		progressSetPos(1);
 	}
-
+/*
 	r = loadFirm(path, &fsz);
 	if (r) {
 		msg = L"Failed to load NATIVE_FIRM: %d\n"
 			L"Reboot rxTools and try again.\n";
 		goto fail;
 	}
-
+*/
 	((FirmHdr *)FIRM_ADDR)->arm9Entry = 0x0801B01C;
 
 	getFirmPatchPath(path, tid);
