@@ -24,6 +24,7 @@
 #include <reboot.h>
 #include "fs.h"
 #include "aes.h"
+#include "native_firm.h"
 
 #define FIRM_MAGIC 'MRIF'
 
