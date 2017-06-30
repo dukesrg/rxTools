@@ -365,14 +365,14 @@ int rxMode(int_fast8_t drive)
 		}
 		progressSetPos(1);
 	}
-/*
+
 	r = loadFirm(path, &fsz);
 	if (r) {
 		msg = L"Failed to load NATIVE_FIRM: %d\n"
 			L"Reboot rxTools and try again.\n";
 		goto fail;
 	}
-*/
+
 	((FirmHdr *)FIRM_ADDR)->arm9Entry = 0x0801B01C;
 
 	getFirmPatchPath(path, tid);
