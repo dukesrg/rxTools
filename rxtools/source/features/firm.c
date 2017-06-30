@@ -207,9 +207,9 @@ static uint_fast8_t firmLoad(wchar_t *path) { //load FIRM file sections directly
 		) || (FileClose(&f) && 0)
 	))) return 0;
 
-	for (size_t i = sizeof(firm_header->sections)/sizeof(firm_section_header); i--; section++)
+	for (size_t i = sizeof(firm.sections)/sizeof(firm.sections[0]); i--; section++)
 		if (!((FileSeek(&f, section->offset) &&
-				FileRead2(&f, section->load_address, section->size) == section->size
+				FileRead2(&f, (void*)section->load_address, section->size) == section->size
 			) || (FileClose(&f) && 0)
 		)) return 0;
 
@@ -218,9 +218,10 @@ static uint_fast8_t firmLoad(wchar_t *path) { //load FIRM file sections directly
 }	
 
 static uint_fast8_t firmCopy(void *data) { //copy FIRM sections to target addresses
-	firm_section_header *section = ((firm_header*)data).sections;
-	for (size_t i = sizeof(firm_header->sections)/sizeof(firm_section_header); i--; section++)
-		memcpy(section->load_address, data + section->offset, section->size);
+	firm_header *firm = (firm_header*)data;
+	firm_section_header *section = firm->sections;
+	for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--; section++)
+		memcpy((void*)section->load_address, data + section->offset, section->size);
 	return 1;
 }
 
@@ -258,7 +259,7 @@ static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operati
 		if (drive <= maxdrive) {
 			aes_set_key(&Key);
 			aes(data, data, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
-			return (data = decryptFirmTitleNcch(data, &size))
+			return (data = decryptFirmTitleNcch(data, &size)) &&
 				(!(operation & FIRM_PATCH) || firmPatch(data)) &&
 				(!(operation & FIRM_COPY) || firmCopy(data)) &&
 				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)));
@@ -295,7 +296,7 @@ static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation op
 				(data = decryptFirmTitleNcch(data, &size)) &&
 				(!(operation & FIRM_PATCH) || firmPatch(data, operation)) &&
 				(!(operation & FIRM_COPY) || firmCopy(data)) &&
-				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)));
+				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)))
 		) return 1;
 
 	return 0;
