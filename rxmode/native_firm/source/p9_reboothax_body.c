@@ -260,7 +260,7 @@ _Noreturn void __attribute__((section(".text.start")))
 rebootFunc(uint32_t sector, const void *pkeyx, uint32_t *arm11EntryDst)
 {
 	setupMpu();
-	loadFirm();
+//	loadFirm();
 	patchFirm(sector, pkeyx);
 	flushFirmData();
 	arm11Enter(arm11EntryDst);
