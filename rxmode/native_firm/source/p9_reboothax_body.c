@@ -167,6 +167,7 @@ static int memcmp(const void *s1, const void *s2, size_t n)
 
 static void patchFirm(uint32_t sector, const void *pkeyx)
 {
+/*
 	static const char patchNandPrefix[] = ".patch.p9.nand";
 #ifndef PLATFORM_KTR
 	static const char patchKeyxStr[] = ".patch.p9.keyx";
@@ -197,7 +198,7 @@ static void patchFirm(uint32_t sector, const void *pkeyx)
 			(void *)PATCH_ADDR + shdr->sh_offset,
 			shdr->sh_size);
 	}
-
+*/
 	if (sector > 0)
 		nandSector = sector;
 
