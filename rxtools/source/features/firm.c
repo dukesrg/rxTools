@@ -173,7 +173,7 @@ static void setAgbBios()
 	}
 }
 
-static uint_fast8_t firmLoadPatches(uint32_t title_id_lo) {
+static uint_fast8_t firmLoadPatches(void *data, uint32_t title_id_lo) {
 	wchar_t path[_MAX_LFN + 1];
 	File f;
 	size_t size;
@@ -182,7 +182,7 @@ static uint_fast8_t firmLoadPatches(uint32_t title_id_lo) {
 		swprintf(path, _MAX_LFN + 1, firmPatchPathFmt, TID_HI_FIRM, title_id_lo) > 0 &&
 		FileOpen(&f, path, 0) && (
 			((size = FileSize(path)) &&
-				FileRead2(&f, (void*)PATCH_ADDR, size) == size
+				FileRead2(&f, data, size) == size
 			) || (FileClose(&f) && 0)
 		) && (FileClose(&f) || 1)
 	)) {
@@ -194,11 +194,6 @@ static uint_fast8_t firmLoadPatches(uint32_t title_id_lo) {
 }
 
 static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, firm_operation operation) { //path FIRM sections
-//	firm_section_header *section = ((firm_header*)data).sections;
-//	for (size_t i = sizeof(firm_header->sections)/sizeof(firm_section_header); i--; section++) {
-//todo: static firmware patching
-//	}
-	
 	static const char patchNandPrefix[] = ".patch.p9.nand";
 	static const char patchKeyxStr[] = ".patch.p9.keyx";
 
@@ -209,7 +204,7 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, firm_operation o
 	firm_header *firm = (firm_header*)data;
 	firm_section_header *section;
 
-	if (!firmLoadPatches(title_id_lo))
+	if (!firmLoadPatches((void*)PATCH_ADDR, title_id_lo))
 		return 0;	
 
 	shdr = (Elf32_Shdr*)(PATCH_ADDR + ehdr->e_shoff);
@@ -412,7 +407,7 @@ int rxMode(int_fast8_t drive)
 			return 0;
 		}
 		progressSetPos(1);
-	} else if (!firmLoadPatches(tid)) {
+	} else if (!firmLoadPatches((void*)PATCH_ADDR, tid)) {
 		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading patches"));
 		return 0;
 	} else if (!firmLoad((void*)FIRM_ADDR, path, 1)) {
