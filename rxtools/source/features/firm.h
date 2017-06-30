@@ -24,6 +24,7 @@
 #include <reboot.h>
 #include "fs.h"
 #include "aes.h"
+#include "native_firm.h"
 
 #define FIRM_MAGIC 'MRIF'
 
@@ -50,16 +51,15 @@ int PastaMode();
 void FirmLoader();
 int rxMode(int_fast8_t drive);
 uint8_t* decryptFirmTitleNcch(uint8_t* title, size_t *size);
-FRESULT applyPatch(void *file, const char *patch);
 
 static inline int getFirmPath(wchar_t *s, TitleIdLo id)
 {
 	return swprintf(s, _MAX_LFN, firmPathFmt, TID_HI_FIRM, id);
 }
 
-static inline int getFirmPatchPath(wchar_t *s, TitleIdLo id)
-{
-	return swprintf(s, _MAX_LFN, firmPatchPathFmt, TID_HI_FIRM, id);
-}
+//static inline int getFirmPatchPath(wchar_t *s, TitleIdLo id)
+//{
+//	return swprintf(s, _MAX_LFN, firmPatchPathFmt, TID_HI_FIRM, id);
+//}
 
 #endif

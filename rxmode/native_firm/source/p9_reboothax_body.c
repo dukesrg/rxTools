@@ -100,24 +100,6 @@ static void setupMpu()
 	WRITE_MPU_CACHABLE(i | (1 << 4) | (1 << 5), MPU_DCACHE, WRITE);
 }
 
-static void *memcpy16(void *dst, const void *src, size_t n)
-{
-	const uint16_t *_src;
-	uint16_t *_dst;
-	uintptr_t btm;
-
-	_dst = dst;
-	_src = src;
-	btm = (uintptr_t)dst + n;
-	while ((uintptr_t)_dst < btm) {
-		*_dst = *_src;
-		_dst++;
-		_src++;
-	}
-
-	return _dst;
-}
-
 static void *memcpy32(void *dst, const void *src, size_t n)
 {
 	const uint32_t *_src;
@@ -146,65 +128,6 @@ static void loadFirm()
 		memcpy32((void *)seg->addr, (void *)FIRM_ADDR + seg->offset, seg->size);
 		seg++;
 	}
-}
-
-static int memcmp(const void *s1, const void *s2, size_t n)
-{
-	int d;
-
-	while (n > 0) {
-		d = *(unsigned char *)s1 - *(unsigned char *)s2;
-		if (d)
-			return d;
-
-		s1 = (unsigned char *)s1 + 1;
-		s2 = (unsigned char *)s2 + 1;
-		n--;
-	}
-
-	return 0;
-}
-
-static void patchFirm(uint32_t sector, const void *pkeyx)
-{
-	static const char patchNandPrefix[] = ".patch.p9.nand";
-#ifndef PLATFORM_KTR
-	static const char patchKeyxStr[] = ".patch.p9.keyx";
-#endif
-	const Elf32_Ehdr *ehdr;
-	const Elf32_Shdr *shdr, *btm;
-	const char *shstrtab, *sh_name;
-	uintptr_t dst, src;
-
-	ehdr = (void *)PATCH_ADDR;
-	shdr = (void *)(PATCH_ADDR + ehdr->e_shoff);
-	shstrtab = (char *)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
-	for (btm = shdr + ehdr->e_shnum; shdr != btm; shdr++) {
-		if (!(shdr->sh_flags & SHF_ALLOC) || shdr->sh_type != SHT_PROGBITS)
-			continue;
-
-		sh_name = shstrtab + shdr->sh_name;
-		if ((sector <= 0 && !memcmp(sh_name, patchNandPrefix, sizeof(patchNandPrefix) - 1))
-#ifndef PLATFORM_KTR
-			|| (pkeyx == NULL && !memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr)))
-#endif
-			)
-		{
-			continue;
-		}
-
-		memcpy16((void *)shdr->sh_addr,
-			(void *)PATCH_ADDR + shdr->sh_offset,
-			shdr->sh_size);
-	}
-
-	if (sector > 0)
-		nandSector = sector;
-
-#ifndef PLATFORM_KTR
-	if (pkeyx != NULL)
-		memcpy32(keyx, pkeyx, sizeof(keyx));
-#endif
 }
 
 static void flushFirmData()
@@ -261,7 +184,15 @@ rebootFunc(uint32_t sector, const void *pkeyx, uint32_t *arm11EntryDst)
 {
 	setupMpu();
 //	loadFirm();
-	patchFirm(sector, pkeyx);
+
+	if (sector > 0)
+		nandSector = sector;
+
+#ifndef PLATFORM_KTR
+	if (pkeyx != NULL)
+		memcpy32(keyx, pkeyx, sizeof(keyx));
+#endif
+
 	flushFirmData();
 	arm11Enter(arm11EntryDst);
 	flushFirmInstr();

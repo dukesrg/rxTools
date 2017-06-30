@@ -45,8 +45,10 @@
 //FIRM processing additional job flags
 typedef enum {
 	FIRM_PATCH = 1<<0, //apply patches
-	FIRM_COPY = 1<<1, //copy section to target address
-	FIRM_SAVE = 1<<2 //save to file
+	FIRM_PATCH_EMUNAND = 1<<1, //apply EmuNAND patch
+	FIRM_PATCH_KEYX = 1<<2, //apply keyX patch
+	FIRM_COPY = 1<<3, //copy section to target address
+	FIRM_SAVE = 1<<4 //save to file
 } firm_operation;
 
 const wchar_t *firmPathFmt= L"" FIRM_PATH_FMT;
@@ -171,26 +173,68 @@ static void setAgbBios()
 	}
 }
 
-static uint_fast8_t firmPatch(void *data) { //path FIRM sections
-//	firm_section_header *section = ((firm_header*)data).sections;
-//	for (size_t i = sizeof(firm_header->sections)/sizeof(firm_section_header); i--; section++) {
-//todo: static firmware patching
-//	}
+static uint_fast8_t firmLoadPatches(void *data, uint32_t title_id_lo) {
+	wchar_t path[_MAX_LFN + 1];
+	File f;
+	size_t size;
+
+	if (!(
+		swprintf(path, _MAX_LFN + 1, firmPatchPathFmt, TID_HI_FIRM, title_id_lo) > 0 &&
+		FileOpen(&f, path, 0) && (
+			((size = FileSize(path)) &&
+				FileRead2(&f, data, size) == size
+			) || (FileClose(&f) && 0)
+		) && (FileClose(&f) || 1)
+	)) {
+		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading patches"));
+		return 0;
+	}
+
 	return 1;
 }
 
-static uint_fast8_t firmLoad(wchar_t *path) { //load FIRM file sections directly to target addresses
+static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, firm_operation operation) { //path FIRM sections
+	static const char patchNandPrefix[] = ".patch.p9.nand";
+	static const char patchKeyxStr[] = ".patch.p9.keyx";
+
+	Elf32_Ehdr *ehdr = (Elf32_Ehdr*)PATCH_ADDR;
+	Elf32_Shdr *shdr;
+	const char *shstrtab, *sh_name;
+
+	firm_header *firm = (firm_header*)data;
+	firm_section_header *section;
+
+	if (!firmLoadPatches((void*)PATCH_ADDR, title_id_lo))
+		return 0;	
+
+	shdr = (Elf32_Shdr*)(PATCH_ADDR + ehdr->e_shoff);
+	shstrtab = (char*)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
+
+	for (size_t i = ehdr->e_shnum; i--; shdr++)
+		if (shdr->sh_flags & SHF_ALLOC &&
+			shdr->sh_type == SHT_PROGBITS &&
+			(sh_name = shstrtab + shdr->sh_name) &&
+			(operation | FIRM_PATCH_EMUNAND || memcmp(sh_name, patchNandPrefix, sizeof(patchNandPrefix) - 1)) && //skip nand* patches for SysNAND
+			(operation | FIRM_PATCH_KEYX || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
+			(section = firmFindSection(firm, shdr->sh_addr))
+		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
+	return 1;
+}
+
+static uint_fast8_t firmLoad(firm_header *firm, wchar_t *path, uint_fast8_t header_only) { //load FIRM file sections directly to target addresses
 	File f;
-	firm_header firm;
-	firm_section_header *section = firm.sections;
+	firm_section_header *section = firm->sections;
 	
 	if (!(FileOpen(&f, path, 0) && (
-		(FileRead2(&f, &firm, sizeof(firm)) == sizeof(firm) &&
-			firm.magic == FIRM_MAGIC
+		(FileRead2(&f, firm, sizeof(*firm)) == sizeof(*firm) &&
+			firm->magic == FIRM_MAGIC
 		) || (FileClose(&f) && 0)
 	))) return 0;
 
-	for (size_t i = sizeof(firm.sections)/sizeof(firm.sections[0]); i--; section++)
+	if (header_only)
+		return 1;
+
+	for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--; section++)
 		if (!((FileSeek(&f, section->offset) &&
 				FileRead2(&f, (void*)section->load_address, section->size) == section->size
 			) || (FileClose(&f) && 0)
@@ -243,7 +287,7 @@ static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operati
 			aes_set_key(&Key);
 			aes(data, data, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 			return (data = decryptFirmTitleNcch(data, &size)) &&
-				(!(operation & FIRM_PATCH) || firmPatch(data)) &&
+				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, operation)) &&
 				(!(operation & FIRM_COPY) || firmCopy(data)) &&
 				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)));
 		}
@@ -277,7 +321,7 @@ static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation op
 					) || (FileClose(&f) && 0)
 				) && (FileClose(&f) || 1) &&
 				(data = decryptFirmTitleNcch(data, &size)) &&
-				(!(operation & FIRM_PATCH) || firmPatch(data)) &&
+				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, operation)) &&
 				(!(operation & FIRM_COPY) || firmCopy(data)) &&
 				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)))
 		) return 1;
@@ -294,15 +338,12 @@ int rxMode(int_fast8_t drive)
 {
 	wchar_t path[_MAX_LFN + 1];
 	const char *shstrtab;
-	const wchar_t *msg;
-	uint8_t keyx[16];
 	uint32_t tid;
-	int r, sector;
+	int sector;
 	Elf32_Ehdr *ehdr;
-	Elf32_Shdr *shdr, *btm;
-	void *keyxArg;
-	FIL fd;
-	UINT br, fsz;
+	Elf32_Shdr *shdr;
+	aes_ctr_data *keyxArg;
+	File f;
 
 	if (drive > 0) {
 		sector = checkNAND(drive);
@@ -324,12 +365,13 @@ int rxMode(int_fast8_t drive)
 	} else
 		sector = 0;
 
-	if (sysver < 7 && f_open(&fd, L"slot0x25KeyX.bin", FA_READ) == FR_OK) {
-		f_read(&fd, keyx, sizeof(keyx), &br);
-		f_close(&fd);
-		keyxArg = keyx;
-	} else
-		keyxArg = NULL;
+	if (!(sysver < 7 &&
+		FileOpen(&f, L"slot0x25KeyX.bin", 0) && (
+			((keyxArg = __builtin_alloca(sizeof(*keyxArg))) &&
+				FileRead2(&f, keyxArg, sizeof(*keyxArg)) == sizeof(*keyxArg)
+			) || (FileClose(&f) && 0)
+		) && (FileClose(&f) || 1)
+	)) keyxArg = NULL;
 
 	if (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) {
 		tid = TID_KTR_NATIVE_FIRM;
@@ -358,63 +400,34 @@ int rxMode(int_fast8_t drive)
 		tid = TID_CTR_NATIVE_FIRM;
 	}
 	getFirmPath(path, tid);
-	if (!firmLoad(path)) {
+	if (!firmLoad((void*)FIRM_ADDR, path, 0)) {
 		statusInit(1, 0, L"Decrypting NATIVE_FIRM");
-		if (!processFirm(tid, FIRM_PATCH | FIRM_SAVE | FIRM_COPY)) {
+		if (!processFirm(tid, FIRM_PATCH | (drive ? FIRM_PATCH_EMUNAND : 0) | (keyxArg ? FIRM_PATCH_KEYX : 0) | FIRM_SAVE | FIRM_COPY)) {
 			DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting NATIVE_FIRM"));
 			return 0;
 		}
 		progressSetPos(1);
-	}
-
-	r = loadFirm(path, &fsz);
-	if (r) {
-		msg = L"Failed to load NATIVE_FIRM: %d\n"
-			L"Reboot rxTools and try again.\n";
-		goto fail;
+	} else if (!firmLoadPatches((void*)PATCH_ADDR, tid)) {
+		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading patches"));
+		return 0;
+	} else if (!firmLoad((void*)FIRM_ADDR, path, 1)) {
+		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading NATIVE_FIRM"));
+		return 0;
 	}
 
 	((FirmHdr *)FIRM_ADDR)->arm9Entry = 0x0801B01C;
 
-	getFirmPatchPath(path, tid);
-	r = f_open(&fd, path, FA_READ);
-	if (r != FR_OK)
-		goto patchFail;
-
-	r = f_read(&fd, (void *)PATCH_ADDR, PATCH_SIZE, &br);
-	if (r != FR_OK)
-		goto patchFail;
-
-	f_close(&fd);
-
 	ehdr = (void *)PATCH_ADDR;
 	shdr = (void *)(PATCH_ADDR + ehdr->e_shoff);
 	shstrtab = (char *)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
-	for (btm = shdr + ehdr->e_shnum; shdr != btm; shdr++) {
+	for (size_t i = ehdr->e_shnum; i--; shdr++)
 		if (!strcmp(shstrtab + shdr->sh_name, ".patch.p9.reboot.body")) {
 			execReboot(sector, keyxArg, ehdr->e_entry, shdr);
 			__builtin_unreachable();
 		}
-	}
 
-	msg = L".patch.p9.reboot.body not found\n"
-		L"Please check your installation.\n";
-fail:
-	ConsoleInit();
-	ConsoleSetTitle(L"rxMode");
-	print(msg, r);
-	print(L"\n");
-	print(strings[STR_PRESS_BUTTON_ACTION],
-		strings[STR_BUTTON_A], strings[STR_CONTINUE]);
-	ConsoleShow();
-	WaitForButton(keys[KEY_A].mask);
-
-	return r;
-
-patchFail:
-	msg = L"Failed to load the patch: %d\n"
-		L"Check your installation.\n";
-	goto fail;
+	DrawInfo(NULL, lang(S_CONTINUE), lang(".patch.p9.reboot.body not found"));
+	return 0;
 }
 
 //Just patches signatures check, loads in sysnand
