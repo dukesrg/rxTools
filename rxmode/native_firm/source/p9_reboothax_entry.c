@@ -22,6 +22,7 @@
 #include <emunand.h>
 #include <process9.h>
 
+
 static _Noreturn void __attribute__((section(".patch.p9.reboot.entry")))
 execReboot()
 {
@@ -53,12 +54,6 @@ loadExecReboot(int r0, int r1, int r2, uint32_t hiId, uint32_t loId)
 	swprintf(path, pathLen, L"sdmc:/" FIRM_PATH_FMT, hiId, loId);
 	p9Open(f, path, 1);
 	p9Read(f, &read, (void *)FIRM_ADDR, FIRM_SIZE);
-	p9Close(f);
-
-	p9FileInit(f);
-	swprintf(path, pathLen, L"sdmc:/" FIRM_PATCH_PATH_FMT, hiId, loId);
-	p9Open(f, path, 1);
-	p9Read(f, &read, (void *)PATCH_ADDR, PATCH_SIZE);
 	p9Close(f);
 
 	while (p9RecvPxi() != 0x44846);

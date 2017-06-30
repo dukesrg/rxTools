@@ -118,6 +118,18 @@ static void *memcpy32(void *dst, const void *src, size_t n)
 	return _dst;
 }
 
+static void loadFirm()
+{
+	const FirmSeg *seg;
+	unsigned int i;
+
+	seg = ((FirmHdr *)FIRM_ADDR)->segs;
+	for (i = 0; i < FIRM_SEG_NUM; i++) {
+		memcpy32((void *)seg->addr, (void *)FIRM_ADDR + seg->offset, seg->size);
+		seg++;
+	}
+}
+
 static void flushFirmData()
 {
 	uintptr_t dstCur, dstBtm;
@@ -171,6 +183,7 @@ _Noreturn void __attribute__((section(".text.start")))
 rebootFunc(uint32_t sector, const void *pkeyx, uint32_t *arm11EntryDst)
 {
 	setupMpu();
+//	loadFirm();
 
 	if (sector > 0)
 		nandSector = sector;
