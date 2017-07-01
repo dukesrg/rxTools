@@ -1,67 +1,57 @@
-@ Copyright (C) 2015 The PASTA Team
-@
-@ This program is free software; you can redistribute it and/or
-@ modify it under the terms of the GNU General Public License
-@ version 2 as published by the Free Software Foundation
-@
-@ This program is distributed in the hope that it will be useful,
-@ but WITHOUT ANY WARRANTY; without even the implied warranty of
-@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-@ GNU General Public License for more details.
-@
-@ You should have received a copy of the GNU General Public License
-@ along with this program; if not, write to the Free Software
-@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 	.arm
 	.text
-	.global	nandHook
-nandHook:
-	stmib	sp, {r2-r3}
-	ldr	r7, [lr, #-1]
-	ldmib	r0, {r5-r6}
+	.global	nand_sd
+nand_sd:
+    @ Original code that still needs to be executed.
+    mov r4, r0
+    mov r5, r1
+    mov r7, r2
+    mov r6, r3
+    @ End.
+
+    @ If we're already trying to access the SD, return.
+    ldr r2, [r0, #4]
+    ldr r1, sdmmc
+    cmp r2, r1
+    beq nand_sd_ret
+
+    str r1, [r0, #4]  @ Set object to be SD
+    ldr r2, [r0, #8]  @ Get sector to read
+    cmp r2, #0  @ For GW compatibility, see if we're trying to read the ncsd header (sector 0)
+
+    ldr r3, nand_offset
+    add r2, r3  @ Add the offset to the NAND in the SD.
+
+    ldr r3, nandSector
+    addeq r2, r3  @ If we're reading the ncsd header, add the offset of that sector.
+
+    str r2, [r0, #8]  @ Store sector to read
+
+    nand_sd_ret:
+        @ Restore registers.
+        mov r1, r5
+        mov r2, r7
+        mov r3, r6
+
+        @ Return 4 bytes behind where we got called,
+        @   due to the offset of this function being stored there.
+        mov r0, lr
+        add r0, #4
+        bx r0
+.pool
+sdmmc: @ The offset of the sdmmc object.
 #ifdef PLATFORM_KTR
-	ldr	r4, =0x080D86F0
+	.word	0x080F0B10
 #else
-	ldr	r4, =0x080D8670
+	.word	0x080D8670	@ 0x080D8A70
 #endif
-	cmp	r5, r4
-	beq	loc_801A310
-	mov	r5, r4
-	cmp	r6, #0
-	ldreq	r6, nandSector
+	.size	sdmmc, . - sdmmc
 
-loc_801A310:
-	mov	r4, r0
-	movs	r0, r1, lsl #23
-	beq	loc_801A33C
-#ifdef PLATFORM_KTR
-	blx	0x08062A28
-#else
-	blx	0x08062A28
-#endif
-
-loc_801A33C:
-	mov	r0, r1, lsr #9
-	add	r0, r0, r6
-	str	r0, [sp]
-	ldr	r1, [r5]
-	ldr	r1, [r1, #24]
-	blx	r1
-	mov	r3, r0
-	ldr	r0, [r5, #32]
-	cmp	r5, #0
-	moveq	r1, r5
-	addne	r1, r5, #8
-	add	r2, r4, #12
-	blx	r7
-	stmib	r4, {r5-r6}
-	ldmfd	sp!, {r1-r7, pc}
-
-	.size nandHook, . - nandHook
+nand_offset: .word	0  @ The starting offset of the emuNAND on the SD.
+	.size	nand_offset, . - nand_offset
 
 	.global	nandSector
 	.type	nandSector, %object
-nandSector:
+nandSector: @ The offset of the first emuNAND sector relative to the start of the emuNAND (Used for when the first sector is placed at the end).
 	.word	0
 	.size	nandSector, . - nandSector
