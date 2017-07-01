@@ -30,6 +30,7 @@ execReboot()
 		"ldr r0, %0\n"
 		"mov r1, #0\n"
 		"mov r2, #0x1FFFFFFC\n"
+		"mov r3, #0x00000001\n"
 #ifdef PLATFORM_KTR
 		"mov sp, #0x08100000\n"
 		"orr sp, #0x0007F000\n"

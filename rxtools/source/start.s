@@ -103,7 +103,7 @@ _start_al9h:
 settings:
 	.word	(MEM_BOOTROM | PR_SZ_32K | PR_EN)	@ r0: memory region 0 base, size and protection
 	.word	(MEM_ARM9_ITCM_KERNEL | PR_SZ_32K | PR_EN)	@ r1: memory region 1 base, size and protection
-	.word	(MEM_ARM9_RAM | PR_SZ_1M | PR_EN)	@ r2: memory region 2 base, size and protection
+	.word	(MEM_ARM9_RAM | PR_SZ_2M | PR_EN)	@ r2: memory region 2 base, size and protection
 	.word	(MEM_IO | PR_SZ_128K | PR_EN)		@ r3: memory region 3 base, size and protection
 	.word	(MEM_IO + 0x00100000 | PR_SZ_512K | PR_EN)		@ r4: memory region 4 base, size and protection
 	.word	(MEM_FCRAM | PR_SZ_128M | PR_EN)	@ r5: memory region 5 base, size and protection

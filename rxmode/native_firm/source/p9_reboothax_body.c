@@ -24,41 +24,6 @@
 #include <keyx.h>
 #endif
 
-#define SET_MPU_REGION(id, base, size, enable)	{	\
-	__asm__ volatile ("mcr p15, 0, %0, c6, c" #id ", 0\n"	\
-		:: "r"(((base) & 0xFFFFF000) | ((size) & 0x3E) | ((enable) ? 1 : 0)));	\
-	}
-
-#define PERM_DATA "2"
-#define PERM_INSTR "3"
-#define READ_MPU_PERM(v, type)	{	\
-	__asm__("mrc p15, 0, %0, c5, c0, " type "\n" : "=r"(*(v)));	\
-}
-#define WRITE_MPU_PERM(v, type)	{	\
-	__asm__("mcr p15, 0, %0, c5, c0, " type "\n" :: "r"(v));	\
-}
-
-static void SET_MPU_PERM_RWFORALL(uint32_t *v, uint8_t area)
-{
-	const uint8_t bits = 4;
-	uint8_t shift;
-
-	shift = area * bits;
-	// 3 means the area is readable and writable for everyone.
-	*v = (*v & ~(((1 << bits) - 1) << shift)) | (3 << shift);
-}
-
-#define MPU_DCACHE "0"
-#define MPU_ICACHE "1"
-#define FETCH "c2"
-#define WRITE "c3"
-#define READ_MPU_CACHABLE(v, id, type) {	\
-	__asm__("mrc p15, 0, %0, " type ", c0, " id "\n" : "=r"(*(v)));	\
-}
-#define WRITE_MPU_CACHABLE(v, id, type) {	\
-	__asm__ volatile ("mcr p15, 0, %0, " type ", c0, " id "\n" :: "r"(v));	\
-}
-
 static void drainWriteBuffer()
 {
 	__asm__ volatile ("mcr p15, 0, %0, c7, c10, 4\n" :: "r"(0));
@@ -72,32 +37,6 @@ static void cleanDcacheLine(void *p)
 static void flushIcacheLine(void *p)
 {
 	__asm__ volatile ("mcr p15, 0, %0, c7, c5, 1\n" :: "r"(p));
-}
-
-static void setupMpu()
-{
-	uint32_t i;
-
-	SET_MPU_REGION(3, 0x10000000, 52, 1);
-
-	READ_MPU_PERM(&i, PERM_DATA);
-	SET_MPU_PERM_RWFORALL(&i, 4);
-	WRITE_MPU_PERM(i, PERM_DATA);
-
-	READ_MPU_PERM(&i, PERM_INSTR);
-	SET_MPU_PERM_RWFORALL(&i, 4);
-	WRITE_MPU_PERM(i, PERM_INSTR);
-
-	SET_MPU_REGION(4, 0x18000000, 52, 1);
-
-	READ_MPU_CACHABLE(&i, MPU_DCACHE, FETCH);
-	WRITE_MPU_CACHABLE(i | (1 << 4) | (1 << 5), MPU_DCACHE, FETCH);
-
-	READ_MPU_CACHABLE(&i, MPU_ICACHE, FETCH);
-	WRITE_MPU_CACHABLE(i | (1 << 4) | (1 << 5), MPU_ICACHE, FETCH);
-
-	READ_MPU_CACHABLE(&i, MPU_DCACHE, WRITE);
-	WRITE_MPU_CACHABLE(i | (1 << 4) | (1 << 5), MPU_DCACHE, WRITE);
 }
 
 static void *memcpy32(void *dst, const void *src, size_t n)
@@ -182,8 +121,8 @@ static _Noreturn void arm9Enter()
 _Noreturn void __attribute__((section(".text.start")))
 rebootFunc(uint32_t sector, const void *pkeyx, uint32_t *arm11EntryDst)
 {
-	setupMpu();
-//	loadFirm();
+	if ((uint32_t)arm11EntryDst == 0x1FFFFFFC)
+		loadFirm();
 
 	if (sector > 0)
 		nandSector = sector;

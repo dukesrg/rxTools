@@ -47,17 +47,15 @@ typedef enum {
 	FIRM_PATCH = 1<<0, //apply patches
 	FIRM_PATCH_EMUNAND = 1<<1, //apply EmuNAND patch
 	FIRM_PATCH_KEYX = 1<<2, //apply keyX patch
-	FIRM_COPY = 1<<3, //copy section to target address
-	FIRM_SAVE = 1<<4 //save to file
+	FIRM_COPY_SECTIONS = 1<<3, //copy sections to target address
+	FIRM_COPY_HEADER = 1<<4, //copy header to FIRM_ADDR
+	FIRM_SAVE = 1<<5 //save to file
 } firm_operation;
 
 const wchar_t *firmPathFmt= L"" FIRM_PATH_FMT;
 const wchar_t *firmPatchPathFmt = L"" FIRM_PATCH_PATH_FMT;
 
-unsigned int emuNandMounted = 0;
 _Noreturn void (* const _softreset)() = (void *)0x080F0000;
-
-_Noreturn void execReboot(uint32_t, void *, uintptr_t, const Elf32_Shdr *);
 
 static FRESULT loadExecReboot()
 {
@@ -221,8 +219,9 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, firm_operation o
 	return 1;
 }
 
-static uint_fast8_t firmLoad(firm_header *firm, wchar_t *path, uint_fast8_t header_only) { //load FIRM file sections directly to target addresses
+static uint_fast8_t firmLoad(wchar_t *path) { //load FIRM file sections directly to target addresses
 	File f;
+	firm_header *firm = (firm_header*)FIRM_ADDR;
 	firm_section_header *section = firm->sections;
 	
 	if (!(FileOpen(&f, path, 0) && (
@@ -230,9 +229,6 @@ static uint_fast8_t firmLoad(firm_header *firm, wchar_t *path, uint_fast8_t head
 			firm->magic == FIRM_MAGIC
 		) || (FileClose(&f) && 0)
 	))) return 0;
-
-	if (header_only)
-		return 1;
 
 	for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--; section++)
 		if (!((FileSeek(&f, section->offset) &&
@@ -244,11 +240,17 @@ static uint_fast8_t firmLoad(firm_header *firm, wchar_t *path, uint_fast8_t head
 	return 1;
 }	
 
-static uint_fast8_t firmCopy(void *data) { //copy FIRM sections to target addresses
+static uint_fast8_t firmCopy(void *data, firm_operation operation) { //copy FIRM sections to target addresses
 	firm_header *firm = (firm_header*)data;
 	firm_section_header *section = firm->sections;
-	for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--; section++)
-		memcpy((void*)section->load_address, data + section->offset, section->size);
+
+	if (operation & FIRM_COPY_HEADER)
+		memcpy((void*)FIRM_ADDR, firm, sizeof(*firm));
+		
+	if (operation & FIRM_COPY_SECTIONS)
+		for (size_t i = sizeof(firm->sections)/sizeof(firm->sections[0]); i--; section++)
+			memcpy((void*)section->load_address, data + section->offset, section->size);
+
 	return 1;
 }
 
@@ -288,7 +290,7 @@ static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operati
 			aes(data, data, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 			return (data = decryptFirmTitleNcch(data, &size)) &&
 				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, operation)) &&
-				(!(operation & FIRM_COPY) || firmCopy(data)) &&
+				(!(operation & (FIRM_COPY_SECTIONS | FIRM_COPY_HEADER)) || firmCopy(data, operation)) &&
 				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)));
 		}
 	}
@@ -322,7 +324,7 @@ static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation op
 				) && (FileClose(&f) || 1) &&
 				(data = decryptFirmTitleNcch(data, &size)) &&
 				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, operation)) &&
-				(!(operation & FIRM_COPY) || firmCopy(data)) &&
+				(!(operation & (FIRM_COPY_SECTIONS | FIRM_COPY_HEADER)) || firmCopy(data, operation)) &&
 				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)))
 		) return 1;
 
@@ -342,7 +344,7 @@ int rxMode(int_fast8_t drive)
 	int sector;
 	Elf32_Ehdr *ehdr;
 	Elf32_Shdr *shdr;
-	aes_ctr_data *keyxArg;
+	aes_key_data *keyxArg;
 	File f;
 
 	if (drive > 0) {
@@ -400,9 +402,9 @@ int rxMode(int_fast8_t drive)
 		tid = TID_CTR_NATIVE_FIRM;
 	}
 	getFirmPath(path, tid);
-	if (!firmLoad((void*)FIRM_ADDR, path, 0)) {
+	if (!firmLoad(path)) {
 		statusInit(1, 0, L"Decrypting NATIVE_FIRM");
-		if (!processFirm(tid, FIRM_PATCH | (drive ? FIRM_PATCH_EMUNAND : 0) | (keyxArg ? FIRM_PATCH_KEYX : 0) | FIRM_SAVE | FIRM_COPY)) {
+		if (!processFirm(tid, FIRM_PATCH | (drive ? FIRM_PATCH_EMUNAND : 0) | (keyxArg ? FIRM_PATCH_KEYX : 0) | FIRM_SAVE | FIRM_COPY_HEADER | FIRM_COPY_SECTIONS)) {
 			DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting NATIVE_FIRM"));
 			return 0;
 		}
@@ -410,19 +412,15 @@ int rxMode(int_fast8_t drive)
 	} else if (!firmLoadPatches((void*)PATCH_ADDR, tid)) {
 		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading patches"));
 		return 0;
-	} else if (!firmLoad((void*)FIRM_ADDR, path, 1)) {
-		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading NATIVE_FIRM"));
-		return 0;
 	}
-
-	((FirmHdr *)FIRM_ADDR)->arm9Entry = 0x0801B01C;
 
 	ehdr = (void *)PATCH_ADDR;
 	shdr = (void *)(PATCH_ADDR + ehdr->e_shoff);
 	shstrtab = (char *)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
 	for (size_t i = ehdr->e_shnum; i--; shdr++)
 		if (!strcmp(shstrtab + shdr->sh_name, ".patch.p9.reboot.body")) {
-			execReboot(sector, keyxArg, ehdr->e_entry, shdr);
+			memcpy((void*)ehdr->e_entry, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
+			(*(void (*)(uint32_t sector, aes_key_data *keyx, void *arm11_entry_vector))ehdr->e_entry)(sector, keyxArg, (void*)0x1FFFFFF8);
 			__builtin_unreachable();
 		}
 
