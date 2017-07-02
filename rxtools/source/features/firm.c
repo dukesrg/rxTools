@@ -45,11 +45,9 @@
 //FIRM processing additional job flags
 typedef enum {
 	FIRM_PATCH = 1<<0, //apply patches
-	FIRM_PATCH_EMUNAND = 1<<1, //apply EmuNAND patch
-	FIRM_PATCH_KEYX = 1<<2, //apply keyX patch
-	FIRM_COPY_SECTIONS = 1<<3, //copy sections to target address
-	FIRM_COPY_HEADER = 1<<4, //copy header to FIRM_ADDR
-	FIRM_SAVE = 1<<5 //save to file
+	FIRM_COPY_SECTIONS = 1<<1, //copy sections to target address
+	FIRM_COPY_HEADER = 1<<2, //copy header to FIRM_ADDR
+	FIRM_SAVE = 1<<3 //save to file
 } firm_operation;
 
 const wchar_t *firmPathFmt= L"" FIRM_PATH_FMT;
@@ -176,22 +174,17 @@ static uint_fast8_t firmLoadPatches(void *data, uint32_t title_id_lo) {
 	File f;
 	size_t size;
 
-	if (!(
-		swprintf(path, _MAX_LFN + 1, firmPatchPathFmt, TID_HI_FIRM, title_id_lo) > 0 &&
+	return (swprintf(path, _MAX_LFN + 1, firmPatchPathFmt, TID_HI_FIRM, title_id_lo) > 0 &&
 		FileOpen(&f, path, 0) && (
 			((size = FileSize(path)) &&
-				FileRead2(&f, data, size) == size
+				FileRead2(&f, data, size) == size &&
+				*(uint32_t*)data == *(uint32_t*)ELFMAG
 			) || (FileClose(&f) && 0)
 		) && (FileClose(&f) || 1)
-	)) {
-		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading patches"));
-		return 0;
-	}
-
-	return 1;
+	);
 }
 
-static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, firm_operation operation) { //path FIRM sections
+static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector, aes_key_data *keyx) { //path FIRM sections
 	static const char patchNandPrefix[] = ".patch.p9.nand";
 	static const char patchKeyxStr[] = ".patch.p9.keyx";
 
@@ -208,14 +201,77 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, firm_operation o
 	shdr = (Elf32_Shdr*)(PATCH_ADDR + ehdr->e_shoff);
 	shstrtab = (char*)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
 
+//Apply patch parameters
+	if (sector || keyx) {
+static Elf32_Ehdr *header;
+static Elf32_Shdr *sections;
+static char *section_names;
+static Elf32_Sym *symbols;
+static char *symbol_names;
+static uint32_t symbols_count;
+//patchPreload
+//	if (*(uint32_t*)data != *(uint32_t*)ELFMAG)
+//		return 0;
+	uint_fast16_t count = 0;
+	header = ehdr;
+	sections = (Elf32_Shdr*)((void*)header + header->e_shoff);
+	section_names = (char*)((void*)header + sections[header->e_shstrndx].sh_offset);
+	for (size_t i = header->e_shnum; --i;)
+		if (!sections[i].sh_name)
+			continue;
+		else if (!strcmp(section_names + sections[i].sh_name, ".symtab")) {
+	        	symbols = (Elf32_Sym*)((void*)header + sections[i].sh_offset);
+			symbols_count = sections[i].sh_size / sizeof(*symbols);
+		} else if (!strcmp(section_names + sections[i].sh_name, ".strtab"))
+			symbol_names = (char*)((void*)header + sections[i].sh_offset);
+		else if (!strspn(section_names + sections[i].sh_name, ".:"))
+			count++;
+//	return count;
+
+	char *dst;
+	uint32_t sidx;
+	if (sector) {
+	dst = "nandSector";
+	for (size_t i = symbols_count; --i;) {
+//symbolCompare(*)
+	        if (!(sidx = symbols[i].st_name))
+			continue;
+		char *src = symbol_names + sidx;
+		size_t slen = strlen(src), dlen = strlen(dst);
+		if (!strncmp(src, dst, slen < dlen ? slen : dlen)) {
+//DrawInfo(NULL, lang(S_CONTINUE), lang("Sector patch: @%08x, section: %u, file offset: %08x, address: %08x"), symbols[i].st_value, symbols[i].st_shndx, header + sections[symbols[i].st_shndx].sh_offset + symbols[i].st_value, sections[symbols[i].st_shndx].sh_addr + symbols[i].st_value);
+			*(uint32_t*)((void*)header + sections[symbols[i].st_shndx].sh_offset + symbols[i].st_value) = sector;
+			break;
+		}
+	}
+	}
+
+	if (keyx) {
+	dst = "keyx";
+	for (size_t i = symbols_count; --i;) {
+//symbolCompare(*)
+	        if (!(sidx = symbols[i].st_name))
+			continue;
+		char *src = symbol_names + sidx;
+		size_t slen = strlen(src), dlen = strlen(dst);
+		if (!strncmp(src, dst, slen < dlen ? slen : dlen)) {
+//DrawInfo(NULL, lang(S_CONTINUE), lang("KeyX patch: @%08x, %08x"), symbols[i].st_value, (uint32_t)keyx);
+//			*(aes_key_data*)((void*)header + sections[symbols[i].st_shndx].sh_offset + symbols[i].st_value) = *keyx;
+			break;
+		}
+	}
+	}
+	}
+
 	for (size_t i = ehdr->e_shnum; i--; shdr++)
 		if (shdr->sh_flags & SHF_ALLOC &&
 			shdr->sh_type == SHT_PROGBITS &&
 			(sh_name = shstrtab + shdr->sh_name) &&
-			(operation | FIRM_PATCH_EMUNAND || memcmp(sh_name, patchNandPrefix, sizeof(patchNandPrefix) - 1)) && //skip nand* patches for SysNAND
-			(operation | FIRM_PATCH_KEYX || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
+			(sector || memcmp(sh_name, patchNandPrefix, sizeof(patchNandPrefix) - 1)) && //skip nand* patches for SysNAND
+			(keyx || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
 			(section = firmFindSection(firm, shdr->sh_addr))
 		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
+
 	return 1;
 }
 
@@ -261,7 +317,7 @@ static uint_fast8_t firmSave(wchar_t *path, void *data, size_t size) { //decrypt
 		(FileClose(&f) || 1);
 }
 
-static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operation) {
+static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operation, uint32_t sector, aes_key_data *keyx) {
 	static const wchar_t pathFmt[] = L"rxTools/firm/00040138%08lx%ls.bin";
 	const uint64_t title_id = (uint64_t)__builtin_bswap32(title_id_lo) << 32 | 0x38010400;
 	wchar_t path[_MAX_LFN + 1];
@@ -289,7 +345,7 @@ static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operati
 			aes_set_key(&Key);
 			aes(data, data, size, &(aes_ctr){{{0}}, AES_CNT_INPUT_BE_NORMAL}, AES_CBC_DECRYPT_MODE | AES_CNT_INPUT_BE_NORMAL | AES_CNT_OUTPUT_BE_NORMAL);
 			return (data = decryptFirmTitleNcch(data, &size)) &&
-				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, operation)) &&
+				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, sector, keyx)) &&
 				(!(operation & (FIRM_COPY_SECTIONS | FIRM_COPY_HEADER)) || firmCopy(data, operation)) &&
 				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)));
 		}
@@ -298,7 +354,7 @@ static uint_fast8_t processFirmFile(uint32_t title_id_lo, firm_operation operati
 	return 0;
 }
 
-static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation operation) {
+static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation operation, uint32_t sector, aes_key_data *keyx) {
 	void *data;
 	wchar_t path[_MAX_LFN + 1], apppath[_MAX_LFN + 1];
 	File f;
@@ -323,7 +379,7 @@ static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation op
 					) || (FileClose(&f) && 0)
 				) && (FileClose(&f) || 1) &&
 				(data = decryptFirmTitleNcch(data, &size)) &&
-				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, operation)) &&
+				(!(operation & FIRM_PATCH) || firmPatch(data, title_id_lo, sector, keyx)) &&
 				(!(operation & (FIRM_COPY_SECTIONS | FIRM_COPY_HEADER)) || firmCopy(data, operation)) &&
 				(!(operation & FIRM_SAVE) || (getFirmPath(path, title_id_lo) && firmSave(path, data, size)))
 		) return 1;
@@ -331,9 +387,9 @@ static uint_fast8_t processFirmInstalled(uint32_t title_id_lo, firm_operation op
 	return 0;
 }
 
-static uint_fast8_t processFirm(uint32_t title_id_lo, firm_operation operation) {
-	return processFirmFile(title_id_lo, operation) ||
-		processFirmInstalled(title_id_lo, operation); 
+static uint_fast8_t processFirm(uint32_t title_id_lo, firm_operation operation, uint32_t sector, aes_key_data *keyx) {
+	return processFirmFile(title_id_lo, operation, sector, keyx) ||
+		processFirmInstalled(title_id_lo, operation, sector, keyx); 
 }
 
 int rxMode(int_fast8_t drive)
@@ -344,7 +400,7 @@ int rxMode(int_fast8_t drive)
 	int sector;
 	Elf32_Ehdr *ehdr;
 	Elf32_Shdr *shdr;
-	aes_key_data *keyxArg;
+	aes_key_data *keyx;
 	File f;
 
 	if (drive > 0) {
@@ -369,11 +425,11 @@ int rxMode(int_fast8_t drive)
 
 	if (!(sysver < 7 &&
 		FileOpen(&f, L"slot0x25KeyX.bin", 0) && (
-			((keyxArg = __builtin_alloca(sizeof(*keyxArg))) &&
-				FileRead2(&f, keyxArg, sizeof(*keyxArg)) == sizeof(*keyxArg)
+			((keyx = __builtin_alloca(sizeof(*keyx))) &&
+				FileRead2(&f, keyx, sizeof(*keyx)) == sizeof(*keyx)
 			) || (FileClose(&f) && 0)
 		) && (FileClose(&f) || 1)
-	)) keyxArg = NULL;
+	)) keyx = NULL;
 
 	if (REG_CFG11_SOCINFO & CFG11_SOCINFO_KTR) {
 		tid = TID_KTR_NATIVE_FIRM;
@@ -381,7 +437,7 @@ int rxMode(int_fast8_t drive)
 		getFirmPath(path, TID_CTR_TWL_FIRM);
 		if (!FileExists(path)) {
 			statusInit(1, 0, L"Decrypting TWL_FIRM");
-			if (!processFirm(TID_CTR_TWL_FIRM, FIRM_PATCH | FIRM_SAVE)) {
+			if (!processFirm(TID_CTR_TWL_FIRM, FIRM_PATCH | FIRM_SAVE, 0, NULL)) {
 				DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting TWL_FIRM"));
 				return 0;
 			}
@@ -391,7 +447,7 @@ int rxMode(int_fast8_t drive)
 		getFirmPath(path, TID_CTR_AGB_FIRM);
 		if (!FileExists(path)) {
 			statusInit(1, 0, L"Decrypting AGB_FIRM");
-			if (!processFirm(TID_CTR_AGB_FIRM, FIRM_PATCH | FIRM_SAVE)) {
+			if (!processFirm(TID_CTR_AGB_FIRM, FIRM_PATCH | FIRM_SAVE, 0, NULL)) {
 				DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting AGB_FIRM"));
 				return 0;
 			}
@@ -404,7 +460,7 @@ int rxMode(int_fast8_t drive)
 	getFirmPath(path, tid);
 	if (!firmLoad(path)) {
 		statusInit(1, 0, L"Decrypting NATIVE_FIRM");
-		if (!processFirm(tid, FIRM_PATCH | (drive ? FIRM_PATCH_EMUNAND : 0) | (keyxArg ? FIRM_PATCH_KEYX : 0) | FIRM_SAVE | FIRM_COPY_HEADER | FIRM_COPY_SECTIONS)) {
+		if (!processFirm(tid, FIRM_PATCH | FIRM_SAVE | FIRM_COPY_HEADER | FIRM_COPY_SECTIONS, sector, keyx)) {
 			DrawInfo(NULL, lang(S_CONTINUE), lang("Error decrypting NATIVE_FIRM"));
 			return 0;
 		}
@@ -420,7 +476,7 @@ int rxMode(int_fast8_t drive)
 	for (size_t i = ehdr->e_shnum; i--; shdr++)
 		if (!strcmp(shstrtab + shdr->sh_name, ".patch.p9.reboot.body")) {
 			memcpy((void*)ehdr->e_entry, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
-			(*(void (*)(uint32_t sector, aes_key_data *keyx, void *arm11_entry_vector))ehdr->e_entry)(sector, keyxArg, (void*)0x1FFFFFF8);
+			(*(void (*)(uint32_t sector, aes_key_data *keyx, void *arm11_entry_vector))ehdr->e_entry)(sector, keyx, (void*)0x1FFFFFF8);
 			__builtin_unreachable();
 		}
 

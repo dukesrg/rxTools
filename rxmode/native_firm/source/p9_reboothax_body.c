@@ -124,8 +124,8 @@ rebootFunc(uint32_t sector, const void *pkeyx, uint32_t *arm11EntryDst)
 	if ((uint32_t)arm11EntryDst == 0x1FFFFFFC)
 		loadFirm();
 
-	if (sector > 0)
-		nandSector = sector;
+//	if (sector > 0)
+//		nandSector = sector;
 
 #ifndef PLATFORM_KTR
 	if (pkeyx != NULL)

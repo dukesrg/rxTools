@@ -57,7 +57,7 @@ $(call DEPDIR,$(BUILD)/$(TARGET).elf $(OBJS))
 all: $(BUILD)/$(TARGET).elf
 
 %.elf: %_unstrip.elf
-	$(call Q,OBJCOPY,$@)$(OBJCOPY) -S -R .ARM.attributes -R .comment $< $@
+	$(call Q,OBJCOPY,$@)$(OBJCOPY) -S -K nandSector -K keyx -R .ARM.attributes -R .comment $< $@
 
 %_unstrip.elf: %_ram.elf
 	$(call Q,LINK,$@)$(LD) -i -T$(LDSCRIPT_ROM) $< -o $@
