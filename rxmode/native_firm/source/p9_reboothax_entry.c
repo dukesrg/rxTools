@@ -27,10 +27,7 @@ static _Noreturn void __attribute__((section(".patch.p9.reboot.entry")))
 execReboot()
 {
 	__asm__ volatile (
-		"ldr r0, %0\n"
-		"mov r1, #0\n"
-		"mov r2, #0x1FFFFFFC\n"
-		"mov r3, #0x00000001\n"
+		"mov r0, #0x1FFFFFFC\n"
 #ifdef PLATFORM_KTR
 		"mov sp, #0x08100000\n"
 		"orr sp, #0x0007F000\n"
@@ -38,8 +35,7 @@ execReboot()
 		"mov sp, #0x08000000\n"
 		"orr sp, #0x000FF000\n"
 #endif
-		"b rebootFunc\n"
-		:: "m"(nandSector));
+		"b rebootFunc\n");
 	__builtin_unreachable();
 }
 
@@ -60,9 +56,6 @@ loadExecReboot(int r0, int r1, int r2, uint32_t hiId, uint32_t loId)
 	while (p9RecvPxi() != 0x44846);
 	svcKernelSetState(SVC_KERNEL_STATE_INIT, hiId, loId,
 		SVC_KERNEL_STATE_TITLE_COMPAT);
-
-	if (loId != TID_CTR_NATIVE_FIRM && loId != TID_KTR_NATIVE_FIRM)
-		nandSector = 0;
 
 	svcBackdoor((void *)execReboot);
 	__builtin_unreachable();

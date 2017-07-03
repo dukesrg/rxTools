@@ -18,7 +18,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <reboot.h>
-#include <elf.h>
 #include <emunand.h>
 #ifndef PLATFORM_KTR
 #include <keyx.h>
@@ -119,18 +118,10 @@ static _Noreturn void arm9Enter()
 }
 
 _Noreturn void __attribute__((section(".text.start")))
-rebootFunc(uint32_t sector, const void *pkeyx, uint32_t *arm11EntryDst)
+rebootFunc(uint32_t *arm11EntryDst)
 {
 	if ((uint32_t)arm11EntryDst == 0x1FFFFFFC)
 		loadFirm();
-
-//	if (sector > 0)
-//		nandSector = sector;
-
-#ifndef PLATFORM_KTR
-	if (pkeyx != NULL)
-		memcpy32(keyx, pkeyx, sizeof(keyx));
-#endif
 
 	flushFirmData();
 	arm11Enter(arm11EntryDst);

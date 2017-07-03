@@ -41,6 +41,7 @@
 #include "ticket.h"
 #include "signature.h"
 #include "native_firm.h"
+#include "patch3ds/patch3ds.h"
 
 //FIRM processing additional job flags
 typedef enum {
@@ -201,67 +202,11 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 	shdr = (Elf32_Shdr*)(PATCH_ADDR + ehdr->e_shoff);
 	shstrtab = (char*)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
 
-//Apply patch parameters
-	if (sector || keyx) {
-static Elf32_Ehdr *header;
-static Elf32_Shdr *sections;
-static char *section_names;
-static Elf32_Sym *symbols;
-static char *symbol_names;
-static uint32_t symbols_count;
-//patchPreload
-//	if (*(uint32_t*)data != *(uint32_t*)ELFMAG)
-//		return 0;
-	uint_fast16_t count = 0;
-	header = ehdr;
-	sections = (Elf32_Shdr*)((void*)header + header->e_shoff);
-	section_names = (char*)((void*)header + sections[header->e_shstrndx].sh_offset);
-	for (size_t i = header->e_shnum; --i;)
-		if (!sections[i].sh_name)
-			continue;
-		else if (!strcmp(section_names + sections[i].sh_name, ".symtab")) {
-	        	symbols = (Elf32_Sym*)((void*)header + sections[i].sh_offset);
-			symbols_count = sections[i].sh_size / sizeof(*symbols);
-		} else if (!strcmp(section_names + sections[i].sh_name, ".strtab"))
-			symbol_names = (char*)((void*)header + sections[i].sh_offset);
-		else if (!strspn(section_names + sections[i].sh_name, ".:"))
-			count++;
-//	return count;
-
-	char *dst;
-	uint32_t sidx;
-	if (sector) {
-	dst = "nandSector";
-	for (size_t i = symbols_count; --i;) {
-//symbolCompare(*)
-	        if (!(sidx = symbols[i].st_name))
-			continue;
-		char *src = symbol_names + sidx;
-		size_t slen = strlen(src), dlen = strlen(dst);
-		if (!strncmp(src, dst, slen < dlen ? slen : dlen)) {
-//DrawInfo(NULL, lang(S_CONTINUE), lang("Sector patch: @%08x, section: %u, file offset: %08x, address: %08x"), symbols[i].st_value, symbols[i].st_shndx, header + sections[symbols[i].st_shndx].sh_offset + symbols[i].st_value, sections[symbols[i].st_shndx].sh_addr + symbols[i].st_value);
-			*(uint32_t*)((void*)header + sections[symbols[i].st_shndx].sh_offset + symbols[i].st_value) = sector;
-			break;
-		}
-	}
-	}
-
-	if (keyx) {
-	dst = "keyx";
-	for (size_t i = symbols_count; --i;) {
-//symbolCompare(*)
-	        if (!(sidx = symbols[i].st_name))
-			continue;
-		char *src = symbol_names + sidx;
-		size_t slen = strlen(src), dlen = strlen(dst);
-		if (!strncmp(src, dst, slen < dlen ? slen : dlen)) {
-//DrawInfo(NULL, lang(S_CONTINUE), lang("KeyX patch: @%08x, %08x"), symbols[i].st_value, (uint32_t)keyx);
-//			*(aes_key_data*)((void*)header + sections[symbols[i].st_shndx].sh_offset + symbols[i].st_value) = *keyx;
-			break;
-		}
-	}
-	}
-	}
+	patchPreload(ehdr);
+	if (sector)
+		patchSetParameterData("nandSector", &sector);
+//	if (keyx)
+//		patchSetParameterData("keyx", keyx);
 
 	for (size_t i = ehdr->e_shnum; i--; shdr++)
 		if (shdr->sh_flags & SHF_ALLOC &&
@@ -476,7 +421,7 @@ int rxMode(int_fast8_t drive)
 	for (size_t i = ehdr->e_shnum; i--; shdr++)
 		if (!strcmp(shstrtab + shdr->sh_name, ".patch.p9.reboot.body")) {
 			memcpy((void*)ehdr->e_entry, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
-			(*(void (*)(uint32_t sector, aes_key_data *keyx, void *arm11_entry_vector))ehdr->e_entry)(sector, keyx, (void*)0x1FFFFFF8);
+			(*(void (*)(void *arm11_entry_vector))ehdr->e_entry)((void*)0x1FFFFFF8);
 			__builtin_unreachable();
 		}
 
