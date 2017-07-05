@@ -25,10 +25,6 @@
 [submodule "rxtools/source/lib/jsmn"]
 	path = rxtools/source/lib/jsmn
 	url = https://github.com/zserge/jsmn
-[submodule "rxtools/mbedtls"]
-	path = rxtools/mbedtls
-	url = https://github.com/ARMmbed/mbedtls
-	branch = master
 [submodule "rxtools/source/lib/patch3ds"]
 	path = rxtools/source/lib/patch3ds
 	url = https://github.com/dukesrg/patch3ds
