@@ -155,7 +155,7 @@ uint8_t *decryptFirmTitleNcch(uint8_t* title, size_t *size) {
 		return NULL;
 	return firm;
 }
-
+/*
 static void setAgbBios()
 {
 	File agb_firm;
@@ -169,7 +169,7 @@ static void setAgbBios()
 		FileClose(&agb_firm);
 	}
 }
-
+*/
 static uint_fast8_t firmLoadPatches(void *data, uint32_t title_id_lo) {
 	wchar_t path[_MAX_LFN + 1];
 	File f;
@@ -216,6 +216,27 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 			(keyx || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
 			(section = firmFindSection(firm, shdr->sh_addr))
 		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
+
+	wchar_t path[_MAX_LFN + 1];
+	File f;
+	size_t size;
+
+	if (swprintf(path, _MAX_LFN + 1, L"rxTools/sys/patches.elf") > 0 &&
+		FileOpen(&f, path, 0) && (
+			((size = FileSize(path)) &&
+				(ehdr = __builtin_alloca(size)) &&
+				FileRead2(&f, ehdr, size) == size
+			) || (FileClose(&f) && 0)
+		) && (FileClose(&f) || 1)
+	) {
+		patchPreload(ehdr);
+		patch_record patches[2];
+		char *names[2] = {"GBA signature checks disable", "GBA BIOS logo show"};
+		uint_fast16_t patchidx = patchGet(patches, names, 2, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, 0x0E51);
+		while (patchidx--)
+			if ((section = firmFindSection(firm, patches[patchidx].address)))
+				memcpy((void *)data + section->offset - section->load_address + patches[patchidx].address, patches[patchidx].data, patches[patchidx].size);
+	}
 
 	return 1;
 }
@@ -397,7 +418,7 @@ int rxMode(int_fast8_t drive)
 				return 0;
 			}
 			progressSetPos(1);
-			setAgbBios();
+//			setAgbBios();
 		}
 
 		tid = TID_CTR_NATIVE_FIRM;
