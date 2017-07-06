@@ -92,6 +92,7 @@ release-rxtools: all-target-rxtools
 	@cp rxtools/build/code.bin release/$(SYS_PATH)
 	@cp rxtools/gui.json release/$(SYS_PATH)
 	@cp rxtools/build/arm9loaderhax.bin release/arm9loaderhax
+	@cp rxtools/build/patches.elf release/$(SYS_PATH)
 
 release-doc:
 	@cp README.md "docs/QuickStartGuide(v3.0_BETA).pdf" release

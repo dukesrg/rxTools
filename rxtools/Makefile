@@ -21,7 +21,7 @@ BUILD := build
 DEPS_DIR := $(BUILD)/.deps
 SOURCE := source
 
-all: $(BUILD)/code.bin $(BUILD)/arm9loaderhax.bin
+all: $(BUILD)/code.bin $(BUILD)/arm9loaderhax.bin patches
 
 include $(RXTOOLSMK)
 
@@ -90,6 +90,10 @@ $(BUILD)/%.o: $(SOURCE)/%.s
 $(BUILD)/%.o: $(BUILD)/%.bin
 	$(call Q,OBJCOPY,$@)cd $(BUILD); $(OBJCOPY) -Ibinary -Oelf32-littlearm -Barmv5te $(subst $(BUILD)/,,$< $@)
 
+patches:
+	$(MAKE) $(BRAHFLAGS) -C source/lib/patch3ds
+	@mv source/lib/patch3ds/patches.elf $(BUILD)
+
 $(foreach f,$(NEED_DIRS),$(eval $f : | $(dir $f)D))
 
 %/D:
@@ -97,5 +101,6 @@ $(foreach f,$(NEED_DIRS),$(eval $f : | $(dir $f)D))
 
 clean:
 	$(call Q,RM,)rm -fr $(BUILD)
+	$(MAKE) -C source/lib/patch3ds clean
 
 -include $(DEPS)
