@@ -205,6 +205,7 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 	patchPreload(ehdr);
 	if (sector)
 		patchSetParameterData("nandSector", &sector);
+//sysver not detected properly, so keyx patch skipped
 //	if (keyx)
 //		patchSetParameterData("keyx", keyx);
 
@@ -217,26 +218,37 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 			(section = firmFindSection(firm, shdr->sh_addr))
 		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
 
-	wchar_t path[_MAX_LFN + 1];
+//skip all but TWL&AGB patches for now
+	if (title_id_lo != TID_CTR_TWL_FIRM && title_id_lo != TID_CTR_AGB_FIRM)
+		return 1;
+
+//apply new style patches
 	File f;
 	size_t size;
+	uint_fast16_t title_version = PATCH_TITLE_VERSION_ANY, max_patches, num_patches;
+	wchar_t *path = L"" SYS_PATH "/patches.elf";
+	char **patch_names;
+	patch_record *patches;
 
-	if (swprintf(path, _MAX_LFN + 1, L"rxTools/sys/patches.elf") > 0 &&
-		FileOpen(&f, path, 0) && (
+	if (title_id_lo == TID_CTR_TWL_FIRM)
+		title_version = 0x2271;
+	else if (title_id_lo == TID_CTR_AGB_FIRM)
+		title_version = 0x0E51;
+
+	if (FileOpen(&f, path, 0) && (
 			((size = FileSize(path)) &&
 				(ehdr = __builtin_alloca(size)) &&
 				FileRead2(&f, ehdr, size) == size
 			) || (FileClose(&f) && 0)
-		) && (FileClose(&f) || 1)
-	) {
-		patchPreload(ehdr);
-		patch_record patches[2];
-		char *names[2] = {"GBA signature checks disable", "GBA BIOS logo show"};
-		uint_fast16_t patchidx = patchGet(patches, names, 2, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, 0x0E51);
-		while (patchidx--)
-			if ((section = firmFindSection(firm, patches[patchidx].address)))
-				memcpy((void *)data + section->offset - section->load_address + patches[patchidx].address, patches[patchidx].data, patches[patchidx].size);
-	}
+		) && (FileClose(&f) || 1) &&
+		(max_patches = patchPreload(ehdr)) &&
+		(patch_names = __builtin_alloca(max_patches * sizeof(char*))) &&
+		(num_patches = patchFind(patch_names, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, title_version)) &&
+		(patches = __builtin_alloca(max_patches * sizeof(*patches))) &&
+		(num_patches = patchGet(patches, patch_names, num_patches, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, title_version))
+	) while (num_patches--)
+		if ((section = firmFindSection(firm, patches[num_patches].address)))
+			memcpy((void *)data + section->offset - section->load_address + patches[num_patches].address, patches[num_patches].data, patches[num_patches].size);
 
 	return 1;
 }
