@@ -105,8 +105,6 @@ release-patches: reboot/reboot.bin all-target-patches
 	@mkdir -p release/$(SYS_PATH) release/$(PATCHES_PATH)
 	@cp reboot/reboot.bin release/$(SYS_PATH)
 	@cp rxmode/build/ctr/native_firm.elf release/$(PATCHES_PATH)/0004013800000002.elf
-	@cp rxmode/build/ctr/twl_firm.elf release/$(PATCHES_PATH)/0004013800000102.elf
-	@cp rxmode/build/ctr/agb_firm.elf release/$(PATCHES_PATH)/0004013800000202.elf
 	@cp rxmode/build/ktr/native_firm.elf release/$(PATCHES_PATH)/0004013820000002.elf
 
 release-theme: all-target-theme $(THEMES)

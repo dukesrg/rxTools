@@ -185,6 +185,20 @@ static uint_fast8_t firmLoadPatches(void *data, uint32_t title_id_lo) {
 	);
 }
 
+static uint_fast8_t patchFilter(char **patch_names, uint_fast16_t *num_patches, uint32_t title_id_lo) {//static NATIVE_FIRM patch filter temporary workaround
+	if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM)
+		for (size_t i = 0; i < *num_patches; i++)
+			if (strcmp(patch_names[i], "Signature checks disable") &&
+				strcmp(patch_names[i], "FIRM update protection")
+			) {
+				(*num_patches)--;
+				for (size_t j = i; j < *num_patches; j++)
+					patch_names[j] = patch_names[j + 1];
+				
+			}
+	return 1;
+}
+
 static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector, aes_key_data *keyx) { //path FIRM sections
 	static const char patchNandPrefix[] = ".patch.p9.nand";
 	static const char patchKeyxStr[] = ".patch.p9.keyx";
@@ -196,6 +210,7 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 	firm_header *firm = (firm_header*)data;
 	firm_section_header *section;
 
+if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM) {
 	if (!firmLoadPatches((void*)PATCH_ADDR, title_id_lo))
 		return 0;	
 
@@ -217,10 +232,8 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 			(keyx || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
 			(section = firmFindSection(firm, shdr->sh_addr))
 		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
-
-//skip all but TWL&AGB patches for now
-	if (title_id_lo != TID_CTR_TWL_FIRM && title_id_lo != TID_CTR_AGB_FIRM)
-		return 1;
+	return 1;
+}
 
 //apply new style patches
 	File f;
@@ -230,7 +243,9 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 	char **patch_names;
 	patch_record *patches;
 
-	if (title_id_lo == TID_CTR_TWL_FIRM)
+	if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM)
+		title_version = 0x4F26;
+	else if (title_id_lo == TID_CTR_TWL_FIRM)
 		title_version = 0x2271;
 	else if (title_id_lo == TID_CTR_AGB_FIRM)
 		title_version = 0x0E51;
@@ -244,6 +259,7 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 		(max_patches = patchPreload(ehdr)) &&
 		(patch_names = __builtin_alloca(max_patches * sizeof(char*))) &&
 		(num_patches = patchFind(patch_names, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, title_version)) &&
+//		(patchFilter(patch_names, &num_patches, title_id_lo)) &&
 		(patches = __builtin_alloca(max_patches * sizeof(*patches))) &&
 		(num_patches = patchGet(patches, patch_names, num_patches, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, title_version))
 	) while (num_patches--)

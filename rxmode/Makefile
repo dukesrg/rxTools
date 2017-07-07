@@ -16,19 +16,13 @@
 .PHONY: all clean
 
 all: $(addprefix build/,ktr/native_firm.elf	\
-	ctr/native_firm.elf ctr/agb_firm.elf ctr/twl_firm.elf)
+	ctr/native_firm.elf)
 
 build/ktr/native_firm.elf:
 	$(MAKE) INCDIR=$(INCDIR) BUILD=$(CURDIR)/build/ktr PLATFORM_KTR=1 -C native_firm $(CURDIR)/$@
 
 build/ctr/native_firm.elf:
 	$(MAKE) INCDIR=$(INCDIR) BUILD=$(CURDIR)/build/ctr -C native_firm $(CURDIR)/$@
-
-build/ctr/agb_firm.elf:
-	$(MAKE) INCDIR=$(INCDIR) BUILD=$(CURDIR)/build/ctr -C agb_firm $(CURDIR)/$@
-
-build/ctr/twl_firm.elf:
-	$(MAKE) INCDIR=$(INCDIR) BUILD=$(CURDIR)/build/ctr -C twl_firm $(CURDIR)/$@
 
 clean:
 	rm -Rf build
