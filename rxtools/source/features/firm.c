@@ -185,18 +185,17 @@ static uint_fast8_t firmLoadPatches(void *data, uint32_t title_id_lo) {
 	);
 }
 
-static uint_fast8_t patchFilter(char **patch_names, uint_fast16_t *num_patches, uint32_t title_id_lo) {//static NATIVE_FIRM patch filter temporary workaround
+static uint_fast16_t patchFilter(char **patch_names, uint_fast16_t num_patches, uint32_t title_id_lo) {//static NATIVE_FIRM patch filter temporary workaround
 	if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM)
-		for (size_t i = 0; i < *num_patches; i++)
+		for (size_t i = 0; i < num_patches; i++)
 			if (strcmp(patch_names[i], "Signature checks disable") &&
 				strcmp(patch_names[i], "FIRM update protection")
 			) {
-				(*num_patches)--;
-				for (size_t j = i; j < *num_patches; j++)
+				num_patches--;
+				for (size_t j = i--; j < num_patches; j++)
 					patch_names[j] = patch_names[j + 1];
-				
 			}
-	return 1;
+	return num_patches;
 }
 
 static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector, aes_key_data *keyx) { //path FIRM sections
@@ -232,7 +231,6 @@ if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM) {
 			(keyx || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
 			(section = firmFindSection(firm, shdr->sh_addr))
 		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
-	return 1;
 }
 
 //apply new style patches
@@ -259,7 +257,7 @@ if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM) {
 		(max_patches = patchPreload(ehdr)) &&
 		(patch_names = __builtin_alloca(max_patches * sizeof(char*))) &&
 		(num_patches = patchFind(patch_names, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, title_version)) &&
-//		(patchFilter(patch_names, &num_patches, title_id_lo)) &&
+		(num_patches = patchFilter(patch_names, num_patches, title_id_lo)) &&
 		(patches = __builtin_alloca(max_patches * sizeof(*patches))) &&
 		(num_patches = patchGet(patches, patch_names, num_patches, ((uint64_t)TID_HI_FIRM << 32) | title_id_lo, title_version))
 	) while (num_patches--)

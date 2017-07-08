@@ -12,12 +12,6 @@ SECTIONS
 	. = process9 + 0x002F8;
 	.patch.p9.keyx : { *(.patch.p9.keyx) }
 
-	. = process9 + 0x3563C;
-	.patch.p9.sig.1 : { *(.patch.p9.sig.1) }
-
-	. = process9 + 0x3B2B8;
-	.patch.p9.sig.2 : { *(.patch.p9.sig.2) }
-
 	. = process9 + 0x5082C;
 	.patch.p9.nand.write : { *(.patch.p9.nand.write) }
 
