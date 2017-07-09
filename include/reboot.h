@@ -26,9 +26,6 @@
 #define FIRM_ADDR (0x24000000)
 #define FIRM_SIZE (33554432)
 
-#define PATCH_ADDR (0x01FF8000)
-#define PATCH_SIZE (8192)
-
 #ifndef ASM
 
 #include <stdint.h>

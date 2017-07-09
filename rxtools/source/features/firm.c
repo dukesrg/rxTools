@@ -170,20 +170,6 @@ static void setAgbBios()
 	}
 }
 */
-static uint_fast8_t firmLoadPatches(void *data, uint32_t title_id_lo) {
-	wchar_t path[_MAX_LFN + 1];
-	File f;
-	size_t size;
-
-	return (swprintf(path, _MAX_LFN + 1, firmPatchPathFmt, TID_HI_FIRM, title_id_lo) > 0 &&
-		FileOpen(&f, path, 0) && (
-			((size = FileSize(path)) &&
-				FileRead2(&f, data, size) == size &&
-				*(uint32_t*)data == *(uint32_t*)ELFMAG
-			) || (FileClose(&f) && 0)
-		) && (FileClose(&f) || 1)
-	);
-}
 
 static uint_fast16_t patchFilter(char **patch_names, uint_fast16_t num_patches, uint32_t title_id_lo) {//static NATIVE_FIRM patch filter temporary workaround
 	if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM)
@@ -202,19 +188,31 @@ static uint_fast8_t firmPatch(void *data, uint32_t title_id_lo, uint32_t sector,
 	static const char patchNandPrefix[] = ".patch.p9.nand";
 	static const char patchKeyxStr[] = ".patch.p9.keyx";
 
-	Elf32_Ehdr *ehdr = (Elf32_Ehdr*)PATCH_ADDR;
+	Elf32_Ehdr *ehdr;
 	Elf32_Shdr *shdr;
 	const char *shstrtab, *sh_name;
+
+	wchar_t path[_MAX_LFN + 1];
+	File f;
+	size_t size;
 
 	firm_header *firm = (firm_header*)data;
 	firm_section_header *section;
 
+//apply old patches
 if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM) {
-	if (!firmLoadPatches((void*)PATCH_ADDR, title_id_lo))
-		return 0;	
+	if (!(swprintf(path, _MAX_LFN + 1, firmPatchPathFmt, TID_HI_FIRM, title_id_lo) > 0 &&
+		FileOpen(&f, path, 0) && (
+			((size = FileSize(path)) &&
+				(ehdr = __builtin_alloca(size)) &&
+				FileRead2(&f, ehdr, size) == size &&
+				*(uint32_t*)ehdr == *(uint32_t*)ELFMAG
+			) || (FileClose(&f) && 0)
+		) && (FileClose(&f) || 1)
+	)) return 0;
 
-	shdr = (Elf32_Shdr*)(PATCH_ADDR + ehdr->e_shoff);
-	shstrtab = (char*)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
+	shdr = (Elf32_Shdr*)((void*)ehdr + ehdr->e_shoff);
+	shstrtab = (char*)ehdr + shdr[ehdr->e_shstrndx].sh_offset;
 
 	patchPreload(ehdr);
 	if (sector)
@@ -230,14 +228,12 @@ if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM) {
 			(sector || memcmp(sh_name, patchNandPrefix, sizeof(patchNandPrefix) - 1)) && //skip nand* patches for SysNAND
 			(keyx || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
 			(section = firmFindSection(firm, shdr->sh_addr))
-		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
+		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)ehdr + shdr->sh_offset, shdr->sh_size);
 }
 
 //apply new style patches
-	File f;
-	size_t size;
 	uint_fast16_t title_version = PATCH_TITLE_VERSION_ANY, max_patches, num_patches;
-	wchar_t *path = L"" SYS_PATH "/patches.elf";
+	wcscpy(path, L"" SYS_PATH "/patches.elf");
 	char **patch_names;
 	patch_record *patches;
 
@@ -387,13 +383,11 @@ static uint_fast8_t processFirm(uint32_t title_id_lo, firm_operation operation, 
 int rxMode(int_fast8_t drive)
 {
 	wchar_t path[_MAX_LFN + 1];
-	const char *shstrtab;
 	uint32_t tid;
 	int sector;
-	Elf32_Ehdr *ehdr;
-	Elf32_Shdr *shdr;
 	aes_key_data *keyx;
 	File f;
+	firm_header *firm = (firm_header*)FIRM_ADDR;
 
 	if (drive > 0) {
 		sector = checkNAND(drive);
@@ -457,23 +451,11 @@ int rxMode(int_fast8_t drive)
 			return 0;
 		}
 		progressSetPos(1);
-	} else if (!firmLoadPatches((void*)PATCH_ADDR, tid)) {
-		DrawInfo(NULL, lang(S_CONTINUE), lang("Error loading patches"));
-		return 0;
 	}
 
-	ehdr = (void *)PATCH_ADDR;
-	shdr = (void *)(PATCH_ADDR + ehdr->e_shoff);
-	shstrtab = (char *)PATCH_ADDR + shdr[ehdr->e_shstrndx].sh_offset;
-	for (size_t i = ehdr->e_shnum; i--; shdr++)
-		if (!strcmp(shstrtab + shdr->sh_name, ".patch.p9.reboot.body")) {
-			memcpy((void*)ehdr->e_entry, (void *)(PATCH_ADDR + shdr->sh_offset), shdr->sh_size);
-			(*(void (*)(void *arm11_entry_vector))ehdr->e_entry)((void*)0x1FFFFFF8);
-			__builtin_unreachable();
-		}
-
-	DrawInfo(NULL, lang(S_CONTINUE), lang(".patch.p9.reboot.body not found"));
-	return 0;
+	*(volatile uint32_t*)0x1FFFFFF8 = firm->arm11_entry;
+	(*(void (*)())firm->arm9_entry)();
+	__builtin_unreachable();
 }
 
 //Just patches signatures check, loads in sysnand
