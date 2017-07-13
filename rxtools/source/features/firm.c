@@ -43,6 +43,58 @@
 #include "native_firm.h"
 #include "patch3ds/patch3ds.h"
 
+static void drainWriteBuffer()
+{
+	__asm__ volatile ("mcr p15, 0, %0, c7, c10, 4\n" :: "r"(0));
+}
+
+static void cleanDcacheLine(void *p)
+{
+	__asm__ volatile ("mcr p15, 0, %0, c7, c10, 1\n" :: "r"(p));
+}
+
+static void flushIcacheLine(void *p)
+{
+	__asm__ volatile ("mcr p15, 0, %0, c7, c5, 1\n" :: "r"(p));
+}
+
+static void flushFirmData()
+{
+	uintptr_t dstCur, dstBtm;
+	const FirmSeg *seg;
+	unsigned int i;
+
+	seg = ((FirmHdr *)FIRM_ADDR)->segs;
+	for (i = 0; i < FIRM_SEG_NUM; i++) {
+		dstCur = seg->addr;
+		for (dstBtm = seg->addr + seg->size; dstCur < dstBtm; dstCur += 32)
+			cleanDcacheLine((void *)dstCur);
+
+		seg++;
+	}
+
+	drainWriteBuffer();
+}
+
+static void flushFirmInstr()
+{
+	uintptr_t dstCur, dstBtm;
+	const FirmSeg *seg;
+	unsigned int i;
+
+	seg = ((FirmHdr *)FIRM_ADDR)->segs;
+	for (i = 0; i < FIRM_SEG_NUM; i++) {
+		if (!seg->isArm11) {
+			dstCur = seg->addr;
+			for (dstBtm = seg->addr + seg->size; dstCur < dstBtm; dstCur += 32)
+				flushIcacheLine((void *)dstCur);
+		}
+
+		seg++;
+	}
+}
+
+
 //FIRM processing additional job flags
 typedef enum {
 	FIRM_PATCH = 1<<0, //apply patches
@@ -453,7 +505,11 @@ int rxMode(int_fast8_t drive)
 		progressSetPos(1);
 	}
 
+	flushFirmData();
 	*(volatile uint32_t*)0x1FFFFFF8 = firm->arm11_entry;
+	cleanDcacheLine((void*)0x1FFFFFF8);
+	drainWriteBuffer();
+	flushFirmInstr();
 	(*(void (*)())firm->arm9_entry)();
 	__builtin_unreachable();
 }
