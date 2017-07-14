@@ -281,8 +281,10 @@ if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM) {
 			(keyx || memcmp(sh_name, patchKeyxStr, sizeof(patchKeyxStr))) && //skip keyx patch if not defined/ktr
 			(section = firmFindSection(firm, shdr->sh_addr))
 		) memcpy((void *)data + section->offset - section->load_address + shdr->sh_addr, (void *)ehdr + shdr->sh_offset, shdr->sh_size);
-		else if (!strcmp(shstrtab + shdr->sh_name, ".patch.p9.reboot.body"))
-			memcpy((void*)ehdr->e_entry, (void *)ehdr + shdr->sh_offset, shdr->sh_size);
+		else if (!strcmp(shstrtab + shdr->sh_name, ".patch.p9.reboot.body")) {
+			section = firmFindSection(firm, ehdr->e_entry);
+			memcpy((void *)data + section->offset - section->load_address + ehdr->e_entry, (void *)ehdr + shdr->sh_offset, shdr->sh_size);
+		}
 }
 
 //apply new style patches
