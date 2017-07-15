@@ -235,7 +235,6 @@ _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
 			p++;
 		}
 		writeArmB(arm11Swi, arm11Code);
-/*
 
 		initScr();
 		scrPuts("\nException Information by rxTools\n\n\n\n"
@@ -250,7 +249,6 @@ _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
 			scrPuts(": 0x");
 			scrItoa(regs[i], 16, 8);
 		}
-*/
 	}
 }
 /*
