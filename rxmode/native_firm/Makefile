@@ -32,11 +32,11 @@ OBJS	:= $(BUILD)/payload/arm9/EmuNAND.o $(BUILD)/payload/arm9/process9.o	\
 	$(BUILD)/k9_fix_flags.o	\
 	$(BUILD)/p9_emunand_hook_1.o $(BUILD)/p9_emunand_hook_2.o	\
 	$(BUILD)/p9_reboothax_entry.o $(BUILD)/p9_reboothax_body_prefix.o	\
-	$(BUILD)/p9_signatures_spoof_1.o $(BUILD)/p9_signatures_spoof_2.o	#\
+	$(BUILD)/p9_signatures_spoof_1.o $(BUILD)/p9_signatures_spoof_2.o	\
+	$(BUILD)/k11_codeset.o
 #	$(BUILD)/p9_thread_hook.o	\
 #	$(BUILD)/payload/arm9/create_thread.o	\
 #	$(BUILD)/payload/arm9/thread/thread.o 	\
-#	$(BUILD)/k11_codeset.o
 
 ifdef PLATFORM_KTR
 LDSCRIPT_ROM	:= ktr_rom.ld

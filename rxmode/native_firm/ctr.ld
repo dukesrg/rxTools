@@ -38,11 +38,11 @@ SECTIONS
 		*(.patch.p9.reboot.body.text.start)
 		*(.patch.p9.reboot.body*)
 	}
-/*
+
 	. = codeSetHook;
 	.patch.k11.codeset.hook : { *(.patch.k11.codeset.hook) }
 
 	. = 0x1ff824f0;
 	.patch.k11.codeset.addr : { *(.patch.k11.codeset.addr) }
-*/
+
 }
