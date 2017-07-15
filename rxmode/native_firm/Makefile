@@ -33,10 +33,10 @@ OBJS	:= $(BUILD)/payload/arm9/EmuNAND.o $(BUILD)/payload/arm9/process9.o	\
 	$(BUILD)/p9_emunand_hook_1.o $(BUILD)/p9_emunand_hook_2.o	\
 	$(BUILD)/p9_reboothax_entry.o $(BUILD)/p9_reboothax_body_prefix.o	\
 	$(BUILD)/p9_signatures_spoof_1.o $(BUILD)/p9_signatures_spoof_2.o	\
-	$(BUILD)/k11_codeset.o
-#	$(BUILD)/p9_thread_hook.o	\
-#	$(BUILD)/payload/arm9/create_thread.o	\
-#	$(BUILD)/payload/arm9/thread/thread.o 	\
+	$(BUILD)/p9_thread_hook.o	\
+	$(BUILD)/payload/arm9/thread/thread.o 	\
+	$(BUILD)/payload/arm9/create_thread.o	\
+#	$(BUILD)/k11_codeset.o \
 
 ifdef PLATFORM_KTR
 LDSCRIPT_ROM	:= ktr_rom.ld
@@ -46,9 +46,9 @@ else
 LDSCRIPT_ROM	:= ctr_rom.ld
 LDSCRIPT_RAM	:= ctr_ram.ld
 
-OBJS	+= $(BUILD)/p9_keyx_spoof.o
-#	$(BUILD)/payload/arm9/thread/handlers.o	\
-#	$(BUILD)/payload/arm11/hookswi.o	\
+OBJS	+= $(BUILD)/p9_keyx_spoof.o \
+	$(BUILD)/payload/arm9/thread/handlers.o	\
+	$(BUILD)/payload/arm11/hookswi.o	\
 
 endif
 
