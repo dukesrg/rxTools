@@ -285,6 +285,6 @@ _Noreturn void thread()
 			*(int *)8192 = 100;
 #endif
 
-		patchLabel();
+//		patchLabel();
 	}
 }
