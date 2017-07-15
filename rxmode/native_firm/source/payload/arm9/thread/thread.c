@@ -31,7 +31,7 @@
 #include "lib.c"
 
 //#define DEBUG_DUMP_RAM              //Uncomment this to enable RAM (fcram+axiwram) dumper
-/*
+
 #ifdef DEBUG_DUMP_RAM
 static void memdump(wchar_t *filename, unsigned char *buf, size_t size)
 {
@@ -200,6 +200,7 @@ static void writeArmB(void *cur, const void *dst)
 		| (((uintptr_t)dst - ((uintptr_t)cur + 8)) >> 2);
 }
 
+
 #define REG_NUM 17
 
 _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
@@ -233,7 +234,7 @@ _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
 			*p = *q;
 			p++;
 		}
-
+/*
 		writeArmB(arm11Swi, arm11Code);
 
 		initScr();
@@ -249,9 +250,9 @@ _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
 			scrPuts(": 0x");
 			scrItoa(regs[i], 16, 8);
 		}
-	}
+*/	}
 }
-
+/*
 static void initExceptionHandler()
 {
 	*(void **)0x08000008 = handleFiq;
@@ -259,9 +260,10 @@ static void initExceptionHandler()
 	*(void **)0x0800002C = handleData;
 	*(void **)0x08000020 = handlePrefetch;
 }
+*/
 	#endif
 #endif
-*/
+
 _Noreturn void thread()
 {
 /*
