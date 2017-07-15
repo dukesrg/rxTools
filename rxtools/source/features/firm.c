@@ -389,6 +389,17 @@ static uint_fast8_t processFirm(uint32_t title_id_lo, firm_operation operation, 
 		processFirmInstalled(title_id_lo, operation, sector, keyx); 
 }
 
+void __attribute__((naked)) disable_lcds() {
+	*(volatile uint32_t*)0x1FFFFFF8 = 0;  // Don't wait for us
+
+	*(volatile uint32_t *)0x10202A44 = 0;
+	*(volatile uint32_t *)0x10202244 = 0;
+	*(volatile uint32_t *)0x1020200C = 0;
+	*(volatile uint32_t *)0x10202014 = 0;
+    	while (!*(volatile uint32_t*)0x1FFFFFF8);
+	((void (*)())*(volatile uint32_t*)0x1FFFFFF8)();
+}
+
 int rxMode(int_fast8_t drive)
 {
 	wchar_t path[_MAX_LFN + 1];
@@ -462,6 +473,8 @@ int rxMode(int_fast8_t drive)
 		progressSetPos(1);
 	}
 
+	*(volatile uint32_t*)0x1FFFFFF8 = (uint32_t)disable_lcds;
+	while (*(volatile uint32_t*)0x1FFFFFF8);
 	*(volatile uint32_t*)0x1FFFFFF8 = firm->arm11_entry;
 	(*(void (*)())firm->arm9_entry)();
 //	(*(void (*)(void *arm11_entry_vector))entry)((void*)0x1FFFFFF8);
