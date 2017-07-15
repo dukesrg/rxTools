@@ -267,7 +267,7 @@ _Noreturn void thread()
 
 #ifndef PLATFORM_KTR
 	#ifndef DEBUG_DUMP_RAM
-		initExceptionHandler();
+//		initExceptionHandler();
 	#endif
 #endif
 
