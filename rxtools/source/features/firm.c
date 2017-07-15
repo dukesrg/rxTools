@@ -272,9 +272,13 @@ static uint_fast8_t firmLoad(wchar_t *path) { //load FIRM file sections directly
 	File f;
 	firm_header *firm = (firm_header*)FIRM_ADDR;
 	firm_section_header *section = firm->sections;
+	size_t size;
 	
 	if (!(FileOpen(&f, path, 0) && (
-		(FileRead2(&f, firm, sizeof(*firm)) == sizeof(*firm) &&
+		(
+//		(size = sizeof(*firm)) &&
+		(size = FileSize(path)) &&
+			FileRead2(&f, firm, size) == size &&
 			firm->magic == FIRM_MAGIC
 		) || (FileClose(&f) && 0)
 	))) return 0;
@@ -458,9 +462,9 @@ int rxMode(int_fast8_t drive)
 		progressSetPos(1);
 	}
 
-//	*(volatile uint32_t*)0x1FFFFFF8 = firm->arm11_entry;
-//	(*(void (*)())firm->arm9_entry)();
-	(*(void (*)(void *arm11_entry_vector))entry)((void*)0x1FFFFFF8);
+	*(volatile uint32_t*)0x1FFFFFF8 = firm->arm11_entry;
+	(*(void (*)())firm->arm9_entry)();
+//	(*(void (*)(void *arm11_entry_vector))entry)((void*)0x1FFFFFF8);
 	__builtin_unreachable();
 }
 
