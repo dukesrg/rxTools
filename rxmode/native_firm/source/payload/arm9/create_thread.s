@@ -18,6 +18,7 @@
 	.text
 	.global	createThread
 	.type	createThread, %function
+.align 4
 createThread:
 	mov	r0, #0x3F @ Priority
 	ldr	r1, =thread @ Address
