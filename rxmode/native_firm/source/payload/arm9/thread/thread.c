@@ -255,10 +255,10 @@ _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
 
 static void initExceptionHandler()
 {
-	*(void **)0x08000008 = handleFiq;
-	*(void **)0x08000018 = handleInstr;
-	*(void **)0x0800002C = handleData;
-	*(void **)0x08000020 = handlePrefetch;
+//	*(void **)0x08000008 = handleFiq;
+//	*(void **)0x08000018 = handleInstr;
+//	*(void **)0x0800002C = handleData;
+//	*(void **)0x08000020 = handlePrefetch;
 }
 
 	#endif
