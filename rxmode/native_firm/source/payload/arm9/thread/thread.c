@@ -31,7 +31,7 @@
 #include "lib.c"
 
 //#define DEBUG_DUMP_RAM              //Uncomment this to enable RAM (fcram+axiwram) dumper
-
+/*
 #ifdef DEBUG_DUMP_RAM
 static void memdump(wchar_t *filename, unsigned char *buf, size_t size)
 {
@@ -261,18 +261,18 @@ static void initExceptionHandler()
 }
 	#endif
 #endif
-
+*/
 _Noreturn void thread()
 {
-
+/*
 #ifndef PLATFORM_KTR
 	#ifndef DEBUG_DUMP_RAM
 //		initExceptionHandler();
 	#endif
 #endif
-
+*/
 	while (1) {
-
+/*
 #ifdef DEBUG_DUMP_RAM
 		if(getHID() & BUTTON_SELECT){
 			memdump(L"sdmc:/FCRAM.bin", (void *)0x20000000, 0x10000);
@@ -286,5 +286,6 @@ _Noreturn void thread()
 #endif
 
 //		patchLabel();
+*/
 	}
 }

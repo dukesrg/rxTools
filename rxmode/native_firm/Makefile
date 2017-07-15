@@ -48,7 +48,7 @@ LDSCRIPT_RAM	:= ctr_ram.ld
 
 OBJS	+= $(BUILD)/p9_keyx_spoof.o \
 	$(BUILD)/payload/arm11/hookswi.o	\
-	$(BUILD)/payload/arm9/thread/handlers.o	\
+#	$(BUILD)/payload/arm9/thread/handlers.o	\
 
 endif
 
