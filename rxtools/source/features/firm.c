@@ -176,8 +176,8 @@ static void setAgbBios()
 static uint_fast16_t patchFilter(char **patch_names, uint_fast16_t num_patches, uint32_t title_id_lo) {//static NATIVE_FIRM patch filter temporary workaround
 	if (title_id_lo == TID_CTR_NATIVE_FIRM || title_id_lo == TID_KTR_NATIVE_FIRM)
 		for (size_t i = 0; i < num_patches; i++)
-			if (strcmp(patch_names[i], "Signature checks disable") &&
-				strcmp(patch_names[i], "FIRM update protection")
+			if (strcmp(patch_names[i], "Signature checks disable")// &&
+//				strcmp(patch_names[i], "FIRM update protection")
 			) {
 				num_patches--;
 				for (size_t j = i--; j < num_patches; j++)
