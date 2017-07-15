@@ -234,7 +234,7 @@ _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
 			*p = *q;
 			p++;
 		}
-/*
+
 		writeArmB(arm11Swi, arm11Code);
 
 		initScr();
@@ -250,9 +250,9 @@ _Noreturn void mainHandler(int regs[REG_NUM], const char *type)
 			scrPuts(": 0x");
 			scrItoa(regs[i], 16, 8);
 		}
-*/	}
+	}
 }
-/*
+
 static void initExceptionHandler()
 {
 	*(void **)0x08000008 = handleFiq;
@@ -260,7 +260,7 @@ static void initExceptionHandler()
 	*(void **)0x0800002C = handleData;
 	*(void **)0x08000020 = handlePrefetch;
 }
-*/
+
 	#endif
 #endif
 
