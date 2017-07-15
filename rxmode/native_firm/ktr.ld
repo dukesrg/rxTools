@@ -26,19 +26,20 @@ SECTIONS
 		*(.patch.p9.reboot.entry.top)
 		*(.patch.p9.reboot.entry)
 	}
-
+/*
 	. = process9 + 0x5E140;
 	.patch.p9.thread : { *(.patch.p9.thread) }
-
+*/
 	. = reboot;
 	.patch.p9.reboot.body : {
 		*(.patch.p9.reboot.body.text.start)
 		*(.patch.p9.reboot.body*)
 	}
-
+/*
 	. = codeSetHook;
 	.patch.k11.codeset.hook : { *(.patch.k11.codeset.hook) }
 
 	. = 0x1ff824d4;
 	.patch.k11.codeset.addr : { *(.patch.k11.codeset.addr) }
+*/
 }

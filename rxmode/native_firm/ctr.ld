@@ -23,10 +23,10 @@ SECTIONS
 
 	. = process9 + 0x5086C;
 	.patch.p9.nand.read : { *(.patch.p9.nand.read) }
-
+/*
 	. = process9 + 0x5E140;
 	.patch.p9.thread : { *(.patch.p9.thread) }
-
+*/
 	. = process9 + 0x5D9EC;
 	.patch.p9.reboot.entry : {
 		*(.patch.p9.reboot.entry.top)
@@ -38,10 +38,11 @@ SECTIONS
 		*(.patch.p9.reboot.body.text.start)
 		*(.patch.p9.reboot.body*)
 	}
-
+/*
 	. = codeSetHook;
 	.patch.k11.codeset.hook : { *(.patch.k11.codeset.hook) }
 
 	. = 0x1ff824f0;
 	.patch.k11.codeset.addr : { *(.patch.k11.codeset.addr) }
+*/
 }
