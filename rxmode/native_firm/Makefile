@@ -26,7 +26,7 @@ SOURCE	:= source
 LD	:= arm-none-eabi-ld
 OBJCOPY	:= arm-none-eabi-objcopy
 
-CFLAGS	:= -Os -fshort-wchar -fno-zero-initialized-in-bss $(INCDIR) -I$(SOURCE)/include -DPATCHES_PATH=\"$(PATCHES_PATH)\"
+CFLAGS	:= -Os -falign-functions=16 -falign-jumps=16 -falign-loops=16 -falign-labels=16  -fshort-wchar -fno-zero-initialized-in-bss $(INCDIR) -I$(SOURCE)/include -DPATCHES_PATH=\"$(PATCHES_PATH)\"
 
 OBJS	:= $(BUILD)/payload/arm9/EmuNAND.o $(BUILD)/payload/arm9/process9.o	\
 	$(BUILD)/k9_fix_flags.o	\
