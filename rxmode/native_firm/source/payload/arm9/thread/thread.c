@@ -30,6 +30,10 @@
 #endif
 #include "lib.c"
 
+_Noreturn void thread() {
+	while (1);
+}
+
 //#define DEBUG_DUMP_RAM              //Uncomment this to enable RAM (fcram+axiwram) dumper
 
 #ifdef DEBUG_DUMP_RAM
@@ -267,7 +271,7 @@ static void initExceptionHandler()
 	#endif
 #endif
 
-_Noreturn void thread()
+_Noreturn void thread_old()
 {
 /*
 #ifndef PLATFORM_KTR
