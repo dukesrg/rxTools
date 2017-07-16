@@ -108,14 +108,14 @@ static int cur_y;
 
 static void initScr()
 {
-/*	cur_x = 0;
+	cur_x = 0;
 	cur_y = FB_HEIGHT;
-*/
+
 }
 
 static void scrPutc(int c)
 {
-/*	struct px {
+	struct px {
 		unsigned char b;
 		unsigned char g;
 		unsigned char r;
@@ -157,21 +157,21 @@ static void scrPutc(int c)
 				cur_x++;
 			}
 	}
-*/
+
 }
 
 static void scrPuts(const char *s)
 {
-/*	while (*s) {
+	while (*s) {
 		scrPutc(*s);
 		s++;
 	}
-*/
+
 }
 
 static void scrItoa(unsigned val, int base, int w)
 {
-/*        char buf[10];
+        char buf[10];
         int i = 0;
         int rem;
 
@@ -184,7 +184,7 @@ static void scrItoa(unsigned val, int base, int w)
 
         while (i > 0)
                 scrPutc(buf[--i]);
-*/
+
 }
 
 static int getArmBoff(void *p)

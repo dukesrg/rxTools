@@ -18,15 +18,21 @@
 	.text
 	.global	createThread
 	.type	createThread, %function
-.align 4
 createThread:
-	mov	r0, #0x3F @ Priority
-	ldr	r1, =thread @ Address
-	mov	r2, #0 @ Argument Address
-	mov	r3, #0x08000000	@ The top of the stack
-	orr	r3, #0xC00
-	mov	r4, #0xFFFFFFFE	@ Affinity Mask
-	svc	8	@ Create thread
+@	mov	r0, #0x3F @ Priority
+@	ldr	r1, =thread @ Address
+@	mov	r2, #0 @ Argument Address
+@	mov	r3, #0x08000000	@ The top of the stack
+@	orr	r3, #0xC00
+@	mov	r4, #0xFFFFFFFE	@ Affinity Mask
+@	svc	8	@ Create thread
+nop
+nop
+nop
+nop
+nop
+nop
+nop
 
 	ldr	r0, [lr, #48]
 	bx	lr
