@@ -16,6 +16,7 @@
 	.arm
 	.text
 	.global	nandHook
+.align 4
 nandHook:
 	stmib	sp, {r2-r3}
 	ldr	r7, [lr, #-1]

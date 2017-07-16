@@ -30,10 +30,6 @@
 #endif
 #include "lib.c"
 
-_Noreturn void thread() {
-	while (1);
-}
-
 //#define DEBUG_DUMP_RAM              //Uncomment this to enable RAM (fcram+axiwram) dumper
 
 #ifdef DEBUG_DUMP_RAM
@@ -211,7 +207,7 @@ static void writeArmB(void *cur, const void *dst)
 
 #define REG_NUM 17
 
-_Noreturn void mainHandler(int regs[REG_NUM], const char *type)
+_Noreturn void __attribute__((aligned(16))) mainHandler(int regs[REG_NUM], const char *type)
 {
 	static const char regNames[REG_NUM][4] = {
 		"R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",
@@ -271,7 +267,7 @@ static void initExceptionHandler()
 	#endif
 #endif
 
-_Noreturn void thread_old()
+_Noreturn void __attribute__((aligned(16))) thread()
 {
 /*
 #ifndef PLATFORM_KTR
